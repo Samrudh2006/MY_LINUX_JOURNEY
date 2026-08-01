@@ -1036,7 +1036,7 @@ function runLogTriage() {
         </div>
       ` : ''}
       <div style="font-family:var(--font-hand); font-size:1.1rem; color:var(--text-ink); background:var(--bg-app); padding:0.8rem; border-radius:8px;">
-        💡 <strong>Telugu-English Triage Tip:</strong> Ee log file lo high severity lines red lo highlight chesam. SOC Analyst triage lo first SSH Failed count check cheyali, user account compromise nunchi IP block (`fail2ban`) & SUID binaries revoke cheyali!
+        💡 <strong>Telugu-English Triage Tip:</strong> Ee log file lo high severity lines red lo highlight chesam. SOC Analyst triage lo first SSH Failed count check cheyali, user account compromise nunchi IP block ('fail2ban') & SUID binaries revoke cheyali!
       </div>
     </div>
 
