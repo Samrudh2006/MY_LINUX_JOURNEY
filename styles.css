@@ -674,23 +674,25 @@ body.theme-cyber .btn-email:hover {
   display: flex;
   align-items: center;
   background: var(--bg-app);
-  padding: 0.3rem;
+  padding: 0.35rem 0.5rem;
   border-radius: 12px;
   border: 1.5px solid var(--card-border);
-  max-width: 980px;
+  max-width: 1100px;
   width: 100%;
   gap: 0.4rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
 }
 
 .mode-tab {
-  flex: 1;
+  flex: 0 0 auto;
   background: transparent;
   border: 1px solid transparent;
-  padding: 0.6rem 1rem;
+  padding: 0.5rem 0.85rem;
   border-radius: 8px;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   color: var(--text-dark);
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
