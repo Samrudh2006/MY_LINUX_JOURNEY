@@ -128,8 +128,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-left: auto;
-  margin-right: 0.8rem;
+  margin: 0 auto;
 }
 
 .profile-pill {
@@ -291,39 +290,80 @@ body.theme-cyber .btn-email:hover {
   white-space: nowrap;
 }
 
-/* --- MODE TABS BAR (CENTERED) --- */
+/* --- MODE TABS BAR (BALANCED SEGMENTED CONTROL) --- */
 .mode-tabs-bar {
   background: var(--paper-bg);
   border-bottom: 2px solid var(--card-border);
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 1rem;
-  padding: 0.6rem 1rem;
+  padding: 0.5rem 1.5rem;
   width: 100%;
 }
 
-.mode-tab {
+.mode-tabs-container {
+  display: flex;
+  align-items: center;
   background: var(--bg-app);
-  border: 1px solid var(--card-border);
-  padding: 0.55rem 1.4rem;
+  padding: 0.3rem;
+  border-radius: 12px;
+  border: 1.5px solid var(--card-border);
+  max-width: 980px;
+  width: 100%;
+  gap: 0.4rem;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.mode-tab {
+  flex: 1;
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 0.6rem 1rem;
   border-radius: 8px;
   font-weight: 700;
   font-size: 0.95rem;
-  color: var(--text-ink);
+  color: var(--text-dark);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   text-align: center;
+  white-space: nowrap;
+}
+
+.mode-tab:hover:not(.active) {
+  background: rgba(21, 101, 192, 0.08);
+  color: var(--accent-blue);
 }
 
 .mode-tab.active {
   background: var(--accent-blue);
   color: #ffffff;
   border-color: var(--accent-blue);
-  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.35);
+  box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+}
+
+/* Cyber Dark Mode Segmented Tabs */
+body.theme-cyber .mode-tabs-container {
+  background: #0b1324;
+  border-color: #1e293b;
+}
+
+body.theme-cyber .mode-tab {
+  color: #94a3b8;
+}
+
+body.theme-cyber .mode-tab:hover:not(.active) {
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+}
+
+body.theme-cyber .mode-tab.active {
+  background: linear-gradient(135deg, #1565c0, #0284c7);
+  color: #ffffff;
+  border-color: #38bdf8;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.4);
 }
 
 
@@ -1048,16 +1088,16 @@ body.theme-cyber .btn-email:hover {
   /* Cyber tools bar wraps cleanly */
   .cyber-tools-bar { gap: 0.6rem; font-size: 0.72rem; padding: 0.25rem 0.6rem; }
 
-  /* Mode tabs become scrollable row */
+  /* Mode tabs become scrollable row on mobile */
   .mode-tabs-bar {
-    gap: 0.4rem;
     padding: 0.4rem 0.6rem;
+  }
+  .mode-tabs-container {
     overflow-x: auto;
     justify-content: flex-start;
     -webkit-overflow-scrolling: touch;
   }
-
-  .mode-tab { font-size: 0.8rem; padding: 0.4rem 0.8rem; white-space: nowrap; }
+  .mode-tab { font-size: 0.8rem; padding: 0.4rem 0.8rem; white-space: nowrap; flex: none; }
 
   /* Sidebar: hidden by default on mobile — slides in as drawer */
   .sidebar {
