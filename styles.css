@@ -263,6 +263,103 @@ body.theme-cyber .btn-email:hover {
 
 .btn-cyber { background: #1e1e1e; color: #4af626; border-color: #333; }
 .btn-pdf { background: var(--accent-red); color: #fff; border-color: var(--accent-red); }
+.btn-pwa { background: linear-gradient(135deg, #7c3aed, #4f46e5); color: #ffffff; border-color: #6d28d9; }
+.btn-pwa:hover { background: linear-gradient(135deg, #6d28d9, #4338ca); box-shadow: 0 0 12px rgba(124, 58, 237, 0.4); }
+.btn-voice { background: linear-gradient(135deg, #0284c7, #0d9488); color: #ffffff; border-color: #0369a1; }
+.btn-voice:hover { background: linear-gradient(135deg, #0369a1, #0f766e); box-shadow: 0 0 12px rgba(2, 132, 199, 0.4); }
+.btn-voice.speaking { animation: pulseVoice 1.2s infinite alternate; background: #ea580c; border-color: #c2410c; }
+
+@keyframes pulseVoice {
+  from { box-shadow: 0 0 4px #ea580c; }
+  to { box-shadow: 0 0 16px #f97316; transform: scale(1.04); }
+}
+
+/* --- MITRE ATT&CK MATRIX STYLES --- */
+.mitre-matrix-wrapper {
+  padding: 1.5rem;
+  background: var(--paper-bg);
+  border-radius: 14px;
+  border: 2px solid var(--card-border);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+}
+
+.mitre-matrix-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.mitre-matrix-header h2 {
+  font-size: 1.6rem;
+  color: var(--accent-blue);
+  font-family: var(--font-sans);
+  margin-bottom: 0.5rem;
+}
+
+.mitre-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.2rem;
+}
+
+.mitre-column {
+  background: var(--bg-app);
+  border-radius: 12px;
+  border: 1px solid var(--card-border);
+  padding: 1rem;
+}
+
+.mitre-tactic-title {
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--text-ink);
+  padding-bottom: 0.6rem;
+  margin-bottom: 0.8rem;
+  border-bottom: 2px solid var(--accent-blue);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.mitre-tech-card {
+  background: var(--paper-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  padding: 0.8rem;
+  margin-bottom: 0.7rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mitre-tech-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-blue);
+  box-shadow: 0 4px 12px rgba(21, 101, 192, 0.2);
+}
+
+.mitre-tech-id {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--accent-blue);
+  background: rgba(21, 101, 192, 0.1);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  display: inline-block;
+  margin-bottom: 0.3rem;
+}
+
+.mitre-tech-name {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: var(--text-dark);
+  margin-bottom: 0.3rem;
+}
+
+.mitre-tech-desc {
+  font-size: 0.76rem;
+  color: #64748b;
+  line-height: 1.35;
+}
 
 /* --- CYBER TOOL LOGOS BAR --- */
 .cyber-tools-bar {

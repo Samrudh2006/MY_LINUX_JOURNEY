@@ -8,6 +8,7 @@ let bookmarkedQAs = JSON.parse(localStorage.getItem("soc_bookmarked_qas") || "[]
 let currentFilter = "all";
 
 document.addEventListener("DOMContentLoaded", () => {
+  initPWA();
   initModeTabs();
   initSidebar();
   renderCurrentView();
@@ -70,10 +71,13 @@ function setupMobileNav() {
 function initModeTabs() {
   document.getElementById("tab-notebook").addEventListener("click", () => switchMode("notebook"));
   document.getElementById("tab-interview").addEventListener("click", () => switchMode("interview"));
+  const mitreTab = document.getElementById("tab-mitre");
+  if (mitreTab) mitreTab.addEventListener("click", () => switchMode("mitre"));
   document.getElementById("tab-cover").addEventListener("click", () => switchMode("cover"));
 }
 
 function switchMode(mode) {
+  stopSpeech();
   activeMode = mode;
   document.querySelectorAll(".mode-tab").forEach(tab => tab.classList.remove("active"));
 
@@ -89,6 +93,10 @@ function switchMode(mode) {
     document.getElementById("total-count-label").innerText = INTERVIEW_QUESTIONS.length;
     document.getElementById("page-number-input").max = INTERVIEW_QUESTIONS.length;
     document.getElementById("toolbar-controls").style.display = "flex";
+  } else if (mode === "mitre") {
+    const mitreTab = document.getElementById("tab-mitre");
+    if (mitreTab) mitreTab.classList.add("active");
+    document.getElementById("toolbar-controls").style.display = "none";
   } else if (mode === "cover") {
     document.getElementById("tab-cover").classList.add("active");
     document.getElementById("toolbar-controls").style.display = "none";
@@ -198,6 +206,8 @@ function renderCurrentView(direction = "next") {
       updateBookmarkButtonState(currentQAId);
       container.innerHTML = generateInterviewQAHTML(qa);
     }
+  } else if (activeMode === "mitre") {
+    container.innerHTML = generateMitreMatrixHTML();
   } else if (activeMode === "cover") {
     container.innerHTML = generateBrandCoverHTML();
   }
@@ -422,6 +432,12 @@ function setupEventListeners() {
   const playBtn = document.getElementById("btn-play-slideshow");
   if (playBtn) {
     playBtn.addEventListener("click", toggleAutoPlay);
+  }
+
+  // Voice Speech Synthesis Listener
+  const listenBtn = document.getElementById("btn-listen-speech");
+  if (listenBtn) {
+    listenBtn.addEventListener("click", toggleSpeech);
   }
 
   document.getElementById("page-number-input").addEventListener("change", (e) => {
@@ -661,4 +677,230 @@ function handleTerminalCommand(cmdStr) {
 
   outputDiv.appendChild(res);
   document.getElementById("terminal-body").scrollTop = document.getElementById("terminal-body").scrollHeight;
+}
+
+// --- PWA INSTALL & SERVICE WORKER CONTROLLER ---
+let deferredPwaPrompt = null;
+
+function initPWA() {
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').then((reg) => {
+        console.log("PWA ServiceWorker registered:", reg.scope);
+      }).catch((err) => {
+        console.warn("PWA ServiceWorker error:", err);
+      });
+    });
+  }
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPwaPrompt = e;
+    const pwaBtn = document.getElementById("btn-pwa-install");
+    if (pwaBtn) pwaBtn.style.display = "inline-flex";
+  });
+
+  const pwaBtn = document.getElementById("btn-pwa-install");
+  if (pwaBtn) {
+    pwaBtn.addEventListener('click', () => {
+      if (deferredPwaPrompt) {
+        deferredPwaPrompt.prompt();
+        deferredPwaPrompt.userChoice.then(() => {
+          deferredPwaPrompt = null;
+          pwaBtn.style.display = "none";
+        });
+      }
+    });
+  }
+}
+
+// --- TEXT-TO-SPEECH (VOICE NOTES) CONTROLLER ---
+let isSpeaking = false;
+let currentSpeechUtterance = null;
+
+function toggleSpeech() {
+  if (!('speechSynthesis' in window)) {
+    alert("Text-to-Speech is not supported in this browser.");
+    return;
+  }
+
+  const voiceBtn = document.getElementById("btn-listen-speech");
+  const voiceBtnText = document.getElementById("voice-btn-text");
+
+  if (isSpeaking) {
+    window.speechSynthesis.cancel();
+    isSpeaking = false;
+    if (voiceBtn) {
+      voiceBtn.classList.remove("speaking");
+      voiceBtnText.innerText = "Listen Voice";
+    }
+  } else {
+    let textToSpeak = "";
+    if (activeMode === "notebook") {
+      const page = NOTEBOOK_PAGES.find(p => p.id === currentPageId);
+      if (page) {
+        const cleanExplanation = page.simpleExplanation ? page.simpleExplanation.replace(/<[^>]*>?/gm, '') : '';
+        textToSpeak = `Page ${page.id}. ${page.concept}. Command: ${page.command}. ${cleanExplanation}`;
+      }
+    } else if (activeMode === "interview") {
+      const qa = INTERVIEW_QUESTIONS.find(q => q.id === currentQAId);
+      if (qa) {
+        const cleanAnswer = qa.idealAnswer ? qa.idealAnswer.replace(/<[^>]*>?/gm, '') : '';
+        textToSpeak = `Question ${qa.id}. ${qa.question}. Answer: ${cleanAnswer}`;
+      }
+    }
+
+    if (!textToSpeak) return;
+
+    window.speechSynthesis.cancel();
+    currentSpeechUtterance = new SpeechSynthesisUtterance(textToSpeak);
+    currentSpeechUtterance.rate = 0.95;
+    currentSpeechUtterance.pitch = 1.0;
+
+    currentSpeechUtterance.onstart = () => {
+      isSpeaking = true;
+      if (voiceBtn) {
+        voiceBtn.classList.add("speaking");
+        voiceBtnText.innerText = "Pause Voice";
+      }
+    };
+
+    currentSpeechUtterance.onend = () => {
+      isSpeaking = false;
+      if (voiceBtn) {
+        voiceBtn.classList.remove("speaking");
+        voiceBtnText.innerText = "Listen Voice";
+      }
+    };
+
+    currentSpeechUtterance.onerror = () => {
+      isSpeaking = false;
+      if (voiceBtn) {
+        voiceBtn.classList.remove("speaking");
+        voiceBtnText.innerText = "Listen Voice";
+      }
+    };
+
+    window.speechSynthesis.speak(currentSpeechUtterance);
+  }
+}
+
+function stopSpeech() {
+  if ('speechSynthesis' in window && isSpeaking) {
+    window.speechSynthesis.cancel();
+    isSpeaking = false;
+    const voiceBtn = document.getElementById("btn-listen-speech");
+    const voiceBtnText = document.getElementById("voice-btn-text");
+    if (voiceBtn) {
+      voiceBtn.classList.remove("speaking");
+      voiceBtnText.innerText = "Listen Voice";
+    }
+  }
+}
+
+// --- JUMP TO PAGE HELPER ---
+function jumpToPage(pageId) {
+  switchMode("notebook");
+  currentPageId = pageId;
+  renderCurrentView();
+  updateActiveSidebarItem();
+}
+
+// --- MITRE ATT&CK INTERACTIVE MATRIX DATA & RENDERER ---
+const MITRE_ATTACK_MATRIX = [
+  {
+    tactic: "Initial Access",
+    icon: "🚪",
+    techniques: [
+      { id: "T1190", name: "Exploit Public Application", desc: "Exploiting web servers or public services.", pageId: 136 },
+      { id: "T1078", name: "Valid Accounts", desc: "Using stolen credentials or default SSH logins.", pageId: 86 }
+    ]
+  },
+  {
+    tactic: "Execution",
+    icon: "⚙️",
+    techniques: [
+      { id: "T1059.004", name: "Unix Shell Execution", desc: "Executing malicious commands via Bash/sh.", pageId: 166 },
+      { id: "T1053.003", name: "Cron Job Persistence", desc: "Scheduling persistence via crontab.", pageId: 111 }
+    ]
+  },
+  {
+    tactic: "Persistence",
+    icon: "📌",
+    techniques: [
+      { id: "T1543.002", name: "systemd Service Backdoor", desc: "Creating malicious systemd unit files.", pageId: 115 },
+      { id: "T1546.004", name: ".bashrc Profile Hijack", desc: "Adding shell aliases or startup scripts.", pageId: 170 }
+    ]
+  },
+  {
+    tactic: "Privilege Escalation",
+    icon: "🔓",
+    techniques: [
+      { id: "T1548.001", name: "SUID Executable Abuse", desc: "Abusing GTFOBins SUID binary permissions.", pageId: 95 },
+      { id: "T1548.002", name: "Sudoers Misconfiguration", desc: "NOPASSWD sudo privilege escalation.", pageId: 100 }
+    ]
+  },
+  {
+    tactic: "Defense Evasion",
+    icon: "🥷",
+    techniques: [
+      { id: "T1070.002", name: "Clear Linux System Logs", desc: "Wiping /var/log/auth.log or .bash_history.", pageId: 196 },
+      { id: "T1562.001", name: "Disable Firewall", desc: "Stopping ufw, iptables, or firewalld.", pageId: 140 }
+    ]
+  },
+  {
+    tactic: "Credential Access",
+    icon: "🔑",
+    techniques: [
+      { id: "T1003.008", name: "/etc/shadow Hash Dumping", desc: "Reading password hashes from shadow file.", pageId: 90 },
+      { id: "T1555", name: "Credentials in Files", desc: "Searching for cleartext API keys or passphrases.", pageId: 168 }
+    ]
+  },
+  {
+    tactic: "Discovery",
+    icon: "🔎",
+    techniques: [
+      { id: "T1083", name: "File & Directory Discovery", desc: "Enumerating system paths using find/ls.", pageId: 61 },
+      { id: "T1057", name: "Process Discovery", desc: "Listing running processes via ps aux / top.", pageId: 112 },
+      { id: "T1049", name: "Network Connections", desc: "Analyzing listening ports via ss -tulpn.", pageId: 142 }
+    ]
+  },
+  {
+    tactic: "Exfiltration",
+    icon: "📡",
+    techniques: [
+      { id: "T1048", name: "Exfiltration Over Protocol", desc: "Transferring sensitive data over DNS/HTTP.", pageId: 150 }
+    ]
+  }
+];
+
+function generateMitreMatrixHTML() {
+  return `
+    <article class="mitre-matrix-wrapper">
+      <div class="mitre-matrix-header">
+        <h2>🗺️ MITRE ATT&CK Interactive Linux SOC Matrix</h2>
+        <p style="color:var(--text-dark); font-size:0.92rem; margin-top:0.4rem;">
+          Click any MITRE technique card below to jump directly to the corresponding 365-Page Handbook page for triage & threat hunting!
+        </p>
+      </div>
+
+      <div class="mitre-grid">
+        ${MITRE_ATTACK_MATRIX.map(col => `
+          <div class="mitre-column">
+            <div class="mitre-tactic-title">${col.icon} ${col.tactic}</div>
+            ${col.techniques.map(tech => `
+              <div class="mitre-tech-card" onclick="jumpToPage(${tech.pageId})">
+                <span class="mitre-tech-id">${tech.id}</span>
+                <div class="mitre-tech-name">${tech.name}</div>
+                <div class="mitre-tech-desc">${tech.desc}</div>
+                <div style="font-size:0.75rem; color:var(--accent-blue); margin-top:0.5rem; font-weight:700;">
+                  ➡️ Open Page P.${tech.pageId}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `).join('')}
+      </div>
+    </article>
+  `;
 }

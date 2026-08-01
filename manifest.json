@@ -1,0 +1,24 @@
+{
+  "name": "SAMRUDH SOC ANALYST - 365-Page Linux & SOC Master Platform",
+  "short_name": "SAMRUDH SOC",
+  "description": "365-Page Interactive Linux & SOC Analyst Master Learning Platform in Telugu-English.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f172a",
+  "theme_color": "#1565c0",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

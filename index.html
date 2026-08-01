@@ -12,6 +12,7 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="shortcut icon" href="favicon.svg">
   <link rel="apple-touch-icon" href="logo.png">
+  <link rel="manifest" href="manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Fira+Code:wght@400;600&family=Kalam:wght@400;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -49,6 +50,9 @@
       </a>
     </div>
     <div class="header-right">
+      <button id="btn-pwa-install" class="btn-action btn-pwa" style="display:none;" title="Install App to Desktop / Mobile">
+        <span class="icon">📲</span><span> Install App</span>
+      </button>
       <button id="btn-theme-toggle" class="btn-action" title="Toggle Theme">
         <span class="icon">🎨</span><span> Switch Theme</span>
       </button>
@@ -81,6 +85,7 @@
     <div class="mode-tabs-container">
       <button id="tab-notebook" class="mode-tab active">📖 365-Page Linux SOC Notebook</button>
       <button id="tab-interview" class="mode-tab">🎯 200+ Interview Q&amp;A</button>
+      <button id="tab-mitre" class="mode-tab">🗺️ MITRE ATT&amp;CK Matrix</button>
       <button id="tab-cover" class="mode-tab">🏆 Brand Cover</button>
     </div>
 
@@ -137,6 +142,9 @@
           <button id="btn-next-page" class="nav-arrow">Next ▶</button>
         </div>
         <div class="quick-tags">
+          <button id="btn-listen-speech" class="btn-action btn-voice" title="Listen to Page Explanation (Voice Notes)">
+            <span class="icon">🔊</span> <span id="voice-btn-text">Listen Voice</span>
+          </button>
           <button id="btn-play-slideshow" class="btn-action btn-play" title="Auto Play Book Mode">
             <span class="icon">▶</span> <span id="play-btn-text">Auto Play (5s)</span>
           </button>
