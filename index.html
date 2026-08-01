@@ -67,19 +67,36 @@
 
   <!-- NAVIGATION MODE TABS & CYBER LOGO BADGES BAR -->
   <div class="mode-tabs-bar no-print">
-    <div class="header-badge-group badge-group-left">
-      <span class="cyber-chip chip-linux" title="Linux Security Hardening">
-        <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M12.003 2c-2.21 0-4.004 1.794-4.004 4.004 0 .426.074.836.203 1.222C6.184 7.82 4.5 9.722 4.5 12c0 1.25.484 2.39 1.281 3.25-.438 1.094-.781 2.312-.781 3.75 0 1.656 1.344 3 3 3 1.14 0 2.125-.64 2.625-1.578.438.203.922.328 1.378.328s.94-.125 1.378-.328c.5.938 1.485 1.578 2.625 1.578 1.656 0 3-1.344 3-3 0-1.438-.343-2.656-.781-3.75.797-.86 1.281-2 1.281-3.25 0-2.278-1.684-4.18-3.702-4.774.129-.386.203-.796.203-1.222 0-2.21-1.794-4.004-4.004-4.004z"/></svg>
-        <span>Linux Kernel</span>
-      </span>
-      <span class="cyber-chip chip-blue" title="Blue Team Security Operations">
-        <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8s0 0 0 0z"/></svg>
-        <span>Blue Team</span>
-      </span>
-      <span class="cyber-chip chip-siem" title="SIEM Log Analysis & Monitoring">
-        <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-        <span>SIEM Logs</span>
-      </span>
+    <div class="mode-tabs-badges-row">
+      <div class="header-badge-group badge-group-left">
+        <span class="cyber-chip chip-linux" title="Linux Security Hardening">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M12.003 2c-2.21 0-4.004 1.794-4.004 4.004 0 .426.074.836.203 1.222C6.184 7.82 4.5 9.722 4.5 12c0 1.25.484 2.39 1.281 3.25-.438 1.094-.781 2.312-.781 3.75 0 1.656 1.344 3 3 3 1.14 0 2.125-.64 2.625-1.578.438.203.922.328 1.378.328s.94-.125 1.378-.328c.5.938 1.485 1.578 2.625 1.578 1.656 0 3-1.344 3-3 0-1.438-.343-2.656-.781-3.75.797-.86 1.281-2 1.281-3.25 0-2.278-1.684-4.18-3.702-4.774.129-.386.203-.796.203-1.222 0-2.21-1.794-4.004-4.004-4.004z"/></svg>
+          <span>Linux Kernel</span>
+        </span>
+        <span class="cyber-chip chip-blue" title="Blue Team Security Operations">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8s0 0 0 0z"/></svg>
+          <span>Blue Team</span>
+        </span>
+        <span class="cyber-chip chip-siem" title="SIEM Log Analysis & Monitoring">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+          <span>SIEM Logs</span>
+        </span>
+      </div>
+
+      <div class="header-badge-group badge-group-right">
+        <span class="cyber-chip chip-threat" title="Threat Hunting & Incident Response">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+          <span>Threat Hunt</span>
+        </span>
+        <span class="cyber-chip chip-mitre" title="MITRE ATT&CK Framework">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          <span>MITRE ATT&amp;CK</span>
+        </span>
+        <span class="cyber-chip chip-forensics" title="Digital Forensics">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+          <span>DFIR</span>
+        </span>
+      </div>
     </div>
 
     <div class="mode-tabs-container">
@@ -91,21 +108,6 @@
       <button id="tab-cheatsheet" class="mode-tab">📑 Cheat Sheet</button>
       <button id="tab-labs" class="mode-tab">🎯 Incident Labs</button>
       <button id="tab-cover" class="mode-tab">🏆 Brand Cover</button>
-    </div>
-
-    <div class="header-badge-group badge-group-right">
-      <span class="cyber-chip chip-threat" title="Threat Hunting & Incident Response">
-        <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-        <span>Threat Hunt</span>
-      </span>
-      <span class="cyber-chip chip-mitre" title="MITRE ATT&CK Framework">
-        <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-        <span>MITRE ATT&amp;CK</span>
-      </span>
-      <span class="cyber-chip chip-forensics" title="Digital Forensics">
-        <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-        <span>DFIR</span>
-      </span>
     </div>
   </div>
 
