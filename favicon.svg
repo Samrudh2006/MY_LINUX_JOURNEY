@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#020617" />
+    </linearGradient>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="50%" stop-color="#1565c0" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+    <linearGradient id="glowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#4af626" />
+      <stop offset="100%" stop-color="#38bdf8" />
+    </linearGradient>
+  </defs>
+
+  <!-- Outer Dark Background Circle with Cyber Shield Rim -->
+  <circle cx="256" cy="256" r="240" fill="url(#bgGrad)" stroke="url(#shieldGrad)" stroke-width="20" />
+  <circle cx="256" cy="256" r="210" fill="none" stroke="#1e293b" stroke-width="8" stroke-dasharray="14 10" />
+
+  <!-- SOC Shield Silhouette -->
+  <path d="M256 75 L390 125 V250 C390 345 328 425 256 450 C184 425 122 250 122 125 Z" fill="#090d16" stroke="url(#shieldGrad)" stroke-width="16" />
+
+  <!-- Terminal Prompt Chevron '>' -->
+  <path d="M175 190 L245 256 L175 322" fill="none" stroke="url(#glowGrad)" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" />
+
+  <!-- Terminal Cursor '_' -->
+  <line x1="265" y1="322" x2="335" y2="322" stroke="#4af626" stroke-width="28" stroke-linecap="round" />
+
+  <!-- Tech Dots -->
+  <circle cx="256" cy="115" r="10" fill="#38bdf8" />
+  <circle cx="340" cy="142" r="7" fill="#4af626" />
+  <circle cx="172" cy="142" r="7" fill="#38bdf8" />
+</svg>
