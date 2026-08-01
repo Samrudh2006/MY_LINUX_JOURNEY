@@ -290,15 +290,76 @@ body.theme-cyber .btn-email:hover {
   white-space: nowrap;
 }
 
-/* --- MODE TABS BAR (BALANCED SEGMENTED CONTROL) --- */
+/* --- MODE TABS BAR (BALANCED SEGMENTED CONTROL & CYBER BADGES) --- */
 .mode-tabs-bar {
   background: var(--paper-bg);
   border-bottom: 2px solid var(--card-border);
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
+  gap: 1rem;
   padding: 0.5rem 1.5rem;
   width: 100%;
+}
+
+.header-badge-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.cyber-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  border: 1px solid var(--card-border);
+  background: var(--paper-bg);
+  color: var(--text-dark);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  cursor: default;
+}
+
+.cyber-chip:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+}
+
+.chip-linux {
+  border-color: #eab308;
+  color: #854d0e;
+  background: rgba(254, 240, 138, 0.4);
+}
+.chip-blue {
+  border-color: #3b82f6;
+  color: #1e40af;
+  background: rgba(219, 234, 254, 0.4);
+}
+.chip-siem {
+  border-color: #10b981;
+  color: #065f46;
+  background: rgba(209, 250, 229, 0.4);
+}
+.chip-threat {
+  border-color: #ef4444;
+  color: #991b1b;
+  background: rgba(254, 226, 226, 0.4);
+}
+.chip-mitre {
+  border-color: #8b5cf6;
+  color: #5b21b6;
+  background: rgba(237, 233, 254, 0.4);
+}
+.chip-forensics {
+  border-color: #06b6d4;
+  color: #155e75;
+  background: rgba(207, 250, 254, 0.4);
 }
 
 .mode-tabs-container {
@@ -364,6 +425,44 @@ body.theme-cyber .mode-tab.active {
   color: #ffffff;
   border-color: #38bdf8;
   box-shadow: 0 0 14px rgba(56, 189, 248, 0.4);
+}
+
+/* Cyber Dark Theme Badge Chips */
+body.theme-cyber .chip-linux {
+  border-color: #facc15;
+  color: #fef08a;
+  background: rgba(234, 179, 8, 0.15);
+  box-shadow: 0 0 8px rgba(250, 204, 21, 0.2);
+}
+body.theme-cyber .chip-blue {
+  border-color: #38bdf8;
+  color: #e0f2fe;
+  background: rgba(56, 189, 248, 0.15);
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.2);
+}
+body.theme-cyber .chip-siem {
+  border-color: #4ade80;
+  color: #f0fdf4;
+  background: rgba(74, 222, 128, 0.15);
+  box-shadow: 0 0 8px rgba(74, 222, 128, 0.2);
+}
+body.theme-cyber .chip-threat {
+  border-color: #f87171;
+  color: #fef2f2;
+  background: rgba(248, 113, 113, 0.15);
+  box-shadow: 0 0 8px rgba(248, 113, 113, 0.2);
+}
+body.theme-cyber .chip-mitre {
+  border-color: #c084fc;
+  color: #faf5ff;
+  background: rgba(192, 132, 252, 0.15);
+  box-shadow: 0 0 8px rgba(192, 132, 252, 0.2);
+}
+body.theme-cyber .chip-forensics {
+  border-color: #22d3ee;
+  color: #ecfeff;
+  background: rgba(34, 211, 238, 0.15);
+  box-shadow: 0 0 8px rgba(34, 211, 238, 0.2);
 }
 
 
@@ -1040,6 +1139,12 @@ body.theme-cyber .mode-tab.active {
    📱 MOBILE RESPONSIVE STYLES
    Breakpoints: ≤1024px (tablet), ≤768px (mobile), ≤480px (phone)
    ============================================================ */
+
+/* ── Large Desktop & Tablet (≤1200px) ── */
+@media (max-width: 1200px) {
+  .header-badge-group { display: none; }
+  .mode-tabs-bar { justify-content: center; }
+}
 
 /* ── Tablet (≤1024px) ── */
 @media (max-width: 1024px) {
