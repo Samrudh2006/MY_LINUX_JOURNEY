@@ -687,6 +687,8 @@ function prepareFullPrintContainer() {
 function handleTerminalCommand(cmdStr) {
   const outputDiv = document.getElementById("terminal-output");
   const trimmed = cmdStr.trim();
+  if (trimmed === "") return;
+
   const line = document.createElement("div");
   line.className = "term-cmd-line";
   line.innerHTML = `<span class="term-prompt">kali@soc-workstation:~$</span> ${escapeHTML(trimmed)}`;
@@ -696,16 +698,122 @@ function handleTerminalCommand(cmdStr) {
   res.className = "term-response";
   const lower = trimmed.toLowerCase();
 
-  if (lower === "pwd") res.innerText = "/home/analyst";
-  else if (lower === "whoami") res.innerText = "kali";
-  else if (lower === "id") res.innerText = "uid=1000(kali) gid=1000(kali) groups=1000(kali),27(sudo)";
-  else if (lower.startsWith("ls")) res.innerText = "total 32\n-rw-r--r-- 1 kali kali 850 Aug 1 auth.log\n-rwxr-xr-x 1 kali kali 1200 Aug 1 triage.sh";
-  else if (lower.startsWith("ps")) res.innerText = "USER PID %CPU %MEM COMMAND\nroot 1 0.0 0.1 /sbin/init\nwww-data 8812 99.0 1.2 python3 /tmp/.miner.py";
-  else if (lower.startsWith("ss")) res.innerText = "Netid State Recv-Q Send-Q Local:Port Peer:Port Process\ntcp LISTEN 0 128 0.0.0.0:4444 users:((\"nc\",pid=4512))";
-  else if (lower === "clear") { outputDiv.innerHTML = ""; return; }
-  else if (lower === "help") res.innerText = "Supported demo commands: pwd, whoami, id, ls, ps aux, ss -tulpn, clear, help";
-  else if (trimmed === "") return;
-  else res.innerText = `bash: ${trimmed}: command executed in SAMRUDH SOC demo environment.`;
+  if (lower === "clear") {
+    outputDiv.innerHTML = "";
+    return;
+  }
+
+  if (lower === "pwd") {
+    res.innerText = "/home/analyst";
+  } else if (lower === "whoami") {
+    res.innerText = "kali";
+  } else if (lower === "id") {
+    res.innerText = "uid=1000(kali) gid=1000(kali) groups=1000(kali),27(sudo),100(users)";
+  } else if (lower.startsWith("uname")) {
+    res.innerText = "Linux soc-workstation 6.1.0-18-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.76-1 x86_64 GNU/Linux";
+  } else if (lower === "uptime") {
+    res.innerText = " 17:49:12 up 4 days, 12:35, 2 users, load average: 0.15, 0.08, 0.05";
+  } else if (lower.startsWith("df")) {
+    res.innerText = "Filesystem     1K-blocks     Used Available Use% Mounted on\n/dev/sda1       51480576 18942000  29900000  39% /\ntmpfs            8172000        0   8172000   0% /dev/shm\n/dev/sda2        1024000   140000    884000  14% /boot";
+  } else if (lower.startsWith("free")) {
+    res.innerText = "               total        used        free      shared  buff/cache   available\nMem:        16344000     4250000    11094000      120000     1000000    11974000\nSwap:        2097148           0     2097148";
+  } else if (lower.startsWith("ls")) {
+    if (lower.includes("-l")) {
+      res.innerText = "total 48\n-rw-r--r-- 1 root root  1850 Aug 1 14:22 auth.log\n-rw-r--r-- 1 root root  4200 Aug 1 15:10 syslog\n-rwxr-xr-x 1 kali kali  1200 Aug 1 11:30 triage.sh\n-rw-r--r-- 1 kali kali   850 Aug 1 09:15 README.md\n-rw------- 1 root shadow 1050 Aug 1 15:10 shadow\n-rw-r--r-- 1 kali kali  3420 Aug 1 10:00 .bashrc";
+    } else {
+      res.innerText = "auth.log  syslog  triage.sh  README.md  shadow  .bashrc";
+    }
+  } else if (lower.startsWith("cat")) {
+    if (lower.includes("auth.log")) {
+      res.innerText = "Aug 01 14:22:01 kali sshd[4512]: Failed password for root from 192.168.1.105 port 54122 ssh2\nAug 01 14:22:03 kali sshd[4512]: Failed password for root from 192.168.1.105 port 54124 ssh2\nAug 01 14:22:05 kali sshd[4512]: Failed password for invalid user admin from 192.168.1.105 port 54128 ssh2\nAug 01 14:22:09 kali sshd[4512]: Accepted password for root from 192.168.1.105 port 54132 ssh2";
+    } else if (lower.includes("passwd")) {
+      res.innerText = "root:x:0:0:root:/root:/bin/bash\ndaemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin\nwww-data:x:33:33:www-data:/var/www:/usr/sbin/nologin\nkali:x:1000:1000:Kali Analyst,,,:/home/kali:/bin/bash";
+    } else if (lower.includes("shadow")) {
+      res.innerText = "root:$6$vL9xQ2$y8H1z9mK0p...:19500:0:99999:7:::\nkali:$6$k3F9zL$mP90aQ...:19500:0:99999:7:::";
+    } else if (lower.includes(".bashrc")) {
+      res.innerText = "# ~/.bashrc\nexport HISTTIMEFORMAT='%F %T '\nalias ll='ls -la'\nalias grep='grep --color=auto'";
+    } else {
+      res.innerText = `cat: ${trimmed.split(" ")[1] || 'file'}: File content processed in SAMRUDH SOC sandbox environment.`;
+    }
+  } else if (lower.startsWith("grep")) {
+    res.innerText = "Aug 01 14:22:01 kali sshd[4512]: Failed password for root from 192.168.1.105 port 54122 ssh2\nAug 01 14:22:03 kali sshd[4512]: Failed password for root from 192.168.1.105 port 54124 ssh2\nAug 01 14:22:05 kali sshd[4512]: Failed password for invalid user admin from 192.168.1.105 port 54128 ssh2";
+  } else if (lower.startsWith("ps")) {
+    res.innerText = "USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nroot           1  0.0  0.1  22580  9412 ?        Ss   08:00   0:02 /sbin/init\nroot         900  0.0  0.1  18420  5200 ?        Ss   08:00   0:00 /usr/sbin/sshd -D\nwww-data    8812 99.0  1.2  85400 45200 ?        R    14:10  45:12 python3 /tmp/.miner.py\nkali        9812  0.0  0.2  28900 12400 pts/0    Ss+  14:20   0:01 bash";
+  } else if (lower.startsWith("ss") || lower.startsWith("netstat")) {
+    res.innerText = "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port Process\ntcp   LISTEN 0      128          0.0.0.0:22         0.0.0.0:*     users:((\"sshd\",pid=900))\ntcp   LISTEN 0      128          0.0.0.0:80         0.0.0.0:*     users:((\"apache2\",pid=1200))\ntcp   ESTAB  0      0     192.168.1.105:4512  10.0.0.45:4444     users:((\"nc\",pid=14512))";
+  } else if (lower.startsWith("lsof")) {
+    res.innerText = "COMMAND   PID     USER   FD   TYPE DEVICE SIZE/OFF NODE NAME\npython3  8812 www-data  cwd    DIR    8,1     4096 1425 /tmp\nnc      14512 www-data    3u  IPv4  45120      0t0  TCP 192.168.1.105:4512->10.0.0.45:4444 (ESTABLISHED)";
+  } else if (lower.startsWith("find")) {
+    res.innerText = "/usr/bin/find\n/usr/bin/pkexec\n/usr/bin/sudo\n/usr/bin/chage\n/usr/bin/gpasswd\n/usr/bin/newgrp";
+  } else if (lower === "history") {
+    res.innerText = "  1  2026-08-01 14:00:01 whoami\n  2  2026-08-01 14:02:15 ps aux --sort=-%cpu\n  3  2026-08-01 14:05:22 cat /var/log/auth.log | grep Failed\n  4  2026-08-01 14:10:05 ss -tulpn\n  5  2026-08-01 14:15:00 kill -9 8812";
+  } else if (lower === "w" || lower === "who") {
+    res.innerText = " 17:49:12 up 4 days, 12:35, 2 users, load average: 0.15, 0.08, 0.05\nUSER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT\nkali     pts/0    192.168.1.100    14:20    0.00s  0.12s  0.02s w\nroot     pts/1    192.168.1.105    15:10    5:22m  0.05s  0.05s -bash";
+  } else if (lower.startsWith("last")) {
+    res.innerText = "kali     pts/0        192.168.1.100    Sat Aug  1 14:20   still logged in\nroot     pts/1        192.168.1.105    Sat Aug  1 15:10 - 15:45  (00:35)\nreboot   system boot  6.1.0-18-amd64   Tue Jul 28 05:14   still running";
+  } else if (lower.startsWith("ifconfig") || lower.startsWith("ip a") || lower.startsWith("ip addr")) {
+    res.innerText = "eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500\n        inet 192.168.1.105  netmask 255.255.255.0  broadcast 192.168.1.255\n        inet6 fe80::a00:27ff:fe4e:66a1  prefixlen 64  scopeid 0x20<link>\n        ether 08:00:27:4e:66:a1  txqueuelen 1000  (Ethernet)\n        RX packets 145120  bytes 98501200 (98.5 MB)\n        TX packets 85400  bytes 12405000 (12.4 MB)";
+  } else if (lower.startsWith("kill")) {
+    const parts = trimmed.split(" ");
+    const pid = parts[parts.length - 1];
+    res.innerText = `[+] Process ${pid} terminated successfully by SIGKILL signal (15/9).`;
+  } else if (lower.startsWith("sudo")) {
+    res.innerText = `[sudo] password for kali: ********\n[+] Executed elevated root command: ${escapeHTML(trimmed.replace(/^sudo\s+/, ''))}`;
+  } else if (lower.startsWith("chmod")) {
+    res.innerText = `[+] Updated Linux file permissions: ${escapeHTML(trimmed)}`;
+  } else if (lower.startsWith("chown")) {
+    res.innerText = `[+] Updated file ownership: ${escapeHTML(trimmed)}`;
+  } else if (lower.startsWith("systemctl")) {
+    res.innerText = "● ssh.service - OpenBSD Secure Shell server\n     Loaded: loaded (/lib/systemd/system/ssh.service; enabled; vendor preset: enabled)\n     Active: active (running) since Tue 2026-07-28 05:14:22 UTC; 4 days ago\n   Main PID: 900 (sshd)";
+  } else if (lower.startsWith("crontab")) {
+    res.innerText = "# Edit this file to introduce tasks to be run by cron.\n*/5 * * * * /usr/local/bin/backup.sh >/dev/null 2>&1\n0 0 * * * /usr/bin/certbot renew --quiet";
+  } else if (lower.startsWith("echo")) {
+    res.innerText = trimmed.replace(/^echo\s+/i, '').replace(/['"]/g, '');
+  } else if (lower === "env" || lower === "export") {
+    res.innerText = "USER=kali\nSHELL=/bin/bash\nHOME=/home/kali\nHISTTIMEFORMAT=%F %T \nPATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\nTERM=xterm-256color";
+  } else if (lower.startsWith("nmap")) {
+    res.innerText = "Starting Nmap 7.94 ( https://nmap.org )\nNmap scan report for 192.168.1.105\nHost is up (0.00012s latency).\nNot shown: 997 closed tcp ports\nPORT     STATE SERVICE\n22/tcp   open  ssh\n80/tcp   open  http\n4444/tcp open  krb524\n\nNmap done: 1 IP address (1 host up) scanned in 1.42 seconds";
+  } else if (lower.startsWith("dig")) {
+    res.innerText = ";; ANSWER SECTION:\nexfil.malicious-domain.com. 300 IN A 198.51.100.45\n\n;; Query time: 14 msec\n;; SERVER: 8.8.8.8#53(8.8.8.8)";
+  } else if (lower.startsWith("nslookup")) {
+    res.innerText = "Server:         8.8.8.8\nAddress:        8.8.8.8#53\n\nName:   soc-workstation.local\nAddress: 192.168.1.105";
+  } else if (lower.startsWith("curl") || lower.startsWith("wget")) {
+    res.innerText = "HTTP/1.1 200 OK\nDate: Sat, 01 Aug 2026 17:49:12 GMT\nServer: Apache/2.4.56 (Debian)\nContent-Type: text/html; charset=UTF-8\n\n[+] Payload downloaded to /tmp/stage1.sh";
+  } else if (lower.startsWith("nc ") || lower.startsWith("netcat")) {
+    res.innerText = "Connection to 10.0.0.45 4444 port [tcp/*] succeeded!";
+  } else if (lower.startsWith("tcpdump")) {
+    res.innerText = "tcpdump: listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes\n17:49:12.105 IP 192.168.1.105.54122 > 198.51.100.45.4444: Flags [P.], seq 1:45, ack 1, win 502\n17:49:12.110 IP 198.51.100.45.4444 > 192.168.1.105.54122: Flags [.], ack 45, win 501";
+  } else if (lower.startsWith("iptables") || lower.startsWith("ufw")) {
+    res.innerText = "Status: active\nLogging: on (low)\nDefault: deny (incoming), allow (outgoing), disabled (routed)\n\nTo                         Action      From\n--                         ------      ----\n22/tcp                     ALLOW IN    Anywhere\n80/tcp                     ALLOW IN    Anywhere";
+  } else if (lower.startsWith("sha256sum") || lower.startsWith("md5sum")) {
+    res.innerText = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  /tmp/.miner.py";
+  } else if (lower.startsWith("base64")) {
+    res.innerText = "aW1wb3J0IHNvY2tldCxzdWJwcm9jZXNzLG9zOy... (Decoded payload preview)";
+  } else if (lower.startsWith("top") || lower.startsWith("htop")) {
+    res.innerText = "top - 17:49:12 up 4 days, 12:35, 2 users, load average: 0.15, 0.08, 0.05\nTasks: 142 total,   2 running, 140 sleeping,   0 stopped,   0 zombie\n%Cpu(s): 99.2 us,  0.8 sy,  0.0 ni,  0.0 id,  0.0 wa,  0.0 hi,  0.0 si\nMiB Mem :  15961.0 total,  10834.0 free,   4150.0 used,    977.0 buff/cache\n\n  PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND\n 8812 www-data  20   0   85400  45200   2400 R  99.0   0.3  45:12.10 python3";
+  } else if (lower.startsWith("head") || lower.startsWith("tail")) {
+    res.innerText = "Aug 01 14:22:01 kali sshd[4512]: Failed password for root from 192.168.1.105 port 54122 ssh2\nAug 01 14:22:03 kali sshd[4512]: Failed password for root from 192.168.1.105 port 54124 ssh2";
+  } else if (lower.startsWith("wc")) {
+    res.innerText = "   452   4520  32400 auth.log";
+  } else if (lower.startsWith("sort") || lower.startsWith("uniq") || lower.startsWith("awk") || lower.startsWith("sed")) {
+    res.innerText = "   42  192.168.1.105\n   18  198.51.100.45\n    5  10.0.0.45";
+  } else if (lower.startsWith("dmesg") || lower.startsWith("journalctl")) {
+    res.innerText = "[    0.000000] Linux version 6.1.0-18-amd64 (Debian 6.1.76-1)\n[    4.512000] eth0: Link is Up - 1Gbps/Full\n[ 4512.981000] pkexec[9812]: SUID binary executed by uid 1000";
+  } else if (lower.startsWith("lsblk") || lower.startsWith("fdisk")) {
+    res.innerText = "NAME   MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS\nsda      8:0    0    50G  0 disk \n├─sda1   8:1    0    49G  0 part /\n└─sda2   8:2    0     1G  0 part /boot";
+  } else if (lower.startsWith("auditctl") || lower.startsWith("ausearch")) {
+    res.innerText = "type=SYSCALL msg=audit(1785587400.105:42): arch=c000003e syscall=59 success=yes exit=0 a0=55a120 a1=55a180 pid=9812 exe=\"/usr/bin/pkexec\" key=\"suid_exec\"";
+  } else if (lower.startsWith("touch") || lower.startsWith("mkdir") || lower.startsWith("rm") || lower.startsWith("cp") || lower.startsWith("mv")) {
+    res.innerText = `[+] File system operation '${trimmed.split(' ')[0]}' executed successfully.`;
+  } else if (lower === "help") {
+    res.innerText = "⚡ SAMRUDH SOC Interactive Linux & Blue Team Command Emulator (60+ Commands):\n\n" +
+      "▸ Recon & Network: nmap, dig, nslookup, curl, wget, nc, tcpdump, ss -tulpn, lsof -i, ifconfig, ip a\n" +
+      "▸ Forensics & Logs: cat, grep, awk, sed, head, tail, wc, sort, uniq, sha256sum, md5sum, base64, dmesg, journalctl, auditctl, ausearch\n" +
+      "▸ Process & Memory: ps aux, top, htop, kill -9, systemctl, service, w, last, uptime, free -m, df -h, lsblk, fdisk\n" +
+      "▸ Admin & Hardening: sudo, chmod, chown, iptables, ufw, crontab, at, env, touch, mkdir, rm, cp, mv, clear, help";
+  } else {
+    res.innerText = `bash: ${trimmed}: command executed in SAMRUDH SOC interactive Linux environment. Type 'help' for 60+ full command list!`;
+  }
 
   outputDiv.appendChild(res);
   document.getElementById("terminal-body").scrollTop = document.getElementById("terminal-body").scrollHeight;
@@ -1164,37 +1272,7 @@ function copyCmdToClipboard(text) {
 }
 
 
-// --- 4. INCIDENT RESPONSE SCENARIO LABS ---
-const INCIDENT_LABS = [
-  {
-    id: "lab1",
-    title: "Lab 1: Rogue Cryptominer Process Triage",
-    desc: "A CPU usage alert spiked to 99%. Analyst notices a process running under /tmp/.miner.py.",
-    question: "Which Linux command should you run to verify the executable binary location of PID 8812?",
-    options: [
-      "ls -la /proc/8812/exe",
-      "cat /etc/passwd",
-      "uname -a",
-      "chmod 777 /tmp"
-    ],
-    answer: 0,
-    explanation: "Correct! /proc/<PID>/exe points to the exact file executable path on Linux."
-  },
-  {
-    id: "lab2",
-    title: "Lab 2: Unauthorized SSH Key Injection",
-    desc: "An attacker gained access and injected a persistent SSH public key for persistence.",
-    question: "In which file would an attacker add their public key for passwordless SSH access?",
-    options: [
-      "/var/log/auth.log",
-      "~/.ssh/authorized_keys",
-      "/etc/sudoers",
-      "/tmp/key.txt"
-    ],
-    answer: 1,
-    explanation: "Correct! ~/.ssh/authorized_keys stores trusted public keys for SSH authentication."
-  }
-];
+// --- 4. INCIDENT RESPONSE SCENARIO LABS (50 SCENARIOS LOADED FROM INCIDENT_LABS_DATA.JS) ---
 
 function generateIncidentLabsHTML() {
   return `

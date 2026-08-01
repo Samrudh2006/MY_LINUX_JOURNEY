@@ -1,4 +1,4 @@
-const CACHE_NAME = 'samrudh-soc-v2';
+const CACHE_NAME = 'samrudh-soc-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -6,6 +6,7 @@ const ASSETS = [
   './app.js',
   './data.js',
   './interview_data.js',
+  './incident_labs_data.js',
   './visuals.js',
   './logo.png',
   './favicon.svg',
