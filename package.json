@@ -4,6 +4,7 @@
   "description": "365-Page Linux & SOC Master Learning Platform in Telugu-English",
   "main": "index.html",
   "scripts": {
+    "build": "echo Static site build complete",
     "start": "node server.js"
   },
   "keywords": [

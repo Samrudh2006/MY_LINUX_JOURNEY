@@ -131,6 +131,33 @@ body {
   margin: 0 auto;
 }
 
+.mode-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.mode-tab svg {
+  flex-shrink: 0;
+  vertical-align: middle;
+  transition: transform 0.2s ease;
+}
+
+.mode-tab:hover svg {
+  transform: scale(1.18);
+}
+
+.cyber-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.cyber-chip svg {
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
 .profile-pill {
   display: inline-flex;
   align-items: center;
