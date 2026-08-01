@@ -1578,7 +1578,7 @@ body.theme-cyber .chip-forensics {
 
   /* Main content fills full width */
   .main-container { flex-direction: column; }
-  .notebook-workspace { padding: 0.8rem; width: 100%; }
+  .notebook-workspace { padding: 0.5rem 0.4rem; width: 100%; }
 
   /* Toolbar: stack into 2 rows */
   .notebook-controls {
@@ -1594,19 +1594,62 @@ body.theme-cyber .chip-forensics {
 
   .page-indicator input { width: 48px; font-size: 0.9rem; }
 
-  /* Page card: full width, smaller padding */
+  /* --- MOBILE RULED PAPER & TEXT ALIGNMENT FIX --- */
   .ruled-paper, .interview-card {
-    padding: 1rem;
+    padding: 1rem 0.8rem 1.5rem 2.8rem !important; /* Keep text to the right of red margin line */
     font-size: 0.88rem;
-    border-radius: 0;
+    line-height: 28px;
+    border-radius: 8px;
     margin: 0;
+    background-image: repeating-linear-gradient(
+      var(--paper-bg) 0px,
+      var(--paper-bg) 27px,
+      var(--paper-line) 28px
+    );
+  }
+
+  /* Reposition Red Vertical Margin Line on Mobile */
+  .ruled-paper::before {
+    left: 1.8rem !important; /* Move red line to 1.8rem so it sits to the left of text */
+  }
+
+  /* Watermark Stamp positioning on Mobile */
+  .brand-watermark-stamp {
+    width: 42px !important;
+    top: 0.5rem !important;
+    right: 0.5rem !important;
+    opacity: 0.35 !important;
+  }
+
+  /* Page Title Header Row on Mobile */
+  .page-header-row {
+    flex-direction: column !important;
+    padding-right: 0 !important;
+    gap: 0.4rem !important;
+    margin-bottom: 0.8rem !important;
+    align-items: flex-start !important;
+  }
+
+  .concept-title-box h2 {
+    font-size: 1.15rem !important;
+    line-height: 1.35 !important;
+    word-break: break-word !important;
+  }
+
+  .page-stamp {
+    position: relative !important;
+    top: 0 !important;
+    right: 0 !important;
+    align-self: flex-start !important;
+    font-size: 0.78rem !important;
+    padding: 0.2rem 0.6rem !important;
   }
 
   /* Section blocks stack vertically */
   .section-block { margin-bottom: 0.8rem; }
   .section-label { font-size: 0.75rem; }
 
-  .handwritten-text { font-size: 1rem; }
+  .handwritten-text { font-size: 0.95rem; line-height: 1.5; }
 
   /* Terminal modal full screen */
   .terminal-window {
@@ -1622,9 +1665,6 @@ body.theme-cyber .chip-forensics {
   .cover-badge-row { gap: 0.5rem; }
   .cover-badge { padding: 0.4rem 0.7rem; font-size: 0.78rem; }
 
-  /* Hide watermark stamp on very small screens to save space */
-  .brand-watermark-stamp { width: 36px; height: 36px; }
-
   /* Sidebar collapsed reading mode — same as full width on mobile */
   .main-container.sidebar-collapsed .notebook-controls,
   .main-container.sidebar-collapsed #notebook-paper-view {
@@ -1634,24 +1674,82 @@ body.theme-cyber .chip-forensics {
 
 /* ── Phone (≤480px) ── */
 @media (max-width: 480px) {
-  .app-header { padding: 0.4rem 0.6rem; }
-  .header-left h1 { font-size: 0.85rem; }
-  .brand-header-logo { width: 32px; height: 32px; }
+  .app-header {
+    padding: 0.5rem;
+    gap: 0.4rem;
+  }
 
-  /* Header profile pills on phone: compact icon mode */
-  .profile-label { display: none; }
-  .profile-pill { padding: 0.35rem 0.45rem; min-width: 32px; justify-content: center; }
+  .header-left h1 { font-size: 0.9rem; }
+  .brand-header-logo { width: 34px; height: 34px; }
+  .header-subtitle { font-size: 0.72rem; }
 
-  /* Header buttons: icon only */
-  .btn-action span:not(.icon) { display: none; }
-  .btn-action { padding: 0.4rem 0.5rem; min-width: 36px; justify-content: center; }
+  /* Scrollable Profile Pills on Phone */
+  .header-profiles {
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
 
-  /* Hide cyber tools bar on phones */
-  .cyber-tools-bar { display: none; }
+  .profile-pill {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+  }
+  .profile-label { display: inline; }
 
-  .mode-tab { font-size: 0.72rem; padding: 0.35rem 0.6rem; }
+  /* Header action buttons scrollable */
+  .header-right {
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
 
-  .ruled-paper, .interview-card { padding: 0.8rem 0.7rem; font-size: 0.83rem; }
+  .btn-action {
+    padding: 0.35rem 0.65rem;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+  }
+
+  /* Mode tabs scrollable bar */
+  .mode-tabs-bar {
+    padding: 0.4rem 0.5rem;
+  }
+
+  .mode-tabs-badges-row {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mode-tabs-container {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    padding: 0.2rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mode-tab {
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    padding: 0.35rem 0.65rem;
+  }
+
+  .ruled-paper, .interview-card {
+    padding: 0.8rem 0.6rem 1.2rem 2.6rem !important; /* Keeps text to the right of red margin line */
+    font-size: 0.83rem;
+  }
+
+  .ruled-paper::before {
+    left: 1.6rem !important; /* Move red line to 1.6rem */
+  }
 
   .page-indicator input { width: 40px; }
 

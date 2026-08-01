@@ -872,9 +872,36 @@ function initPWA() {
   }
 }
 
-// --- TEXT-TO-SPEECH (VOICE NOTES) CONTROLLER ---
+// --- TEXT-TO-SPEECH (HUMAN VOICE NOTES) CONTROLLER ---
 let isSpeaking = false;
 let currentSpeechUtterance = null;
+
+function getBestVoice() {
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices || voices.length === 0) return null;
+
+  // 1. Prefer Indian English / Telugu / Hindi natural human voices for fluent Telugu-English mix
+  const indianVoice = voices.find(v => (
+    v.lang.includes("en-IN") || v.lang.includes("te-IN") || v.lang.includes("hi-IN")
+  ) && (v.name.includes("Natural") || v.name.includes("Google") || v.name.includes("Neerja") || v.name.includes("Ravi") || v.name.includes("Kavya")));
+
+  if (indianVoice) return indianVoice;
+
+  // 2. Prefer any Indian English voice
+  const anyIndian = voices.find(v => v.lang.includes("en-IN") || v.lang.includes("te-IN") || v.lang.includes("hi-IN"));
+  if (anyIndian) return anyIndian;
+
+  // 3. Prefer Natural US / UK English voices (Google, Microsoft Natural, Apple)
+  const naturalVoice = voices.find(v => v.name.includes("Natural") || v.name.includes("Google") || v.name.includes("Samantha") || v.name.includes("Karen") || v.name.includes("Daniel"));
+  if (naturalVoice) return naturalVoice;
+
+  return voices[0];
+}
+
+// Ensure voices are loaded
+if ('speechSynthesis' in window) {
+  window.speechSynthesis.onvoiceschanged = getBestVoice;
+}
 
 function toggleSpeech() {
   if (!('speechSynthesis' in window)) {
@@ -890,21 +917,34 @@ function toggleSpeech() {
     isSpeaking = false;
     if (voiceBtn) {
       voiceBtn.classList.remove("speaking");
-      voiceBtnText.innerText = "Listen Voice";
+      if (voiceBtnText) voiceBtnText.innerText = "Listen Voice";
     }
   } else {
     let textToSpeak = "";
     if (activeMode === "notebook") {
       const page = NOTEBOOK_PAGES.find(p => p.id === currentPageId);
       if (page) {
-        const cleanExplanation = page.simpleExplanation ? page.simpleExplanation.replace(/<[^>]*>?/gm, '') : '';
-        textToSpeak = `Page ${page.id}. ${page.concept}. Command: ${page.command}. ${cleanExplanation}`;
+        const parts = [
+          `Page ${page.id}. ${page.concept}.`,
+          `Explanation: ${page.explanation || ''}`,
+          `Why it matters: ${page.whyItMatters || ''}`,
+          `Command: ${page.command || ''}`,
+          `SOC Use Case: ${page.socUse || ''}`,
+          `Remember: ${page.remember || ''}`
+        ];
+        textToSpeak = parts.filter(Boolean).join(" ").replace(/<[^>]*>?/gm, '');
       }
     } else if (activeMode === "interview") {
       const qa = INTERVIEW_QUESTIONS.find(q => q.id === currentQAId);
       if (qa) {
-        const cleanAnswer = qa.idealAnswer ? qa.idealAnswer.replace(/<[^>]*>?/gm, '') : '';
-        textToSpeak = `Question ${qa.id}. ${qa.question}. Answer: ${cleanAnswer}`;
+        const parts = [
+          `Question ${qa.id}. ${qa.question}.`,
+          `Concept Explanation: ${qa.explanation || ''}`,
+          `Ideal Answer: ${qa.idealAnswer || ''}`,
+          `Example: ${qa.example || ''}`,
+          `Pro Tip: ${qa.proTip || ''}`
+        ];
+        textToSpeak = parts.filter(Boolean).join(" ").replace(/<[^>]*>?/gm, '');
       }
     }
 
@@ -912,14 +952,21 @@ function toggleSpeech() {
 
     window.speechSynthesis.cancel();
     currentSpeechUtterance = new SpeechSynthesisUtterance(textToSpeak);
-    currentSpeechUtterance.rate = 0.95;
+    
+    const chosenVoice = getBestVoice();
+    if (chosenVoice) {
+      currentSpeechUtterance.voice = chosenVoice;
+      currentSpeechUtterance.lang = chosenVoice.lang;
+    }
+    
+    currentSpeechUtterance.rate = 0.92; // Natural, clear human reading cadence
     currentSpeechUtterance.pitch = 1.0;
 
     currentSpeechUtterance.onstart = () => {
       isSpeaking = true;
       if (voiceBtn) {
         voiceBtn.classList.add("speaking");
-        voiceBtnText.innerText = "Pause Voice";
+        if (voiceBtnText) voiceBtnText.innerText = "Pause Voice";
       }
     };
 
@@ -927,7 +974,7 @@ function toggleSpeech() {
       isSpeaking = false;
       if (voiceBtn) {
         voiceBtn.classList.remove("speaking");
-        voiceBtnText.innerText = "Listen Voice";
+        if (voiceBtnText) voiceBtnText.innerText = "Listen Voice";
       }
     };
 
@@ -935,7 +982,7 @@ function toggleSpeech() {
       isSpeaking = false;
       if (voiceBtn) {
         voiceBtn.classList.remove("speaking");
-        voiceBtnText.innerText = "Listen Voice";
+        if (voiceBtnText) voiceBtnText.innerText = "Listen Voice";
       }
     };
 
