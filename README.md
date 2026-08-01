@@ -1,4 +1,4 @@
-# SAMRUDH SOC ANALYST — 365-Page Linux & SOC Master Platform
+# LINUX SOC HANDBOOK — 365-Page Linux & SOC Master Platform
 
 > **Built by Samrudh | Telugu-English Interactive Learning Platform**
 

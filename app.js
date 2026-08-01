@@ -254,12 +254,12 @@ function generatePageHTML(page) {
 
   return `
     <article class="ruled-paper">
-      <img src="logo.png" alt="SAMRUDH SOC" class="brand-watermark-stamp" />
+      <img src="logo.png" alt="LINUX SOC HANDBOOK" class="brand-watermark-stamp" />
 
       ${isFirstPage ? `
         <div style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(168, 85, 247, 0.15)); border: 2px solid var(--accent-blue); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; text-align: center;">
           <img src="logo.png" style="width: 80px; height: 80px; margin-bottom: 0.5rem;" />
-          <h1 style="font-family: 'Outfit', sans-serif; color: var(--accent-blue); font-size: 1.8rem; margin: 0;">📖 SAMRUDH SOC ANALYST — 365-PAGE MASTER HANDBOOK</h1>
+          <h1 style="font-family: 'Outfit', sans-serif; color: var(--accent-blue); font-size: 1.8rem; margin: 0;">📖 LINUX SOC HANDBOOK — 365-PAGE MASTER HANDBOOK</h1>
           <p style="font-weight: 700; color: var(--text-ink); margin-top: 0.4rem;">OFFICIAL PUBLISHED HANDBOOK FOR LINUX & BLUE TEAM SECURITY OPERATIONS</p>
           <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 0.8rem; font-size: 0.85rem;">
             <span style="background: var(--bg-app); border: 1px solid var(--card-border); padding: 0.3rem 0.8rem; border-radius: 20px;">📚 365 Master Pages</span>
@@ -382,8 +382,8 @@ function generateInterviewQAHTML(qa) {
 function generateBrandCoverHTML() {
   return `
     <article class="brand-cover-page">
-      <img src="logo.png" alt="SAMRUDH SOC ANALYST" class="cover-logo-hero" />
-      <h1 class="cover-title">SAMRUDH SOC ANALYST</h1>
+      <img src="logo.png" alt="LINUX SOC HANDBOOK" class="cover-logo-hero" />
+      <h1 class="cover-title">LINUX SOC HANDBOOK</h1>
       <p class="cover-subtitle">BLUE TEAM READY — 365-PAGE NOTEBOOK & 200+ INTERVIEW Q&A</p>
       
       <div class="cover-badge-row">

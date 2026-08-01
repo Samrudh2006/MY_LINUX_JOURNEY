@@ -1,4 +1,4 @@
-// SAMRUDH SOC ANALYST - 200+ Real-World Interview Questions & Answers Dataset
+// LINUX SOC HANDBOOK - 200+ Real-World Interview Questions & Answers Dataset
 
 const INTERVIEW_CATEGORIES = [
   { id: 1, title: "Module 1: SOC L1/L2 Fundamentals & Core Security (Q1-Q40)" },

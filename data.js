@@ -1,4 +1,4 @@
-// SAMRUDH SOC ANALYST - 365-Page Complete Linux for SOC Analyst Master Dataset
+// LINUX SOC HANDBOOK - 365-Page Complete Linux for SOC Analyst Master Dataset
 
 const NOTEBOOK_MODULES = [
   {
@@ -68,12 +68,12 @@ const NOTEBOOK_PAGES = [
     id: 1,
     moduleId: 0,
     concept: "WELCOME & MASTER ORIENTATION — Published Linux for SOC Analyst Handbook",
-    explanation: "Welcome to SAMRUDH SOC ANALYST — The Ultimate 365-Page One-Stop Linux & SOC Analyst Learning Platform! Ee master handbook meeku Computer Fundamentals & Networking Prerequisites nunchi Advanced Linux Architecture, Permission Hardening, Log Forensics, Auditd Tracing, Memory Artifact Recovery, and Practical SOC Incident Response Labs varaku zero-to-hero level lo teach chestundi. Everything is written in natural Spoken Telugu (in English script) + Technical English, exactly like an experienced SOC mentor guiding a friend.",
+    explanation: "Welcome to LINUX SOC HANDBOOK — The Ultimate 365-Page One-Stop Linux & SOC Analyst Learning Platform! Ee master handbook meeku Computer Fundamentals & Networking Prerequisites nunchi Advanced Linux Architecture, Permission Hardening, Log Forensics, Auditd Tracing, Memory Artifact Recovery, and Practical SOC Incident Response Labs varaku zero-to-hero level lo teach chestundi. Everything is written in natural Spoken Telugu (in English script) + Technical English, exactly like an experienced SOC mentor guiding a friend.",
     whyItMatters: "Enterprise Security Operations Center (SOC) lo 90%+ server infrastructure Linux meedhe run avutundi. Linux CLI mechanics, File System Hierarchy (FHS), Log Parsing (grep/awk/sed), and Network Sockets (ss/lsof) ni master cheyakunda Tier-1 SOC Analyst, Threat Hunter, or Incident Responder avvadam impossible.",
     command: "uname -a && cat /etc/os-release && uptime",
-    syntax: "samrudh-soc-init --mode blue-team --pages 365",
-    example: "$ uname -a\nLinux samrudh-soc-station 5.15.0-88-generic #98-Ubuntu SMP x86_64\n[+] SAMRUDH SOC ANALYST Handbook Loaded: 365 / 365 Pages Active\n[+] Status: BLUE TEAM TIER-1 READY",
-    cmdExplanation: "Terminal output confirming local Linux kernel architecture and active SAMRUDH SOC Analyst 365-page master learning platform status.",
+    syntax: "linux-soc-init --mode blue-team --pages 365",
+    example: "$ uname -a\nLinux soc-station 5.15.0-88-generic #98-Ubuntu SMP x86_64\n[+] LINUX SOC HANDBOOK Loaded: 365 / 365 Pages Active\n[+] Status: BLUE TEAM TIER-1 READY",
+    cmdExplanation: "Terminal output confirming local Linux kernel architecture and active LINUX SOC HANDBOOK 365-page master learning platform status.",
     socUse: "Master Learning SOP: 1) Read Telugu-English concept, 2) Execute terminal command, 3) Analyze real log/output, 4) Practice 'Try It' exercise, 5) Apply to SOC alerts.",
     remember: "Linux + Network Sockets + Log Forensics = Foundation of Enterprise Blue Team Security! 🛡️",
     noteVisual: "LEARNING PATHWAY:\nComputer & OS Basics ➔ Linux File Mechanics ➔ Process & Network Forensics ➔ Log Analysis & Auditd ➔ Threat Hunting & SOC Labs"
@@ -5164,11 +5164,11 @@ const NOTEBOOK_PAGES = [
     id: 365,
     moduleId: 11,
     concept: "GRADUATION CERTIFICATE & CAREER ROADMAP — Blue Team Ready SOC Analyst",
-    explanation: "HEARTY CONGRATULATIONS! Meeru complete 365-Page SAMRUDH SOC ANALYST Master Curriculum successfully finish chesaaru! Meeru ippudu Linux Architecture, Navigation, Permission Hardening, Privilege Escalation Vectors (SUID/Capabilities), Process Memory Forensics (/proc/PID/exe), Network Traffic Capture (tcpdump), SSH Hardening & Tunneling, Web Shell Log Forensics, Auditd Syscall Tracing, and Automated Bash Triage Scripting lo mastery achieve chesaaru.",
+    explanation: "HEARTY CONGRATULATIONS! Meeru complete 365-Page LINUX SOC HANDBOOK Master Curriculum successfully finish chesaaru! Meeru ippudu Linux Architecture, Navigation, Permission Hardening, Privilege Escalation Vectors (SUID/Capabilities), Process Memory Forensics (/proc/PID/exe), Network Traffic Capture (tcpdump), SSH Hardening & Tunneling, Web Shell Log Forensics, Auditd Syscall Tracing, and Automated Bash Triage Scripting lo mastery achieve chesaaru.",
     whyItMatters: "Meeru ippudu Entry-Level Linux Security Administrator, Tier-1 SOC Analyst, Blue Team Incident Responder, and Junior Threat Hunter roles ki 100% technically ready ga unnaaru. Enterprise interviews lo direct practical terminal command outputs and log triage logic ni explain chese confidence meeku vachindi.",
-    command: "echo 'CERTIFIED SAMRUDH SOC ANALYST - BLUE TEAM TIER-1 READY' | tee /var/log/graduation.log",
-    syntax: "samrudh-soc-graduate --status CERTIFIED --level TIER-1-ANALYST",
-    example: "$ echo 'GRADUATION COMPLETE'\n=======================================================\n OFFICIAL CERTIFICATE OF COMPLETION: SAMRUDH SOC ANALYST\n Candidate Status : BLUE TEAM TIER-1 ANALYST READY\n Curriculum Scope : 365 Pages Mastered / 200+ Q&A Passed\n Core Competencies: Linux Forensics, Log Analysis, Threat Hunting\n=======================================================",
+    command: "echo 'CERTIFIED LINUX SOC HANDBOOK - BLUE TEAM TIER-1 READY' | tee /var/log/graduation.log",
+    syntax: "linux-soc-graduate --status CERTIFIED --level TIER-1-ANALYST",
+    example: "$ echo 'GRADUATION COMPLETE'\n=======================================================\n OFFICIAL CERTIFICATE OF COMPLETION: LINUX SOC HANDBOOK\n Candidate Status : BLUE TEAM TIER-1 ANALYST READY\n Curriculum Scope : 365 Pages Mastered / 200+ Q&A Passed\n Core Competencies: Linux Forensics, Log Analysis, Threat Hunting\n=======================================================",
     cmdExplanation: "Graduation certificate badge execution output confirming 365-page completion and Blue Team Tier-1 Analyst readiness.",
     socUse: "Career Action Plan: 1) Update Resume with Linux SOC Skills, 2) Practice 200+ Interview Q&A, 3) Demonstrate Bash Triage Scripts, 4) Apply for SOC Analyst Tier-1 Jobs!",
     remember: "Continuous Learning + Daily Log Analysis + Command Line Speed = Master SOC Analyst! 🏆",
