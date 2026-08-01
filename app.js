@@ -519,10 +519,7 @@ function setupEventListeners() {
     document.body.classList.toggle("theme-cyber");
   });
 
-  document.getElementById("btn-print-pdf").addEventListener("click", () => {
-    prepareFullPrintContainer();
-    window.print();
-  });
+  document.getElementById("btn-print-pdf").addEventListener("click", openPdfExportModal);
 
   document.getElementById("btn-terminal-open").addEventListener("click", () => {
     document.getElementById("terminal-modal").classList.remove("hidden");
@@ -673,15 +670,36 @@ function toggleSidebar() {
 }
 
 
-function prepareFullPrintContainer() {
+function openPdfExportModal() {
+  const modal = document.getElementById("pdf-export-choice-modal");
+  if (modal) modal.style.display = "flex";
+}
+
+function closePdfExportModal() {
+  const modal = document.getElementById("pdf-export-choice-modal");
+  if (modal) modal.style.display = "none";
+}
+
+function exportChosenPDF(type) {
+  closePdfExportModal();
   const pdfContainer = document.getElementById("full-pdf-container");
+  if (!pdfContainer) return;
+
   pdfContainer.innerHTML = generateBrandCoverHTML();
 
-  if (activeMode === "notebook") {
-    NOTEBOOK_PAGES.forEach(page => pdfContainer.innerHTML += generatePageHTML(page));
-  } else if (activeMode === "interview") {
-    INTERVIEW_QUESTIONS.forEach(qa => pdfContainer.innerHTML += generateInterviewQAHTML(qa));
+  if (type === "notebook") {
+    NOTEBOOK_PAGES.forEach(page => {
+      pdfContainer.innerHTML += generatePageHTML(page);
+    });
+  } else if (type === "interview") {
+    INTERVIEW_QUESTIONS.forEach(qa => {
+      pdfContainer.innerHTML += generateInterviewQAHTML(qa);
+    });
   }
+
+  setTimeout(() => {
+    window.print();
+  }, 350);
 }
 
 function handleTerminalCommand(cmdStr) {

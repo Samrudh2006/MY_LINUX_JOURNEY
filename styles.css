@@ -1676,6 +1676,57 @@ body.theme-cyber .chip-forensics {
   .main-container { padding-bottom: 60px; }
 }
 
+/* --- PRINT & PDF EXPORT STYLES (CLEAN A4 PAGE BREAKS & PERFECT LINE FITTING) --- */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 11pt !important;
+  }
+
+  .no-print, header, nav, .sidebar, .sidebar-overlay, .mode-tabs-bar, .notebook-controls, .mobile-bottom-nav, #terminal-modal, #pdf-export-choice-modal, #pdf-progress-modal {
+    display: none !important;
+  }
+
+  .main-container {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+  }
+
+  .notebook-workspace {
+    padding: 0 !important;
+    width: 100% !important;
+  }
+
+  #full-pdf-container {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  .ruled-paper, .interview-card {
+    page-break-after: always !important;
+    break-after: page !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    margin: 0 !important;
+    padding: 2.5rem !important;
+    border: none !important;
+    box-shadow: none !important;
+    min-height: 95vh !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
+
+  .cmd-box, .syntax-box, pre, code {
+    white-space: pre-wrap !important;
+    word-break: break-all !important;
+    background: #f8fafc !important;
+    color: #0f172a !important;
+    border: 1px solid #cbd5e1 !important;
+  }
+}
+
 /* Hide mobile bottom nav on desktop */
 @media (min-width: 769px) {
   .mobile-bottom-nav { display: none; }

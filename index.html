@@ -218,6 +218,36 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
+  <!-- EXPORT PDF CHOICE SELECTION MODAL -->
+  <div id="pdf-export-choice-modal" class="no-print" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; justify-content:center; align-items:center; backdrop-filter:blur(4px);">
+    <div style="background:var(--paper-bg); border:2px solid var(--accent-blue); border-radius:18px; padding:2rem; max-width:520px; width:92%; box-shadow:0 12px 40px rgba(0,0,0,0.4); text-align:center; position:relative;">
+      <button onclick="closePdfExportModal()" style="position:absolute; top:1rem; right:1rem; background:transparent; border:none; font-size:1.4rem; cursor:pointer; color:var(--text-dark);">✕</button>
+      <div style="font-size:2.8rem; margin-bottom:0.4rem;">📄</div>
+      <h2 style="color:var(--accent-blue); font-size:1.5rem; margin-bottom:0.5rem;">Select Master Book to Export PDF</h2>
+      <p style="color:var(--text-dark); font-size:0.9rem; margin-bottom:1.5rem;">
+        Choose which complete master book you would like to download as a clean PDF without missing any page:
+      </p>
+
+      <div style="display:flex; flex-direction:column; gap:0.9rem;">
+        <button onclick="exportChosenPDF('notebook')" class="quiz-option-btn" style="padding:1rem 1.2rem; border-color:var(--accent-blue); background:var(--bg-app); display:flex; align-items:center; gap:0.8rem;">
+          <span style="font-size:1.8rem;">📖</span>
+          <div style="text-align:left;">
+            <div style="font-weight:700; font-size:1rem; color:var(--accent-blue);">📖 365-Page Linux SOC Master Handbook</div>
+            <div style="font-size:0.78rem; color:#64748b;">Complete 365 daily pages with Linux commands, Telugu-English notes &amp; pro tips.</div>
+          </div>
+        </button>
+
+        <button onclick="exportChosenPDF('interview')" class="quiz-option-btn" style="padding:1rem 1.2rem; border-color:#8b5cf6; background:var(--bg-app); display:flex; align-items:center; gap:0.8rem;">
+          <span style="font-size:1.8rem;">🎯</span>
+          <div style="text-align:left;">
+            <div style="font-weight:700; font-size:1rem; color:#8b5cf6;">🎯 200+ SOC Interview Q&amp;A Master Book</div>
+            <div style="font-size:0.78rem; color:#64748b;">Complete 200 interview questions with ideal answers &amp; interview tips.</div>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- PDF PROGRESS MODAL -->
   <div id="pdf-progress-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.82); z-index:9999; justify-content:center; align-items:center; flex-direction:column; gap:1.2rem;">
     <div style="background:#111827; border:2px solid #1565c0; border-radius:16px; padding:2.5rem 3rem; text-align:center; max-width:420px; width:90%;">
