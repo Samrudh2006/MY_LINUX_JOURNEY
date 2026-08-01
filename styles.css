@@ -123,6 +123,120 @@ body {
   margin-top: 0.1rem;
 }
 
+/* --- HEADER PROFILE SOCIAL LINKS --- */
+.header-profiles {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+  margin-right: 0.8rem;
+}
+
+.profile-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 50px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.profile-pill .profile-icon {
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.profile-pill:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+}
+
+.profile-pill:hover .profile-icon {
+  transform: scale(1.15);
+}
+
+/* GitHub Badge */
+.btn-github {
+  background: #24292e;
+  color: #ffffff;
+  border-color: #1b1f23;
+}
+.btn-github:hover {
+  background: #000000;
+  color: #58a6ff;
+  border-color: #58a6ff;
+}
+
+/* LinkedIn Badge */
+.btn-linkedin {
+  background: #0a66c2;
+  color: #ffffff;
+  border-color: #004182;
+}
+.btn-linkedin:hover {
+  background: #004182;
+  color: #70b5f9;
+  border-color: #70b5f9;
+}
+
+/* Email Badge */
+.btn-email {
+  background: linear-gradient(135deg, #ea4335, #d93025);
+  color: #ffffff;
+  border-color: #b31412;
+}
+.btn-email:hover {
+  background: linear-gradient(135deg, #d93025, #b31412);
+  color: #ffffff;
+  border-color: #ff8a80;
+}
+
+/* Dark Cyber Theme Adjustments */
+body.theme-cyber .profile-pill {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+body.theme-cyber .btn-github {
+  background: #161b22;
+  color: #f0f6fc;
+  border-color: #30363d;
+}
+body.theme-cyber .btn-github:hover {
+  background: #21262d;
+  color: #58a6ff;
+  border-color: #58a6ff;
+  box-shadow: 0 0 12px rgba(88, 166, 255, 0.4);
+}
+
+body.theme-cyber .btn-linkedin {
+  background: #0a66c2;
+  color: #ffffff;
+  border-color: #38bdf8;
+}
+body.theme-cyber .btn-linkedin:hover {
+  background: #004182;
+  color: #e0f2fe;
+  border-color: #38bdf8;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+}
+
+body.theme-cyber .btn-email {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  color: #ffffff;
+  border-color: #ef4444;
+}
+body.theme-cyber .btn-email:hover {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+}
+
 .header-right {
   display: flex;
   gap: 0.6rem;
@@ -912,6 +1026,16 @@ body {
   .header-subtitle { display: none; }
   .brand-header-logo { width: 38px; height: 38px; }
 
+  .header-profiles {
+    gap: 0.3rem;
+    margin-left: 0.3rem;
+    margin-right: 0.3rem;
+  }
+  .profile-pill {
+    padding: 0.35rem 0.55rem;
+    font-size: 0.75rem;
+  }
+
   .header-right {
     gap: 0.3rem;
   }
@@ -1024,6 +1148,10 @@ body {
   .app-header { padding: 0.4rem 0.6rem; }
   .header-left h1 { font-size: 0.85rem; }
   .brand-header-logo { width: 32px; height: 32px; }
+
+  /* Header profile pills on phone: compact icon mode */
+  .profile-label { display: none; }
+  .profile-pill { padding: 0.35rem 0.45rem; min-width: 32px; justify-content: center; }
 
   /* Header buttons: icon only */
   .btn-action span:not(.icon) { display: none; }

@@ -48,5 +48,9 @@ node server.js
 
 **Samrudh** — Aspiring SOC Analyst | Blue Team | Linux Enthusiast
 
+- 🐙 **GitHub**: [github.com/Samrudh2006](https://github.com/Samrudh2006)
+- 💼 **LinkedIn**: [linkedin.com/in/satyasamrudh](https://www.linkedin.com/in/satyasamrudh)
+- ✉️ **Email**: [samrudhdwivedula12@gmail.com](mailto:samrudhdwivedula12@gmail.com)
+
 ---
 *Idi meeru read chesindi → Command ela work chesthundo ardham avutundi → SOC lo apply chestham → Interview crack chestham!* 🚀

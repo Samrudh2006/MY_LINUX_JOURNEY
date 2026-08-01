@@ -1,0 +1,18 @@
+{
+  "name": "samrudh-soc-analyst-notebook",
+  "version": "1.0.0",
+  "description": "365-Page Linux & SOC Master Learning Platform in Telugu-English",
+  "main": "index.html",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "linux",
+    "soc-analyst",
+    "telugu",
+    "cybersecurity",
+    "blue-team"
+  ],
+  "author": "Samrudh",
+  "license": "MIT"
+}
