@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="SAMRUDH SOC ANALYST — 365-Page Interactive Linux & SOC Analyst Learning Platform in Telugu-English.">
+  <meta name="theme-color" content="#1565c0">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>SAMRUDH SOC ANALYST - 365-Page Linux &amp; SOC Master Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Fira+Code:wght@400;600&family=Kalam:wght@400;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="theme-ruled-paper">
+
+  <!-- TOP BRAND HEADER -->
+  <header class="app-header no-print">
+    <div class="header-left">
+      <img src="logo.png" alt="SAMRUDH SOC ANALYST" class="brand-header-logo" />
+      <div>
+        <h1>SAMRUDH SOC ANALYST <span class="brand-tagline">— BLUE TEAM READY</span></h1>
+        <p class="header-subtitle">365-Page Linux &amp; SOC Master Learning Platform (Telugu-English)</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <button id="btn-theme-toggle" class="btn-action" title="Toggle Theme">
+        <span class="icon">🎨</span><span> Switch Theme</span>
+      </button>
+      <button id="btn-terminal-open" class="btn-action btn-cyber" title="Open Terminal Simulator">
+        <span class="icon">💻</span><span> Live Terminal</span>
+      </button>
+      <button id="btn-print-pdf" class="btn-action btn-pdf" title="Export Full PDF">
+        <span class="icon">📄</span><span> Export PDF</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- NAVIGATION MODE TABS (CENTERED) -->
+  <div class="mode-tabs-bar no-print">
+    <button id="tab-notebook" class="mode-tab active">📖 365-Page Linux SOC Notebook</button>
+    <button id="tab-interview" class="mode-tab">🎯 200+ Interview Q&amp;A</button>
+    <button id="tab-cover" class="mode-tab">🏆 Brand Cover</button>
+  </div>
+
+  <!-- MOBILE SIDEBAR OVERLAY (tap to close) -->
+  <div id="sidebar-overlay" class="sidebar-overlay no-print"></div>
+
+  <div class="main-container">
+
+    <!-- SIDEBAR NAVIGATION -->
+    <aside class="sidebar no-print" id="main-sidebar">
+      <div class="sidebar-search">
+        <input type="text" id="search-input" placeholder="🔎 Search pages, commands..." />
+      </div>
+      <div class="sidebar-filters">
+        <button class="filter-btn active" data-filter="all">All Items</button>
+        <button class="filter-btn" data-filter="bookmarked">⭐ Saved</button>
+      </div>
+      <nav class="module-nav" id="module-nav"></nav>
+    </aside>
+
+    <!-- MAIN NOTEBOOK WORKSPACE -->
+    <main class="notebook-workspace">
+
+      <!-- TOOLBAR CONTROLS -->
+      <div class="notebook-controls no-print" id="toolbar-controls">
+        <div class="toolbar-left-group">
+          <button id="btn-toggle-sidebar" class="btn-action" title="Collapse / Expand Sidebar">
+            <span class="icon">☰</span> <span id="sidebar-toggle-text">Hide Sidebar</span>
+          </button>
+        </div>
+        <div class="page-switcher">
+          <button id="btn-prev-page" class="nav-arrow">◀ Prev</button>
+          <div class="page-indicator">
+            <span id="page-type-label">Page</span>
+            <input type="number" id="page-number-input" min="1" max="365" value="1">
+            / <span id="total-count-label">365</span>
+          </div>
+          <button id="btn-next-page" class="nav-arrow">Next ▶</button>
+        </div>
+        <div class="quick-tags">
+          <button id="btn-play-slideshow" class="btn-action btn-play" title="Auto Play Book Mode">
+            <span class="icon">▶</span> <span id="play-btn-text">Auto Play (5s)</span>
+          </button>
+          <button id="btn-bookmark" class="btn-star" title="Bookmark Item">⭐ Save Item</button>
+        </div>
+      </div>
+
+      <!-- MAIN CONTENT VIEW -->
+      <div id="notebook-paper-view" class="notebook-page-container"></div>
+
+      <!-- FULL PDF PRINT CONTAINER -->
+      <div id="full-pdf-container" class="full-pdf-container print-only-container"></div>
+
+    </main>
+  </div>
+
+  <!-- MOBILE BOTTOM NAV BAR (visible only on mobile) -->
+  <nav class="mobile-bottom-nav no-print" id="mobile-bottom-nav">
+    <button class="mobile-nav-btn" id="mob-menu-btn">
+      <span class="nav-icon">☰</span><span>Menu</span>
+    </button>
+    <button class="mobile-nav-btn" id="mob-prev-btn">
+      <span class="nav-icon">◀</span><span>Prev</span>
+    </button>
+    <button class="mobile-nav-btn" id="mob-next-btn">
+      <span class="nav-icon">▶</span><span>Next</span>
+    </button>
+    <button class="mobile-nav-btn" id="mob-play-btn">
+      <span class="nav-icon">⏯️</span><span>Play</span>
+    </button>
+    <button class="mobile-nav-btn" id="mob-terminal-btn">
+      <span class="nav-icon">💻</span><span>Terminal</span>
+    </button>
+  </nav>
+
+  <!-- TERMINAL MODAL -->
+  <div id="terminal-modal" class="terminal-modal no-print hidden">
+    <div class="terminal-window">
+      <div class="terminal-header">
+        <div class="term-dots">
+          <span class="dot red"></span>
+          <span class="dot yellow"></span>
+          <span class="dot green"></span>
+        </div>
+        <div class="term-title">SAMRUDH SOC Terminal (kali@soc-workstation:~)</div>
+        <button id="btn-terminal-close" class="term-close">✕</button>
+      </div>
+      <div class="terminal-body" id="terminal-body">
+        <div class="term-welcome">
+          Welcome to SAMRUDH SOC Analyst Terminal Simulator!<br>
+          Try: <span class="cmd-tag">pwd</span>, <span class="cmd-tag">ls -la</span>,
+          <span class="cmd-tag">whoami</span>, <span class="cmd-tag">ps aux</span>,
+          <span class="cmd-tag">ss -tulpn</span>, <span class="cmd-tag">help</span>
+        </div>
+        <div id="terminal-output"></div>
+        <div class="terminal-input-line">
+          <span class="term-prompt">kali@soc-workstation:~$</span>
+          <input type="text" id="terminal-input" autocomplete="off" spellcheck="false" placeholder="Type command..." autofocus />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JS SCRIPTS -->
+  <script src="data.js"></script>
+  <script src="interview_data.js"></script>
+  <script src="visuals.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

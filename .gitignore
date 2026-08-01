@@ -1,0 +1,18 @@
+# Git ignore for SAMRUDH SOC ANALYST
+
+# Build scripts (not needed for running the app)
+build_*.js
+builder.js
+builder.py
+enrich_first_last_pages.js
+
+# Node modules (if ever added)
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor settings
+.vscode/
+*.log
