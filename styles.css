@@ -361,6 +361,217 @@ body.theme-cyber .btn-email:hover {
   line-height: 1.35;
 }
 
+/* --- LOG PARSER LAB STYLES --- */
+.logparser-wrapper {
+  background: var(--paper-bg);
+  border-radius: 14px;
+  border: 2px solid var(--card-border);
+  padding: 1.5rem;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+}
+
+.log-preset-bar {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.btn-preset {
+  background: var(--bg-app);
+  border: 1px solid var(--card-border);
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-preset:hover {
+  background: var(--accent-blue);
+  color: #fff;
+}
+
+.log-textarea {
+  width: 100%;
+  height: 140px;
+  background: #090d16;
+  color: #38bdf8;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  padding: 0.8rem;
+  border-radius: 8px;
+  border: 1px solid #1e293b;
+  resize: vertical;
+  margin-bottom: 1rem;
+}
+
+.log-output-box {
+  background: #05080e;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  max-height: 350px;
+  overflow-y: auto;
+  margin-top: 1rem;
+}
+
+.log-line {
+  padding: 0.2rem 0;
+  line-height: 1.4;
+}
+
+.log-line.threat-high {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  font-weight: bold;
+}
+
+.log-line.threat-medium {
+  background: rgba(234, 179, 8, 0.2);
+  color: #fef08a;
+}
+
+/* --- HARDENING CHECKLIST STYLES --- */
+.hardening-wrapper {
+  background: var(--paper-bg);
+  border-radius: 14px;
+  border: 2px solid var(--card-border);
+  padding: 1.5rem;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+}
+
+.score-card {
+  background: linear-gradient(135deg, #1565c0, #0284c7);
+  color: #fff;
+  border-radius: 12px;
+  padding: 1.2rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.score-bar-bg {
+  background: rgba(255,255,255,0.2);
+  height: 12px;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 0.8rem;
+}
+
+.score-bar-fill {
+  background: #4ade80;
+  height: 100%;
+  width: 0%;
+  transition: width 0.4s ease;
+}
+
+.checklist-group {
+  margin-bottom: 1.5rem;
+}
+
+.checklist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  background: var(--bg-app);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  padding: 0.8rem 1rem;
+  margin-bottom: 0.6rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.checklist-item:hover {
+  border-color: var(--accent-blue);
+}
+
+.checklist-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent-blue);
+  cursor: pointer;
+  margin-top: 0.1rem;
+}
+
+/* --- CHEAT SHEET STYLES --- */
+.cheatsheet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.cmd-card {
+  background: var(--paper-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 1rem;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.cmd-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-blue);
+}
+
+.btn-copy-cmd {
+  position: absolute;
+  top: 0.8rem;
+  right: 0.8rem;
+  background: var(--bg-app);
+  border: 1px solid var(--card-border);
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+/* --- INCIDENT LABS STYLES --- */
+.lab-card {
+  background: var(--paper-bg);
+  border: 2px solid var(--card-border);
+  border-radius: 12px;
+  padding: 1.4rem;
+  margin-bottom: 1.5rem;
+}
+
+.quiz-option-btn {
+  width: 100%;
+  text-align: left;
+  background: var(--bg-app);
+  border: 1px solid var(--card-border);
+  padding: 0.7rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quiz-option-btn:hover {
+  background: rgba(21, 101, 192, 0.08);
+  border-color: var(--accent-blue);
+}
+
+.quiz-option-btn.correct {
+  background: rgba(74, 222, 128, 0.2);
+  border-color: #4ade80;
+  color: #166534;
+}
+
+.quiz-option-btn.wrong {
+  background: rgba(248, 113, 113, 0.2);
+  border-color: #f87171;
+  color: #991b1b;
+}
+
 /* --- CYBER TOOL LOGOS BAR --- */
 .cyber-tools-bar {
   background: var(--paper-bg);

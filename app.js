@@ -73,6 +73,14 @@ function initModeTabs() {
   document.getElementById("tab-interview").addEventListener("click", () => switchMode("interview"));
   const mitreTab = document.getElementById("tab-mitre");
   if (mitreTab) mitreTab.addEventListener("click", () => switchMode("mitre"));
+  const logTab = document.getElementById("tab-logparser");
+  if (logTab) logTab.addEventListener("click", () => switchMode("logparser"));
+  const hardTab = document.getElementById("tab-hardening");
+  if (hardTab) hardTab.addEventListener("click", () => switchMode("hardening"));
+  const cheatTab = document.getElementById("tab-cheatsheet");
+  if (cheatTab) cheatTab.addEventListener("click", () => switchMode("cheatsheet"));
+  const labsTab = document.getElementById("tab-labs");
+  if (labsTab) labsTab.addEventListener("click", () => switchMode("labs"));
   document.getElementById("tab-cover").addEventListener("click", () => switchMode("cover"));
 }
 
@@ -94,8 +102,24 @@ function switchMode(mode) {
     document.getElementById("page-number-input").max = INTERVIEW_QUESTIONS.length;
     document.getElementById("toolbar-controls").style.display = "flex";
   } else if (mode === "mitre") {
-    const mitreTab = document.getElementById("tab-mitre");
-    if (mitreTab) mitreTab.classList.add("active");
+    const tab = document.getElementById("tab-mitre");
+    if (tab) tab.classList.add("active");
+    document.getElementById("toolbar-controls").style.display = "none";
+  } else if (mode === "logparser") {
+    const tab = document.getElementById("tab-logparser");
+    if (tab) tab.classList.add("active");
+    document.getElementById("toolbar-controls").style.display = "none";
+  } else if (mode === "hardening") {
+    const tab = document.getElementById("tab-hardening");
+    if (tab) tab.classList.add("active");
+    document.getElementById("toolbar-controls").style.display = "none";
+  } else if (mode === "cheatsheet") {
+    const tab = document.getElementById("tab-cheatsheet");
+    if (tab) tab.classList.add("active");
+    document.getElementById("toolbar-controls").style.display = "none";
+  } else if (mode === "labs") {
+    const tab = document.getElementById("tab-labs");
+    if (tab) tab.classList.add("active");
     document.getElementById("toolbar-controls").style.display = "none";
   } else if (mode === "cover") {
     document.getElementById("tab-cover").classList.add("active");
@@ -208,6 +232,14 @@ function renderCurrentView(direction = "next") {
     }
   } else if (activeMode === "mitre") {
     container.innerHTML = generateMitreMatrixHTML();
+  } else if (activeMode === "logparser") {
+    container.innerHTML = generateLogParserHTML();
+  } else if (activeMode === "hardening") {
+    container.innerHTML = generateHardeningHTML();
+  } else if (activeMode === "cheatsheet") {
+    container.innerHTML = generateCheatSheetHTML();
+  } else if (activeMode === "labs") {
+    container.innerHTML = generateIncidentLabsHTML();
   } else if (activeMode === "cover") {
     container.innerHTML = generateBrandCoverHTML();
   }
@@ -903,4 +935,323 @@ function generateMitreMatrixHTML() {
       </div>
     </article>
   `;
+}
+
+// --- 1. SIEM LOG PARSER LAB ENGINE ---
+const SAMPLE_LOGS = {
+  bruteforce: `Aug 01 14:22:01 kali sshd[4512]: Failed password for root from 192.168.1.105 port 54122 ssh2
+Aug 01 14:22:03 kali sshd[4512]: Failed password for root from 192.168.1.105 port 54124 ssh2
+Aug 01 14:22:05 kali sshd[4512]: Failed password for invalid user admin from 192.168.1.105 port 54128 ssh2
+Aug 01 14:22:09 kali sshd[4512]: Accepted password for root from 192.168.1.105 port 54132 ssh2
+Aug 01 14:22:10 kali systemd-logind[900]: New session 42 of user root.`,
+
+  privesc: `Aug 01 15:10:12 kali sudo: analyst : TTY=pts/0 ; PWD=/home/analyst ; USER=root ; COMMAND=/usr/bin/find . -exec /bin/sh \\;
+Aug 01 15:10:14 kali kernel: [ 4512.981] pkexec[9812]: SUID binary executed by uid 1000
+Aug 01 15:10:15 kali shadow: Password hash changed for user root via passwd`,
+
+  webshell: `Aug 01 16:05:00 kali apache2[1200]: 10.0.0.45 - - [01/Aug/2026:16:05:00] "GET /uploads/shell.php?cmd=cat%20/etc/shadow HTTP/1.1" 200 1420
+Aug 01 16:05:05 kali apache2[1200]: 10.0.0.45 - - [01/Aug/2026:16:05:05] "POST /uploads/shell.php HTTP/1.1" 200 4500
+Aug 01 16:05:10 kali kernel: [ 5200.12] nc[14512]: Outbound TCP connection to 10.0.0.45:4444 established`
+};
+
+function generateLogParserHTML() {
+  return `
+    <article class="logparser-wrapper">
+      <div style="text-align:center; margin-bottom:1.5rem;">
+        <h2 style="color:var(--accent-blue); font-size:1.6rem; margin-bottom:0.4rem;">🔍 SIEM Log Parser & Threat Detection Lab</h2>
+        <p style="color:var(--text-dark); font-size:0.9rem;">
+          Paste raw Linux logs below or select a preset incident sample to run automated threat triage!
+        </p>
+      </div>
+
+      <div class="log-preset-bar">
+        <span style="font-weight:700; font-size:0.85rem; align-self:center; color:var(--text-ink);">Load Preset:</span>
+        <button class="btn-preset" onclick="loadSampleLog('bruteforce')">🚨 SSH Brute Force</button>
+        <button class="btn-preset" onclick="loadSampleLog('privesc')">🔓 SUID PrivEsc</button>
+        <button class="btn-preset" onclick="loadSampleLog('webshell')">🐍 Web Shell & Reverse Shell</button>
+      </div>
+
+      <textarea id="log-input-area" class="log-textarea" placeholder="Paste /var/log/auth.log or syslog here..."></textarea>
+      
+      <div style="text-align:center; margin-top:0.5rem;">
+        <button class="btn-action btn-cyber" onclick="runLogTriage()" style="padding:0.6rem 1.8rem; font-size:1rem;">
+          <span class="icon">🔍</span><span> Run Threat Detection Engine</span>
+        </button>
+      </div>
+
+      <div id="log-triage-results" style="display:none; margin-top:1.5rem;"></div>
+    </article>
+  `;
+}
+
+function loadSampleLog(preset) {
+  const area = document.getElementById("log-input-area");
+  if (area && SAMPLE_LOGS[preset]) {
+    area.value = SAMPLE_LOGS[preset];
+  }
+}
+
+function runLogTriage() {
+  const raw = document.getElementById("log-input-area").value;
+  const resultsDiv = document.getElementById("log-triage-results");
+  if (!raw.trim()) { alert("Please paste log lines or select a sample preset first!"); return; }
+
+  const lines = raw.split("\n");
+  let threatCount = 0;
+  let detectedThreats = [];
+
+  const processedLines = lines.map(line => {
+    let lower = line.toLowerCase();
+    let isHigh = false;
+    let isMed = false;
+
+    if (lower.includes("failed password") || lower.includes("shell.php") || lower.includes("sudo:") || lower.includes("suid") || lower.includes("accepted password for root")) {
+      isHigh = true;
+      threatCount++;
+      if (lower.includes("failed password") && !detectedThreats.includes("SSH Brute Force Attempt")) detectedThreats.push("SSH Brute Force Attempt (T1110)");
+      if (lower.includes("shell.php") && !detectedThreats.includes("Web Shell Command Execution")) detectedThreats.push("Web Shell Execution (T1505.003)");
+      if (lower.includes("sudo:") && !detectedThreats.includes("Sudo Escalation Abuse")) detectedThreats.push("Sudo PrivEsc Abuse (T1548.002)");
+      if (lower.includes("suid") && !detectedThreats.includes("SUID Binary Execution")) detectedThreats.push("SUID Binary Abuse (T1548.001)");
+    } else if (lower.includes("invalid user") || lower.includes("connection established") || lower.includes("session")) {
+      isMed = true;
+      threatCount++;
+    }
+
+    const cssClass = isHigh ? 'log-line threat-high' : isMed ? 'log-line threat-medium' : 'log-line';
+    return `<div class="${cssClass}">${escapeHTML(line)}</div>`;
+  }).join('');
+
+  resultsDiv.style.display = "block";
+  resultsDiv.innerHTML = `
+    <div style="background:var(--paper-bg); border:2px solid var(--card-border); border-radius:12px; padding:1.2rem; margin-bottom:1rem;">
+      <h3 style="color:${threatCount > 0 ? 'var(--accent-red)' : 'var(--accent-green)'}; font-size:1.2rem; margin-bottom:0.5rem;">
+        ${threatCount > 0 ? `🚨 Threat Detection Result: ${threatCount} Anomalies Detected!` : `✅ Log Stream Clean — No Immediate High Severity Threats`}
+      </h3>
+      ${detectedThreats.length > 0 ? `
+        <div style="margin-bottom:0.8rem;">
+          <strong style="color:var(--text-ink);">Mapped MITRE TTPs:</strong>
+          <div style="display:flex; gap:0.4rem; margin-top:0.3rem; flex-wrap:wrap;">
+            ${detectedThreats.map(t => `<span class="cover-badge" style="background:#fee2e2; color:#991b1b; border:1px solid #f87171;">${t}</span>`).join('')}
+          </div>
+        </div>
+      ` : ''}
+      <div style="font-family:var(--font-hand); font-size:1.1rem; color:var(--text-ink); background:var(--bg-app); padding:0.8rem; border-radius:8px;">
+        💡 <strong>Telugu-English Triage Tip:</strong> Ee log file lo high severity lines red lo highlight chesam. SOC Analyst triage lo first SSH Failed count check cheyali, user account compromise nunchi IP block (`fail2ban`) & SUID binaries revoke cheyali!
+      </div>
+    </div>
+
+    <div class="log-output-box">
+      ${processedLines}
+    </div>
+  `;
+}
+
+
+// --- 2. CIS-STYLE HARDENING CHECKLIST ---
+const HARDENING_ITEMS = [
+  { id: "h1", cat: "User & Access Security", text: "Disable Root SSH Direct Login in /etc/ssh/sshd_config (PermitRootLogin no)", cmd: "sudo sed -i 's/#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config" },
+  { id: "h2", cat: "User & Access Security", text: "Enforce SSH Protocol 2 and Disable Empty Passwords", cmd: "sudo sed -i 's/#PermitEmptyPasswords.*/PermitEmptyPasswords no/' /etc/ssh/sshd_config" },
+  { id: "h3", cat: "User & Access Security", text: "Set Strict Permissions on /etc/shadow (chmod 600 & chown root:root)", cmd: "sudo chmod 600 /etc/shadow && sudo chown root:root /etc/shadow" },
+  { id: "h4", cat: "Network & Firewall", text: "Enable UFW Firewall with Default Deny Incoming Rules", cmd: "sudo ufw default deny incoming && sudo ufw default allow outgoing && sudo ufw enable" },
+  { id: "h5", cat: "Network & Firewall", text: "Disable IP Forwarding in sysctl.conf (net.ipv4.ip_forward = 0)", cmd: "sudo sysctl -w net.ipv4.ip_forward=0" },
+  { id: "h6", cat: "File System Security", text: "Audit All SUID/SGID Binaries for GTFOBins Privilege Escalation Vectors", cmd: "find / -type f \\( -perm -4000 -o -perm -2000 \\) -ls 2>/dev/null" },
+  { id: "h7", cat: "File System Security", text: "Mount /tmp directory with noexec, nosuid, nodev flags in /etc/fstab", cmd: "sudo mount -o remount,noexec,nosuid,nodev /tmp" },
+  { id: "h8", cat: "Logging & Auditd", text: "Enable Auditd Rules for Monitoring /etc/passwd and /etc/shadow Changes", cmd: "sudo auditctl -w /etc/shadow -p wa -k shadow_changes" }
+];
+
+function generateHardeningHTML() {
+  const savedChecks = JSON.parse(localStorage.getItem("soc_hardening_checks") || "[]");
+  const checkedCount = savedChecks.length;
+  const pct = Math.round((checkedCount / HARDENING_ITEMS.length) * 100);
+
+  return `
+    <article class="hardening-wrapper">
+      <div class="score-card">
+        <h2 style="font-size:1.5rem; margin-bottom:0.3rem;">🛡️ CIS Linux Security Hardening Score</h2>
+        <div style="font-size:2.4rem; font-weight:800; margin:0.4rem 0;"><span id="hardening-score-text">${pct}</span>%</div>
+        <p style="font-size:0.9rem; opacity:0.9;">Completed <span id="hardening-count">${checkedCount}</span> of ${HARDENING_ITEMS.length} Audit Control Rules</p>
+        <div class="score-bar-bg">
+          <div id="hardening-score-fill" class="score-bar-fill" style="width:${pct}%;"></div>
+        </div>
+      </div>
+
+      <div class="checklist-group">
+        ${HARDENING_ITEMS.map(item => {
+          const isChecked = savedChecks.includes(item.id);
+          return `
+            <div class="checklist-item" onclick="toggleHardeningCheck('${item.id}')">
+              <input type="checkbox" id="chk-${item.id}" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); toggleHardeningCheck('${item.id}')" />
+              <div style="flex:1;">
+                <div style="font-size:0.75rem; font-weight:700; color:var(--accent-blue); text-transform:uppercase;">${item.cat}</div>
+                <div style="font-weight:700; font-size:0.92rem; color:var(--text-dark); margin:0.2rem 0;">${item.text}</div>
+                <div style="font-family:var(--font-mono); font-size:0.76rem; color:#64748b; background:var(--paper-bg); padding:0.3rem 0.6rem; border-radius:6px; border:1px solid var(--card-border); margin-top:0.3rem; display:flex; justify-content:space-between; align-items:center;">
+                  <code>${escapeHTML(item.cmd)}</code>
+                  <button class="btn-copy-cmd" onclick="event.stopPropagation(); copyCmdToClipboard('${escapeHTML(item.cmd)}')">📋 Copy</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </article>
+  `;
+}
+
+function toggleHardeningCheck(id) {
+  let saved = JSON.parse(localStorage.getItem("soc_hardening_checks") || "[]");
+  const idx = saved.indexOf(id);
+  if (idx > -1) saved.splice(idx, 1);
+  else saved.push(id);
+  localStorage.setItem("soc_hardening_checks", JSON.stringify(saved));
+
+  const pct = Math.round((saved.length / HARDENING_ITEMS.length) * 100);
+  const scoreText = document.getElementById("hardening-score-text");
+  const countText = document.getElementById("hardening-count");
+  const scoreFill = document.getElementById("hardening-score-fill");
+  const chkBox = document.getElementById(`chk-${id}`);
+
+  if (chkBox) chkBox.checked = saved.includes(id);
+  if (scoreText) scoreText.innerText = pct;
+  if (countText) countText.innerText = saved.length;
+  if (scoreFill) scoreFill.style.width = `${pct}%`;
+}
+
+
+// --- 3. 1-CLICK CHEAT SHEET GENERATOR ---
+const CHEAT_SHEET_COMMANDS = [
+  { cat: "File Forensics", cmd: "grep -rnw '/var/log/' -e 'FAILED'", desc: "Search recursively for FAILED events in all logs." },
+  { cat: "File Forensics", cmd: "find / -mtime -1 -type f 2>/dev/null", desc: "Find all files modified in the last 24 hours." },
+  { cat: "Process Triage", cmd: "ps aux --sort=-%cpu | head -n 10", desc: "List top 10 highest CPU-consuming processes." },
+  { cat: "Process Triage", cmd: "ls -la /proc/<PID>/exe", desc: "Find true execution path of suspicious process PID." },
+  { cat: "Network Triage", cmd: "ss -tulpn | grep LISTEN", desc: "List all active listening TCP/UDP ports & PIDs." },
+  { cat: "Network Triage", cmd: "lsof -i :4444", desc: "Identify process connected to specific port 4444." },
+  { cat: "Permission Audit", cmd: "find / -perm -4000 -type f 2>/dev/null", desc: "Scan for all SUID binaries on Linux system." },
+  { cat: "Log Analysis", cmd: "awk '{print $1}' /var/log/auth.log | sort | uniq -c | sort -nr", desc: "Count and rank top remote IP addresses in logs." }
+];
+
+function generateCheatSheetHTML() {
+  return `
+    <article class="hardening-wrapper">
+      <div style="text-align:center; margin-bottom:1.5rem;">
+        <h2 style="color:var(--accent-blue); font-size:1.6rem; margin-bottom:0.4rem;">📑 1-Click Interactive Linux SOC Command Cheat Sheet</h2>
+        <p style="color:var(--text-dark); font-size:0.9rem;">
+          Essential Linux commands for Blue Teaming, Forensic Triage, & Log Analysis. Click 📋 Copy to use instantly!
+        </p>
+      </div>
+
+      <div class="cheatsheet-grid">
+        ${CHEAT_SHEET_COMMANDS.map(c => `
+          <div class="cmd-card">
+            <button class="btn-copy-cmd" onclick="copyCmdToClipboard('${escapeHTML(c.cmd)}')">📋 Copy</button>
+            <div style="font-size:0.75rem; font-weight:700; color:var(--accent-blue); text-transform:uppercase; margin-bottom:0.3rem;">${c.cat}</div>
+            <div style="font-family:var(--font-mono); font-weight:700; font-size:0.85rem; color:var(--accent-red); margin-bottom:0.4rem; padding-right:3rem;">
+              ${escapeHTML(c.cmd)}
+            </div>
+            <div style="font-size:0.8rem; color:#64748b;">${c.desc}</div>
+          </div>
+        `).join('')}
+      </div>
+    </article>
+  `;
+}
+
+function copyCmdToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    alert(`Copied command to clipboard:\n${text}`);
+  }).catch(() => {
+    alert(`Command: ${text}`);
+  });
+}
+
+
+// --- 4. INCIDENT RESPONSE SCENARIO LABS ---
+const INCIDENT_LABS = [
+  {
+    id: "lab1",
+    title: "Lab 1: Rogue Cryptominer Process Triage",
+    desc: "A CPU usage alert spiked to 99%. Analyst notices a process running under /tmp/.miner.py.",
+    question: "Which Linux command should you run to verify the executable binary location of PID 8812?",
+    options: [
+      "ls -la /proc/8812/exe",
+      "cat /etc/passwd",
+      "uname -a",
+      "chmod 777 /tmp"
+    ],
+    answer: 0,
+    explanation: "Correct! /proc/<PID>/exe points to the exact file executable path on Linux."
+  },
+  {
+    id: "lab2",
+    title: "Lab 2: Unauthorized SSH Key Injection",
+    desc: "An attacker gained access and injected a persistent SSH public key for persistence.",
+    question: "In which file would an attacker add their public key for passwordless SSH access?",
+    options: [
+      "/var/log/auth.log",
+      "~/.ssh/authorized_keys",
+      "/etc/sudoers",
+      "/tmp/key.txt"
+    ],
+    answer: 1,
+    explanation: "Correct! ~/.ssh/authorized_keys stores trusted public keys for SSH authentication."
+  }
+];
+
+function generateIncidentLabsHTML() {
+  return `
+    <article class="hardening-wrapper">
+      <div style="text-align:center; margin-bottom:1.5rem;">
+        <h2 style="color:var(--accent-blue); font-size:1.6rem; margin-bottom:0.4rem;">🎯 Interactive Linux SOC Incident Response Labs</h2>
+        <p style="color:var(--text-dark); font-size:0.9rem;">
+          Test your real-world triage skills across actual Blue Team incident scenarios!
+        </p>
+      </div>
+
+      ${INCIDENT_LABS.map(lab => `
+        <div class="lab-card">
+          <h3 style="color:var(--accent-blue); font-size:1.15rem; margin-bottom:0.4rem;">${lab.title}</h3>
+          <p style="color:var(--text-dark); font-size:0.88rem; margin-bottom:0.8rem;">${lab.desc}</p>
+          <div style="font-weight:700; font-size:0.92rem; color:var(--text-ink); margin-bottom:0.8rem;">❓ ${lab.question}</div>
+          
+          <div id="opts-${lab.id}">
+            ${lab.options.map((opt, i) => `
+              <button class="quiz-option-btn" onclick="checkLabAnswer('${lab.id}', ${i}, ${lab.answer}, '${escapeHTML(lab.explanation)}')">
+                ${String.fromCharCode(65 + i)}) ${escapeHTML(opt)}
+              </button>
+            `).join('')}
+          </div>
+
+          <div id="feedback-${lab.id}" style="display:none; margin-top:0.8rem; padding:0.8rem; border-radius:8px; font-weight:700; font-size:0.88rem;"></div>
+        </div>
+      `).join('')}
+    </article>
+  `;
+}
+
+function checkLabAnswer(labId, selectedOpt, correctOpt, explanation) {
+  const feedbackDiv = document.getElementById(`feedback-${labId}`);
+  const optsContainer = document.getElementById(`opts-${labId}`);
+
+  if (optsContainer) {
+    const btns = optsContainer.getElementsByTagName("button");
+    for (let i = 0; i < btns.length; i++) {
+      if (i === correctOpt) {
+        btns[i].className = "quiz-option-btn correct";
+      } else if (i === selectedOpt) {
+        btns[i].className = "quiz-option-btn wrong";
+      }
+    }
+  }
+
+  if (feedbackDiv) {
+    feedbackDiv.style.display = "block";
+    if (selectedOpt === correctOpt) {
+      feedbackDiv.style.background = "rgba(74, 222, 128, 0.2)";
+      feedbackDiv.style.color = "#166534";
+      feedbackDiv.innerHTML = `🎉 Correct! ${explanation}`;
+    } else {
+      feedbackDiv.style.background = "rgba(248, 113, 113, 0.2)";
+      feedbackDiv.style.color = "#991b1b";
+      feedbackDiv.innerHTML = `❌ Incorrect. Try reviewing the correct answer highlighted above!`;
+    }
+  }
 }
