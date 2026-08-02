@@ -603,8 +603,8 @@ function checkModuleCompletionOnMark(mode, id) {
     const modPages = NOTEBOOK_PAGES.filter(p => p.moduleId === modId);
     const lastPageInMod = modPages[modPages.length - 1].id;
     
-    // Celebration triggers strictly when the user marks the last page of a module or completes all pages in the module!
-    const isModuleFinished = (id === lastPageInMod) || modPages.every(p => completedPages.includes(p.id));
+    // Celebration triggers ONLY when ALL pages of the module are completed!
+    const isModuleFinished = modPages.every(p => completedPages.includes(p.id));
 
     if (isModuleFinished) {
       const milestoneKey = `mod_${modId}`;
@@ -627,9 +627,9 @@ function checkModuleCompletionOnMark(mode, id) {
     if (!qa) return;
     const catId = qa.catId;
     const catQAs = INTERVIEW_QUESTIONS.filter(q => q.catId === catId);
-    const lastQAInCat = catQAs[catQAs.length - 1].id;
 
-    const isCatFinished = (id === lastQAInCat) || catQAs.every(q => completedQAs.includes(q.id));
+    // Celebration triggers ONLY when ALL questions of the category are completed!
+    const isCatFinished = catQAs.every(q => completedQAs.includes(q.id));
 
     if (isCatFinished) {
       const milestoneKey = `interview_cat_${catId}`;
