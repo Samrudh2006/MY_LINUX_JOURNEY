@@ -1,4 +1,4 @@
-const CACHE_NAME = 'samrudh-soc-v3';
+const CACHE_NAME = 'samrudh-soc-v9';
 const ASSETS = [
   './',
   './index.html',
@@ -13,8 +13,10 @@ const ASSETS = [
   './manifest.json'
 ];
 
-self.addEventListener('install', (event) => {
-  self.skipWaiting();
+self.addEventListener('install', (event) => { event.waitUntil(self.skipWaiting());
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+  );
 });
 
 self.addEventListener('activate', (event) => {
@@ -33,13 +35,31 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  const request = event.request;
+  const url = new URL(request.url);
+
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          return response;
+        })
+        .catch(() => caches.match(request) || caches.match('./index.html'))
+    );
+    return;
+  }
+
   event.respondWith(
-    fetch(event.request).then((response) => {
-      if (response && response.status === 200 && event.request.method === 'GET') {
-        const responseCopy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseCopy));
-      }
-      return response;
-    }).catch(() => caches.match(event.request) || caches.match('./index.html'))
+    caches.match(request).then((cached) => {
+      const fetchPromise = fetch(request).then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, networkResponse.clone()));
+        }
+        return networkResponse;
+      }).catch(() => cached);
+      return cached || fetchPromise;
+    })
   );
 });

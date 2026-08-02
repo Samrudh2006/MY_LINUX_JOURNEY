@@ -4,7 +4,10 @@ let activeMode = "notebook"; // "notebook" | "interview" | "cover"
 let currentPageId = 1;
 let currentQAId = 1;
 let bookmarkedPages = JSON.parse(localStorage.getItem("soc_bookmarked_pages") || "[]");
+let bookmarkedAdvancedPages = JSON.parse(localStorage.getItem("adv_bookmarked_pages") || "[]");
 let bookmarkedQAs = JSON.parse(localStorage.getItem("soc_bookmarked_qas") || "[]");
+let completedPages = JSON.parse(localStorage.getItem("soc_completed_pages") || "[]");
+let completedQAs = JSON.parse(localStorage.getItem("soc_completed_qas") || "[]");
 let currentFilter = "all";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -81,6 +84,8 @@ function initModeTabs() {
   if (cheatTab) cheatTab.addEventListener("click", () => switchMode("cheatsheet"));
   const labsTab = document.getElementById("tab-labs");
   if (labsTab) labsTab.addEventListener("click", () => switchMode("labs"));
+  const advancedTab = document.getElementById("tab-advanced");
+  if (advancedTab) advancedTab.addEventListener("click", () => switchMode("advanced"));
   document.getElementById("tab-cover").addEventListener("click", () => switchMode("cover"));
 }
 
@@ -121,6 +126,16 @@ function switchMode(mode) {
     const tab = document.getElementById("tab-labs");
     if (tab) tab.classList.add("active");
     document.getElementById("toolbar-controls").style.display = "none";
+  } else if (mode === "advanced") {
+    const tab = document.getElementById("tab-advanced");
+    if (tab) tab.classList.add("active");
+    // Reset page index for advanced mode to start at first page
+    currentPageId = 1;
+    // Show toolbar for advanced mode similar to notebook
+    document.getElementById("page-type-label").innerText = "Advanced Page";
+    document.getElementById("total-count-label").innerText = ADVANCED_DOMAIN_PAGES.length;
+    document.getElementById("page-number-input").max = ADVANCED_DOMAIN_PAGES.length;
+    document.getElementById("toolbar-controls").style.display = "flex";
   } else if (mode === "cover") {
     document.getElementById("tab-cover").classList.add("active");
     document.getElementById("toolbar-controls").style.display = "none";
@@ -168,6 +183,21 @@ function initSidebar() {
       });
       navContainer.appendChild(catGroup);
     });
+  } else if (activeMode === "advanced") {
+    ADVANCED_DOMAIN_MODULES.forEach(mod => {
+  const modGroup = createSidebarGroup(mod.title, "");
+  const pagesInMod = ADVANCED_DOMAIN_PAGES.filter(p => p.moduleId === mod.id);
+  pagesInMod.forEach(page => {
+    const isSaved = bookmarkedAdvancedPages.includes(page.id) ? "⭐ " : "";
+    const item = createSidebarItem(page.id, `${isSaved}${page.concept}`, `P.${page.id}`, page.id === currentPageId, () => {
+      currentPageId = page.id;
+      renderCurrentView();
+      updateActiveSidebarItem();
+    });
+    modGroup.appendChild(item);
+  });
+  navContainer.appendChild(modGroup);
+});
   } else if (activeMode === "cover") {
     navContainer.innerHTML = `
       <div style="padding:1rem; color:var(--text-ink); font-weight:600;">
@@ -186,15 +216,23 @@ function createSidebarGroup(title, range) {
 
 function createSidebarItem(id, labelText, badgeText, isActive, onClick) {
   const item = document.createElement("div");
-  item.className = `page-item ${isActive ? 'active' : ''}`;
+  const isDone = activeMode === "interview" ? completedQAs.includes(id) : completedPages.includes(id);
+  item.className = `page-item ${isActive ? 'active' : ''} ${isDone ? 'completed-item' : ''}`;
   item.setAttribute("data-item-id", id);
-  item.innerHTML = `<span>${labelText}</span><span class="page-num">${badgeText}</span>`;
+  item.innerHTML = `<span>${isDone ? '✓ ' : ''}${labelText}</span><span class="page-num">${badgeText}</span>`;
   item.addEventListener("click", onClick);
   return item;
 }
 
 function updateActiveSidebarItem() {
-  const targetId = activeMode === "notebook" ? currentPageId : currentQAId;
+  let targetId = null;
+  if (activeMode === "notebook") {
+    targetId = currentPageId;
+  } else if (activeMode === "interview") {
+    targetId = currentQAId;
+  } else if (activeMode === "advanced") {
+    targetId = currentPageId;
+  }
   document.querySelectorAll(".page-item").forEach(item => {
     const id = parseInt(item.getAttribute("data-item-id"));
     if (id === targetId) {
@@ -240,10 +278,20 @@ function renderCurrentView(direction = "next") {
     container.innerHTML = generateCheatSheetHTML();
   } else if (activeMode === "labs") {
     container.innerHTML = generateIncidentLabsHTML();
+  } else if (activeMode === "advanced") {
+    const page = ADVANCED_DOMAIN_PAGES.find(p => p.id === currentPageId);
+    if (page) {
+      document.getElementById("page-number-input").value = currentPageId;
+      // Update bookmark button state for advanced pages
+      updateBookmarkButtonState(currentPageId);
+      container.innerHTML = generateAdvancedHTML(page);
+    }
   } else if (activeMode === "cover") {
     container.innerHTML = generateBrandCoverHTML();
   }
 
+  updateReadingProgress();
+  applySearchHighlights();
   updateActiveSidebarItem();
 }
 
@@ -333,52 +381,360 @@ function generatePageHTML(page) {
       <div class="sticky-note">
         "🧪 <strong>TRY IT PRACTICAL EXERCISE:</strong> Open terminal, run <code>${escapeHTML(page.command)}</code>, and observe output log timestamps."
       </div>
+
+      <div class="page-completion-footer">
+        <button class="btn-mark-complete ${completedPages.includes(page.id) ? 'completed' : ''}" onclick="togglePageCompletion('notebook', ${page.id})">
+          ${completedPages.includes(page.id) ? '✓ Completed' : '☑️ Mark as Complete'}
+        </button>
+      </div>
     </article>
   `;
 }
 
+function generateAdvancedHTML(page) {
+  // Custom heading for Advanced domain pages
+  const customHeader = `<h2 class="advanced-heading" style="text-align:center; font-family:'Outfit',sans-serif; color:var(--accent-blue); margin:1rem 0;">Advanced Domain – ${page.concept}</h2>`;
+  return customHeader + generatePageHTML(page);
+}
 
 
-// --- GENERATE INTERVIEW Q&A HTML ---
+
+
+// --- GENERATE INTERVIEW Q&A HTML (3D Flip Flashcards) ---
 function generateInterviewQAHTML(qa) {
   return `
-    <article class="interview-card">
-      <img src="logo.png" alt="SAMRUDH SOC" class="brand-watermark-stamp" />
-
-      <header class="page-header-row">
-        <div class="concept-title-box">
-          <h2 style="font-size:1.3rem;">${escapeHTML(qa.question)}</h2>
-          <span class="concept-tag">QUESTION #${qa.id}</span>
+    <div class="flashcard-3d-wrapper" onclick="if (!window.getSelection().toString()) this.classList.toggle('flipped')">
+      <div class="flashcard-inner">
+        
+        <!-- FRONT OF FLASHCARD (Matches User Image 2) -->
+        <div class="flashcard-front">
+          <div class="flashcard-header">
+            <div>
+              <h2 class="flashcard-question-title">${escapeHTML(qa.question).toUpperCase()}</h2>
+              <span class="flashcard-question-badge">QUESTION #${qa.id}</span>
+            </div>
+            <img src="logo.png" alt="SAMRUDH SOC" class="flashcard-logo-badge" />
+          </div>
+          
+          <div class="flashcard-click-hint">
+            <span>👆 Click card to reveal answer</span>
+          </div>
         </div>
-      </header>
 
-      <div class="qa-intent-box">
-        🎯 <strong>INTERVIEWER INTENT:</strong> ${escapeHTML(qa.intent)}
-      </div>
+        <!-- BACK OF FLASHCARD (Full Answer Breakdown) -->
+        <div class="flashcard-back">
+          <div class="flashcard-header">
+            <div>
+              <h2 class="flashcard-question-title" style="font-size: 1.1rem; text-transform: none;">${escapeHTML(qa.question)}</h2>
+              <span class="flashcard-question-badge">QUESTION #${qa.id}</span>
+            </div>
+            <span class="flashcard-flip-badge">🔄 Flip Back</span>
+          </div>
 
-      <div class="section-block">
-        <div class="section-label">🗣️ TELUGU-ENGLISH EXPLANATION (EASY UNDERSTANDING)</div>
-        <p class="handwritten-text">"${qa.explanation}"</p>
-      </div>
+          <div class="qa-intent-box" style="margin-top: 1rem;">
+            🎯 <strong>INTERVIEWER INTENT:</strong> ${escapeHTML(qa.intent)}
+          </div>
 
-      <div class="section-block">
-        <div class="section-label">💬 IDEAL ENGLISH ANSWER TO SPEAK IN INTERVIEW</div>
-        <div class="qa-ideal-box">"${escapeHTML(qa.idealAnswer)}"</div>
-      </div>
+          <div class="section-block" style="margin-top: 0.8rem;">
+            <div class="section-label">🗣️ TELUGU-ENGLISH EXPLANATION (EASY UNDERSTANDING)</div>
+            <p class="handwritten-text">"${qa.explanation}"</p>
+          </div>
 
-      <div class="section-block">
-        <div class="section-label">💻 REAL-WORLD SCENARIO / LOG COMMAND</div>
-        <div class="cmd-box">${escapeHTML(qa.example)}</div>
-      </div>
+          <div class="section-block">
+            <div class="section-label">💬 IDEAL ENGLISH ANSWER TO SPEAK IN INTERVIEW</div>
+            <div class="qa-ideal-box">"${escapeHTML(qa.idealAnswer)}"</div>
+          </div>
 
-      <div class="pro-tip-box">
-        💡 <strong>PRO-TIP TO STAND OUT:</strong> ${escapeHTML(qa.proTip)}
+          <div class="section-block">
+            <div class="section-label">💻 REAL-WORLD SCENARIO / LOG COMMAND</div>
+            <div class="cmd-box">${escapeHTML(qa.example)}</div>
+          </div>
+
+          <div class="pro-tip-box">
+            💡 <strong>PRO-TIP TO STAND OUT:</strong> ${escapeHTML(qa.proTip)}
+          </div>
+
+          <div class="page-completion-footer" style="margin-top: 1.2rem;">
+            <button class="btn-mark-complete ${completedQAs.includes(qa.id) ? 'completed' : ''}" onclick="event.stopPropagation(); togglePageCompletion('interview', ${qa.id})">
+              ${completedQAs.includes(qa.id) ? '✓ Completed' : '☑️ Mark as Complete'}
+            </button>
+          </div>
+
+          <div class="flashcard-click-hint" style="margin-top: 1rem;">
+            <span>🔄 Click card to flip back to question</span>
+          </div>
+        </div>
+
       </div>
-    </article>
+    </div>
   `;
+}
+
+// --- READING PROGRESS & SEARCH HIGHLIGHT HELPERS ---
+function updateReadingProgress() {
+  const progressBar = document.getElementById("reading-progress-bar");
+  const progressLabel = document.getElementById("progress-percentage-label");
+  const progressContainer = document.getElementById("reading-progress-container");
+
+  if (!progressBar || !progressContainer) return;
+
+  if (activeMode === "notebook" || activeMode === "interview" || activeMode === "advanced") {
+    progressContainer.style.display = "block";
+    let pct = 0;
+    if (activeMode === "notebook" && typeof NOTEBOOK_PAGES !== "undefined" && NOTEBOOK_PAGES.length) {
+      pct = Math.round((currentPageId / NOTEBOOK_PAGES.length) * 100);
+    } else if (activeMode === "interview" && typeof INTERVIEW_QUESTIONS !== "undefined" && INTERVIEW_QUESTIONS.length) {
+      pct = Math.round((currentQAId / INTERVIEW_QUESTIONS.length) * 100);
+    } else if (activeMode === "advanced" && typeof ADVANCED_DOMAIN_PAGES !== "undefined" && ADVANCED_DOMAIN_PAGES.length) {
+      pct = Math.round((currentPageId / ADVANCED_DOMAIN_PAGES.length) * 100);
+    }
+    progressBar.style.width = pct + "%";
+    if (progressLabel) progressLabel.innerText = pct + "%";
+  } else {
+    progressContainer.style.display = "none";
+  }
+}
+
+function applySearchHighlights() {
+  const searchInput = document.getElementById("search-input");
+  const query = searchInput ? searchInput.value.trim().toLowerCase() : "";
+  if (!query || query.length < 2) return;
+
+  const container = document.getElementById("notebook-paper-view");
+  if (!container) return;
+
+  const targetSelectors = "p, .handwritten-text, h2, .syntax-box, .cmd-box, .qa-ideal-box, .flashcard-question-title";
+  const elements = container.querySelectorAll(targetSelectors);
+
+  elements.forEach(el => {
+    if (el.querySelector("mark.highlight")) return;
+
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null, false);
+    const textNodes = [];
+    let node;
+    while ((node = walker.nextNode())) {
+      if (node.nodeValue.toLowerCase().includes(query)) {
+        textNodes.push(node);
+      }
+    }
+
+    textNodes.forEach(textNode => {
+      const parent = textNode.parentNode;
+      if (parent.tagName === "MARK" || parent.tagName === "SCRIPT" || parent.tagName === "STYLE") return;
+
+      const text = textNode.nodeValue;
+      const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
+      const frag = document.createDocumentFragment();
+      let lastIdx = 0;
+      let match;
+
+      while ((match = regex.exec(text)) !== null) {
+        if (match.index > lastIdx) {
+          frag.appendChild(document.createTextNode(text.substring(lastIdx, match.index)));
+        }
+        const mark = document.createElement("mark");
+        mark.className = "highlight";
+        mark.textContent = match[0];
+        frag.appendChild(mark);
+        lastIdx = regex.lastIndex;
+      }
+
+      if (lastIdx < text.length) {
+        frag.appendChild(document.createTextNode(text.substring(lastIdx)));
+      }
+
+      parent.replaceChild(frag, textNode);
+    });
+  });
+}
+
+// --- TERMINAL COLOR SCHEMES & CONFETTI MILESTONE SYSTEM ---
+function applyTerminalColorScheme(scheme) {
+  const termWin = document.querySelector(".terminal-window");
+  if (termWin) {
+    termWin.setAttribute("data-term-theme", scheme || "classic");
+  }
+}
+
+let celebratedMilestones = JSON.parse(localStorage.getItem("soc_celebrated_milestones") || "[]");
+
+function togglePageCompletion(mode, id) {
+  let list = mode === "interview" ? completedQAs : completedPages;
+  const storageKey = mode === "interview" ? "soc_completed_qas" : "soc_completed_pages";
+
+  const idx = list.indexOf(id);
+  let nowCompleted = false;
+
+  if (idx > -1) {
+    list.splice(idx, 1);
+  } else {
+    list.push(id);
+    nowCompleted = true;
+  }
+
+  localStorage.setItem(storageKey, JSON.stringify(list));
+
+  // Update button visual state
+  const btns = document.querySelectorAll(".btn-mark-complete");
+  btns.forEach(btn => {
+    if (nowCompleted) {
+      btn.classList.add("completed");
+      btn.innerHTML = "✓ Completed";
+    } else {
+      btn.classList.remove("completed");
+      btn.innerHTML = "☑️ Mark as Complete";
+    }
+  });
+
+  // Re-render sidebar to show completion checks
+  initSidebar();
+  updateReadingProgress();
+
+  if (nowCompleted) {
+    checkModuleCompletionOnMark(mode, id);
+  }
+}
+
+function checkModuleCompletionOnMark(mode, id) {
+  if (mode === "notebook") {
+    const page = typeof NOTEBOOK_PAGES !== "undefined" ? NOTEBOOK_PAGES.find(p => p.id === id) : null;
+    if (!page) return;
+    const modId = page.moduleId;
+    const modPages = NOTEBOOK_PAGES.filter(p => p.moduleId === modId);
+    const lastPageInMod = modPages[modPages.length - 1].id;
+    
+    // Celebration triggers strictly when the user marks the last page of a module or completes all pages in the module!
+    const isModuleFinished = (id === lastPageInMod) || modPages.every(p => completedPages.includes(p.id));
+
+    if (isModuleFinished) {
+      const milestoneKey = `mod_${modId}`;
+      if (!celebratedMilestones.includes(milestoneKey)) {
+        celebratedMilestones.push(milestoneKey);
+        localStorage.setItem("soc_celebrated_milestones", JSON.stringify(celebratedMilestones));
+
+        const modObj = typeof NOTEBOOK_MODULES !== "undefined" ? NOTEBOOK_MODULES.find(m => m.id === modId) : null;
+        const modTitle = modObj ? modObj.title : `Module ${modId}`;
+        
+        let title = `🎉 ${modTitle.toUpperCase()} COMPLETED! EXCELLENT PROGRESS!`;
+        if (id === 365 || modId === 11) {
+          title = "🏆 365-DAY MASTER MILESTONE COMPLETED! CERTIFIED BLUE TEAM ANALYST!";
+        }
+        triggerConfetti(title);
+      }
+    }
+  } else if (mode === "interview") {
+    const qa = typeof INTERVIEW_QUESTIONS !== "undefined" ? INTERVIEW_QUESTIONS.find(q => q.id === id) : null;
+    if (!qa) return;
+    const catId = qa.catId;
+    const catQAs = INTERVIEW_QUESTIONS.filter(q => q.catId === catId);
+    const lastQAInCat = catQAs[catQAs.length - 1].id;
+
+    const isCatFinished = (id === lastQAInCat) || catQAs.every(q => completedQAs.includes(q.id));
+
+    if (isCatFinished) {
+      const milestoneKey = `interview_cat_${catId}`;
+      if (!celebratedMilestones.includes(milestoneKey)) {
+        celebratedMilestones.push(milestoneKey);
+        localStorage.setItem("soc_celebrated_milestones", JSON.stringify(celebratedMilestones));
+
+        const catObj = typeof INTERVIEW_CATEGORIES !== "undefined" ? INTERVIEW_CATEGORIES.find(c => c.id === catId) : null;
+        const catTitle = catObj ? catObj.title : `Module ${catId}`;
+
+        let title = `🎉 ${catTitle.toUpperCase()} COMPLETED! EXCELLENT WORK!`;
+        if (id === 214 || catId === 5) {
+          title = "🎯 ALL 200+ INTERVIEW QUESTIONS MASTERED! YOU ARE INTERVIEW READY!";
+        }
+        triggerConfetti(title);
+      }
+    }
+  }
+}
+
+function triggerConfetti(bannerTitle) {
+  // 1. Toast / Banner notification
+  let banner = document.getElementById("milestone-toast-banner");
+  if (!banner) {
+    banner = document.createElement("div");
+    banner.id = "milestone-toast-banner";
+    banner.className = "milestone-toast-banner";
+    document.body.appendChild(banner);
+  }
+  banner.innerHTML = `
+    <div class="milestone-toast-content">
+      <span class="milestone-toast-icon">✨</span>
+      <span>${bannerTitle}</span>
+    </div>
+  `;
+  banner.classList.add("show");
+  setTimeout(() => banner.classList.remove("show"), 5000);
+
+  // 2. Canvas Confetti Particles Animation
+  let canvas = document.getElementById("confetti-canvas");
+  if (!canvas) {
+    canvas = document.createElement("canvas");
+    canvas.id = "confetti-canvas";
+    canvas.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:99999;";
+    document.body.appendChild(canvas);
+  }
+
+  const ctx = canvas.getContext("2d");
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const colors = ["#1565c0", "#0284c7", "#ff5964", "#ffe600", "#4ade80", "#a855f7", "#ec4899", "#38bdf8"];
+  const particles = [];
+  const count = 120;
+
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height * 0.4 - canvas.height * 0.2,
+      r: Math.random() * 8 + 4,
+      d: Math.random() * count,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      tilt: Math.floor(Math.random() * 10) - 10,
+      tiltAngleIncremental: Math.random() * 0.07 + 0.03,
+      tiltAngle: Math.random() * Math.PI,
+      vy: Math.random() * 3 + 2,
+      vx: (Math.random() - 0.5) * 3
+    });
+  }
+
+  let startTime = Date.now();
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    particles.forEach(p => {
+      p.tiltAngle += p.tiltAngleIncremental;
+      p.y += p.vy;
+      p.x += p.vx + Math.sin(p.d);
+      p.tilt = Math.sin(p.tiltAngle) * 15;
+
+      ctx.beginPath();
+      ctx.lineWidth = p.r / 2;
+      ctx.strokeStyle = p.color;
+      ctx.moveTo(p.x + p.tilt + p.r / 4, p.y);
+      ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 4);
+      ctx.stroke();
+    });
+
+    if (Date.now() - startTime < 4200) {
+      requestAnimationFrame(draw);
+    } else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+
+  draw();
 }
 
 // --- GENERATE BRAND COVER PAGE HTML ---
+
+function generateAdvancedHTML(page) {
+  // Reuse existing page HTML generator for advanced domain pages
+  return generatePageHTML(page);
+}
+
 function generateBrandCoverHTML() {
   return `
     <article class="brand-cover-page">
@@ -507,10 +863,12 @@ function setupEventListeners() {
 
   document.getElementById("btn-bookmark").addEventListener("click", () => {
     if (activeMode === "notebook") {
-      toggleBookmark(currentPageId, bookmarkedPages, "soc_bookmarked_pages");
-    } else if (activeMode === "interview") {
-      toggleBookmark(currentQAId, bookmarkedQAs, "soc_bookmarked_qas");
-    }
+  toggleBookmark(currentPageId, bookmarkedPages, "soc_bookmarked_pages");
+} else if (activeMode === "interview") {
+  toggleBookmark(currentQAId, bookmarkedQAs, "soc_bookmarked_qas");
+} else if (activeMode === "advanced") {
+  toggleBookmark(currentPageId, bookmarkedAdvancedPages, "adv_bookmarked_pages");
+}    
     updateBookmarkButtonState(activeMode === "notebook" ? currentPageId : currentQAId);
     initSidebar();
   });
@@ -529,6 +887,19 @@ function setupEventListeners() {
   document.getElementById("btn-terminal-close").addEventListener("click", () => {
     document.getElementById("terminal-modal").classList.add("hidden");
   });
+
+  const termThemeSelect = document.getElementById("term-theme-select");
+  if (termThemeSelect) {
+    const savedScheme = localStorage.getItem("term_color_scheme") || "classic";
+    termThemeSelect.value = savedScheme;
+    applyTerminalColorScheme(savedScheme);
+
+    termThemeSelect.addEventListener("change", (e) => {
+      const scheme = e.target.value;
+      localStorage.setItem("term_color_scheme", scheme);
+      applyTerminalColorScheme(scheme);
+    });
+  }
 
   document.getElementById("terminal-input").addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
@@ -580,7 +951,14 @@ function toggleBookmark(id, list, storageKey) {
 
 function updateBookmarkButtonState(id) {
   const btn = document.getElementById("btn-bookmark");
-  const isBookmarked = activeMode === "notebook" ? bookmarkedPages.includes(id) : bookmarkedQAs.includes(id);
+  let isBookmarked = false;
+  if (activeMode === "notebook") {
+    isBookmarked = bookmarkedPages.includes(id);
+  } else if (activeMode === "interview") {
+    isBookmarked = bookmarkedQAs.includes(id);
+  } else if (activeMode === "advanced") {
+    isBookmarked = bookmarkedAdvancedPages.includes(id);
+  }
   if (isBookmarked) {
     btn.classList.add("bookmarked");
     btn.innerText = "⭐ Saved";
@@ -594,16 +972,22 @@ function filterSidebar(query) {
   document.querySelectorAll(".page-item").forEach(item => {
     const pId = parseInt(item.getAttribute("data-item-id"));
     let matchesSearch = false;
+    let isBookmarked = false;
 
     if (activeMode === "notebook") {
       const page = NOTEBOOK_PAGES.find(p => p.id === pId);
       matchesSearch = !query || page.concept.toLowerCase().includes(query) || page.command.toLowerCase().includes(query);
+      isBookmarked = bookmarkedPages.includes(pId);
     } else if (activeMode === "interview") {
       const qa = INTERVIEW_QUESTIONS.find(q => q.id === pId);
       matchesSearch = !query || qa.question.toLowerCase().includes(query) || qa.idealAnswer.toLowerCase().includes(query);
+      isBookmarked = bookmarkedQAs.includes(pId);
+    } else if (activeMode === "advanced") {
+      const page = ADVANCED_DOMAIN_PAGES.find(p => p.id === pId);
+      matchesSearch = !query || page.concept.toLowerCase().includes(query) || page.command.toLowerCase().includes(query);
+      isBookmarked = bookmarkedAdvancedPages.includes(pId);
     }
 
-    const isBookmarked = activeMode === "notebook" ? bookmarkedPages.includes(pId) : bookmarkedQAs.includes(pId);
     const matchesFilter = (currentFilter === "all") || (currentFilter === "bookmarked" && isBookmarked);
 
     if (matchesSearch && matchesFilter) {

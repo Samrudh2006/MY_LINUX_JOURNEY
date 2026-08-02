@@ -1353,6 +1353,210 @@ body.theme-cyber .chip-forensics {
   font-family: var(--font-mono); font-size: 0.9rem; outline: none;
 }
 
+/* --- TERMINAL COLOR SCHEMES --- */
+.term-theme-control {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  color: #cbd5e1;
+  font-family: var(--font-mono);
+}
+
+.term-theme-dropdown {
+  background: #0f172a;
+  color: #38bdf8;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.term-theme-dropdown:hover {
+  border-color: #38bdf8;
+}
+
+/* 1. Classic Green (Default) */
+.terminal-window[data-term-theme="classic"],
+.terminal-window:not([data-term-theme]) {
+  background: #090d16;
+  border-color: #1e293b;
+}
+
+/* 2. Dracula Theme */
+.terminal-window[data-term-theme="dracula"] {
+  background: #282a36;
+  border-color: #44475a;
+}
+.terminal-window[data-term-theme="dracula"] .terminal-header { background: #21222c; border-bottom-color: #44475a; }
+.terminal-window[data-term-theme="dracula"] .terminal-body { color: #f8f8f2; }
+.terminal-window[data-term-theme="dracula"] .term-prompt { color: #ff79c6; }
+.terminal-window[data-term-theme="dracula"] .term-welcome { color: #bd93f9; }
+.terminal-window[data-term-theme="dracula"] .cmd-tag { color: #8be9fd; font-weight: bold; }
+.terminal-window[data-term-theme="dracula"] .term-response { color: #50fa7b; }
+.terminal-window[data-term-theme="dracula"] .terminal-input-line input { color: #50fa7b; }
+.terminal-window[data-term-theme="dracula"] .term-theme-dropdown { background: #21222c; color: #ff79c6; border-color: #6272a4; }
+
+/* 3. Solarized Dark Theme */
+.terminal-window[data-term-theme="solarized"] {
+  background: #002b36;
+  border-color: #073642;
+}
+.terminal-window[data-term-theme="solarized"] .terminal-header { background: #073642; border-bottom-color: #586e75; }
+.terminal-window[data-term-theme="solarized"] .terminal-body { color: #839496; }
+.terminal-window[data-term-theme="solarized"] .term-prompt { color: #b58900; }
+.terminal-window[data-term-theme="solarized"] .term-welcome { color: #93a1a1; }
+.terminal-window[data-term-theme="solarized"] .cmd-tag { color: #268bd2; font-weight: bold; }
+.terminal-window[data-term-theme="solarized"] .term-response { color: #2aa198; }
+.terminal-window[data-term-theme="solarized"] .terminal-input-line input { color: #2aa198; }
+.terminal-window[data-term-theme="solarized"] .term-theme-dropdown { background: #073642; color: #b58900; border-color: #586e75; }
+
+/* 4. Monokai Theme */
+.terminal-window[data-term-theme="monokai"] {
+  background: #272822;
+  border-color: #3e3d32;
+}
+.terminal-window[data-term-theme="monokai"] .terminal-header { background: #1e1e1c; border-bottom-color: #3e3d32; }
+.terminal-window[data-term-theme="monokai"] .terminal-body { color: #f8f8f2; }
+.terminal-window[data-term-theme="monokai"] .term-prompt { color: #a6e22e; }
+.terminal-window[data-term-theme="monokai"] .term-welcome { color: #75715e; }
+.terminal-window[data-term-theme="monokai"] .cmd-tag { color: #66d9ef; font-weight: bold; }
+.terminal-window[data-term-theme="monokai"] .term-response { color: #e6db74; }
+.terminal-window[data-term-theme="monokai"] .terminal-input-line input { color: #fd971f; }
+.terminal-window[data-term-theme="monokai"] .term-theme-dropdown { background: #1e1e1c; color: #a6e22e; border-color: #75715e; }
+
+/* 5. Cyberpunk Neon Theme */
+.terminal-window[data-term-theme="cyberpunk"] {
+  background: #0d0221;
+  border-color: #ff007f;
+  box-shadow: 0 0 25px rgba(255, 0, 127, 0.3);
+}
+.terminal-window[data-term-theme="cyberpunk"] .terminal-header { background: #150535; border-bottom-color: #ff007f; }
+.terminal-window[data-term-theme="cyberpunk"] .terminal-body { color: #00f0ff; }
+.terminal-window[data-term-theme="cyberpunk"] .term-prompt { color: #ff007f; }
+.terminal-window[data-term-theme="cyberpunk"] .term-welcome { color: #ffe600; }
+.terminal-window[data-term-theme="cyberpunk"] .cmd-tag { color: #ff007f; font-weight: bold; }
+.terminal-window[data-term-theme="cyberpunk"] .term-response { color: #00f0ff; }
+.terminal-window[data-term-theme="cyberpunk"] .terminal-input-line input { color: #ffe600; }
+.terminal-window[data-term-theme="cyberpunk"] .term-theme-dropdown { background: #150535; color: #ff007f; border-color: #ff007f; }
+
+/* --- MILESTONE TOAST BANNER --- */
+.milestone-toast-banner {
+  position: fixed;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #1565c0, #0284c7);
+  color: #ffffff;
+  padding: 0.9rem 1.8rem;
+  border-radius: 50px;
+  box-shadow: 0 10px 30px rgba(21, 101, 192, 0.4), 0 0 20px rgba(56, 189, 248, 0.4);
+  font-family: var(--font-sans, 'Outfit', sans-serif);
+  font-weight: 800;
+  font-size: 0.95rem;
+  z-index: 100000;
+  transition: top 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.milestone-toast-banner.show {
+  top: 24px;
+}
+
+.milestone-toast-content {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  white-space: nowrap;
+}
+
+@keyframes spinStar {
+  from { transform: scale(1) rotate(0deg); }
+  to { transform: scale(1.3) rotate(20deg); }
+}
+
+/* --- MARK AS COMPLETE BUTTON & FOOTER --- */
+.page-completion-footer {
+  margin-top: 1.8rem;
+  padding-top: 1.2rem;
+  border-top: 2px dashed var(--card-border, #e0d7c3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.btn-mark-complete {
+  background: var(--paper-bg, #fffdf5);
+  color: var(--text-ink, #1a237e);
+  border: 2px solid var(--accent-blue, #1565c0);
+  border-radius: 50px;
+  padding: 0.65rem 1.6rem;
+  font-family: var(--font-sans, 'Outfit', sans-serif);
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 3px 10px rgba(21, 101, 192, 0.12);
+}
+
+.btn-mark-complete:hover {
+  background: var(--accent-blue, #1565c0);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(21, 101, 192, 0.25);
+}
+
+.btn-mark-complete.completed {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  color: #ffffff;
+  border-color: #15803d;
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.3);
+}
+
+.btn-mark-complete.completed:hover {
+  background: linear-gradient(135deg, #15803d, #166534);
+  transform: translateY(-2px);
+}
+
+body.theme-cyber .btn-mark-complete {
+  background: #1e293b;
+  color: #38bdf8;
+  border-color: #38bdf8;
+}
+
+body.theme-cyber .btn-mark-complete:hover {
+  background: #38bdf8;
+  color: #0f172a;
+}
+
+body.theme-cyber .btn-mark-complete.completed {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #0f172a;
+  border-color: #4ade80;
+}
+
+.page-item.completed-item span:first-child {
+  color: #16a34a;
+  font-weight: bold;
+}
+
+body.theme-cyber .page-item.completed-item span:first-child {
+  color: #4ade80;
+}
+
+@keyframes spinStar {
+  from { transform: scale(1) rotate(0deg); }
+  to { transform: scale(1.3) rotate(20deg); }
+}
+
 /* --- PRINT / PDF EXPORT --- */
 
 .print-only-container { display: none; }
@@ -1477,7 +1681,245 @@ body.theme-cyber .chip-forensics {
 
 /* --- TERM RESPONSE LINES --- */
 .term-cmd-line { margin-top: 0.5rem; color: #94a3b8; }
-.term-response  { color: #4af626; white-space: pre-wrap; margin-bottom: 0.5rem; line-height: 1.5; }
+/* --- READING PROGRESS CARD (Exact Match to User Request Image 1) --- */
+.reading-progress-card {
+  background: var(--paper-bg, #fffdf5);
+  border: 1.5px solid var(--card-border, #e0d7c3);
+  border-radius: 12px;
+  padding: 0.85rem 1.2rem;
+  margin: 0.8rem 0 1rem 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  width: 100%;
+}
+
+.progress-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.6rem;
+}
+
+.progress-card-title {
+  font-weight: 800;
+  color: var(--text-ink, #1a237e);
+  font-size: 0.98rem;
+  font-family: var(--font-sans, 'Outfit', sans-serif);
+  letter-spacing: -0.01em;
+}
+
+.progress-card-pct {
+  font-weight: 800;
+  color: var(--text-ink, #1a237e);
+  font-size: 0.98rem;
+  font-family: var(--font-sans, 'Outfit', sans-serif);
+}
+
+.progress-track-bg {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--card-border, #e0d7c3);
+  height: 14px;
+  border-radius: 999px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.progress-fill-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #1565c0, #0284c7);
+  border-radius: 999px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body.theme-cyber .reading-progress-card {
+  background: #111827;
+  border-color: #1e293b;
+}
+
+body.theme-cyber .progress-card-title,
+body.theme-cyber .progress-card-pct {
+  color: #38bdf8;
+}
+
+body.theme-cyber .progress-track-bg {
+  background: #0f172a;
+  border-color: #1e293b;
+}
+
+/* --- INTERACTIVE 3D FLIP FLASHCARDS (Exact Match to User Request Image 2) --- */
+.flashcard-3d-wrapper {
+  perspective: 1200px;
+  cursor: pointer;
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+.flashcard-inner {
+  position: relative;
+  width: 100%;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+.flashcard-3d-wrapper.flipped .flashcard-inner {
+  transform: rotateY(180deg);
+}
+
+.flashcard-front,
+.flashcard-back {
+  width: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 14px;
+  background: var(--paper-bg, #fffdf5);
+  border: 2px solid var(--card-border, #e0d7c3);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+  padding: 2rem 2.2rem;
+  box-sizing: border-box;
+}
+
+.flashcard-front {
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.flashcard-back {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: rotateY(180deg);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.flashcard-3d-wrapper.flipped .flashcard-front {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.flashcard-3d-wrapper.flipped .flashcard-back {
+  position: relative;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.flashcard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  width: 100%;
+}
+
+.flashcard-question-title {
+  font-family: var(--font-sans, 'Outfit', sans-serif);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-ink, #1a237e);
+  text-transform: uppercase;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.5rem 0;
+}
+
+.flashcard-question-badge {
+  background: #d32f2f;
+  color: #ffffff;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.2rem 0.55rem;
+  text-transform: uppercase;
+  display: inline-block;
+  letter-spacing: 0.04em;
+}
+
+.flashcard-logo-badge {
+  width: 60px;
+  height: 60px;
+  border-radius: 10px;
+  border: 1.5px solid var(--card-border, #e0d7c3);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.flashcard-click-hint {
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #78716c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-top: 3rem;
+  user-select: none;
+  transition: color 0.2s ease;
+}
+
+.flashcard-3d-wrapper:hover .flashcard-click-hint {
+  color: var(--accent-blue, #1565c0);
+}
+
+.flashcard-flip-badge {
+  background: var(--accent-blue, #1565c0);
+  color: #ffffff;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.25rem 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+
+/* Cyber Theme for Flashcards */
+body.theme-cyber .flashcard-front,
+body.theme-cyber .flashcard-back {
+  background: #111827;
+  border-color: #1e293b;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+}
+
+body.theme-cyber .flashcard-question-title {
+  color: #f8fafc;
+}
+
+body.theme-cyber .flashcard-click-hint {
+  color: #94a3b8;
+}
+
+body.theme-cyber .flashcard-3d-wrapper:hover .flashcard-click-hint {
+  color: #38bdf8;
+}
+
+/* Search Term Highlights */
+mark.highlight {
+  background-color: #fff9c4 !important;
+  color: #1a237e !important;
+  padding: 0.1em 0.3em;
+  border-radius: 4px;
+  box-shadow: 0 0 6px rgba(255, 249, 196, 0.9);
+  animation: highlightFade 0.4s ease-in-out;
+}
+
+@keyframes highlightFade {
+  from { background-color: #ffe082; }
+  to { background-color: #fff9c4; }
+}
+
+body.theme-cyber mark.highlight {
+  background-color: #fef08a !important;
+  color: #0f172a !important;
+}
 
 /* ============================================================
    📱 MOBILE RESPONSIVE STYLES
