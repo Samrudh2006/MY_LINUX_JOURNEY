@@ -1,4 +1,4 @@
-const CACHE_NAME = 'samrudh-soc-v10';
+const CACHE_NAME = 'samrudh-soc-v12';
 const ASSETS = [
   './',
   './index.html',

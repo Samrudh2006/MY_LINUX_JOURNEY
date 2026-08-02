@@ -340,8 +340,7 @@ const ADVANCED_DOMAIN_PAGES = [
     remember: "Always include `Evidence` section with raw email.",
     noteVisual: ""
   },
-    },
-    {
+  {
       id: 21,
       moduleId: 1,
       concept: "Windows Event ID 4625 – Failed Logon",
@@ -369,7 +368,6 @@ const ADVANCED_DOMAIN_PAGES = [
       remember: "ప్రాముఖ్యత కలిగిన ఖాతాలకు ఈ ఈవెంట్ వస్తే అలార్ట్ చేయండి.",
       noteVisual: "windows_event_id_4672.png"
     },
-  {
     {
       id: 23,
       moduleId: 1,

@@ -129,13 +129,7 @@ function switchMode(mode) {
   } else if (mode === "advanced") {
     const tab = document.getElementById("tab-advanced");
     if (tab) tab.classList.add("active");
-    // Reset page index for advanced mode to start at first page
-    currentPageId = 1;
-    // Show toolbar for advanced mode similar to notebook
-    document.getElementById("page-type-label").innerText = "Advanced Page";
-    document.getElementById("total-count-label").innerText = ADVANCED_DOMAIN_PAGES.length;
-    document.getElementById("page-number-input").max = ADVANCED_DOMAIN_PAGES.length;
-    document.getElementById("toolbar-controls").style.display = "flex";
+    document.getElementById("toolbar-controls").style.display = "none";
   } else if (mode === "cover") {
     document.getElementById("tab-cover").classList.add("active");
     document.getElementById("toolbar-controls").style.display = "none";
@@ -184,20 +178,18 @@ function initSidebar() {
       navContainer.appendChild(catGroup);
     });
   } else if (activeMode === "advanced") {
-    ADVANCED_DOMAIN_MODULES.forEach(mod => {
-  const modGroup = createSidebarGroup(mod.title, "");
-  const pagesInMod = ADVANCED_DOMAIN_PAGES.filter(p => p.moduleId === mod.id);
-  pagesInMod.forEach(page => {
-    const isSaved = bookmarkedAdvancedPages.includes(page.id) ? "⭐ " : "";
-    const item = createSidebarItem(page.id, `${isSaved}${page.concept}`, `P.${page.id}`, page.id === currentPageId, () => {
-      currentPageId = page.id;
-      renderCurrentView();
-      updateActiveSidebarItem();
-    });
-    modGroup.appendChild(item);
-  });
-  navContainer.appendChild(modGroup);
-});
+    navContainer.innerHTML = `
+      <div style="padding:1.8rem 1.2rem; color:var(--text-ink); text-align:center;">
+        <div style="font-size:2.2rem; margin-bottom:0.6rem;">🔒</div>
+        <div style="font-family:var(--font-sans); color:var(--accent-blue); font-size:1.05rem; font-weight:800; margin-bottom:0.4rem;">
+          Advanced Domain (Locked Preview)
+        </div>
+        <p style="font-size:0.82rem; color:#64748b; font-weight:600; line-height:1.45; margin:0;">
+          The 365-Page Master Handbook covers Module 0 through Module 11.<br><br>
+          Advanced Terminal & Simulation labs unlock in the upcoming version release.
+        </p>
+      </div>
+    `;
   } else if (activeMode === "cover") {
     navContainer.innerHTML = `
       <div style="padding:1rem; color:var(--text-ink); font-weight:600;">
@@ -279,13 +271,7 @@ function renderCurrentView(direction = "next") {
   } else if (activeMode === "labs") {
     container.innerHTML = generateIncidentLabsHTML();
   } else if (activeMode === "advanced") {
-    const page = ADVANCED_DOMAIN_PAGES.find(p => p.id === currentPageId);
-    if (page) {
-      document.getElementById("page-number-input").value = currentPageId;
-      // Update bookmark button state for advanced pages
-      updateBookmarkButtonState(currentPageId);
-      container.innerHTML = generateAdvancedHTML(page);
-    }
+    container.innerHTML = generateAdvancedHTML();
   } else if (activeMode === "cover") {
     container.innerHTML = generateBrandCoverHTML();
   }
@@ -391,10 +377,77 @@ function generatePageHTML(page) {
   `;
 }
 
-function generateAdvancedHTML(page) {
-  // Custom heading for Advanced domain pages
-  const customHeader = `<h2 class="advanced-heading" style="text-align:center; font-family:'Outfit',sans-serif; color:var(--accent-blue); margin:1rem 0;">Advanced Domain – ${page.concept}</h2>`;
-  return customHeader + generatePageHTML(page);
+function generateAdvancedHTML() {
+  return `
+    <article class="advanced-locked-card" style="background: var(--paper-bg, #fffdf5); border: 2px solid var(--card-border, #e0d7c3); border-radius: 16px; padding: 2.2rem; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06); text-align: center; max-width: 860px; margin: 1rem auto;">
+      
+      <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(245, 158, 11, 0.12)); border: 1.5px solid #f59e0b; color: #b45309; padding: 0.45rem 1.1rem; border-radius: 30px; font-weight: 800; font-size: 0.85rem; margin-bottom: 1.4rem;">
+        <span>🔒 ADVANCED DOMAIN — COMING SOON (LOCKED PREVIEW)</span>
+      </div>
+
+      <h1 style="font-family: var(--font-sans, 'Outfit', sans-serif); font-size: 1.85rem; font-weight: 800; color: var(--accent-blue, #1565c0); margin: 0 0 0.6rem 0;">
+        💻 Advanced Terminal & Lab Simulation
+      </h1>
+
+      <p style="font-size: 0.98rem; color: var(--text-ink, #1a237e); font-weight: 600; max-width: 680px; margin: 0 auto 2.2rem auto; line-height: 1.5;">
+        Get a sneak peek at the upcoming hands-on simulation module designed for Tier-2/3 Blue Team Threat Hunting and Real-Time Terminal Defense.
+      </p>
+
+      <!-- GLIMPSE FEATURE SECTIONS REQUIRED BY USER -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.2rem; text-align: left; margin-bottom: 2.2rem;">
+        
+        <!-- 1. Interactive Command Prompt -->
+        <div style="background: var(--bg-app, #f4edd9); border: 1.5px solid var(--card-border, #e0d7c3); border-radius: 12px; padding: 1.4rem;">
+          <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">💻</div>
+          <h3 style="font-family: var(--font-sans, 'Outfit', sans-serif); color: var(--accent-blue, #1565c0); font-size: 1.05rem; font-weight: 800; margin-bottom: 0.4rem;">
+            1. Interactive Command Prompt
+          </h3>
+          <p style="font-size: 0.85rem; color: var(--text-dark, #212121); line-height: 1.48;">
+            Upgrade the static terminal UI into a functional sandbox where users can actually type and execute live commands (<code>grep</code>, <code>awk</code>, <code>sed</code>, <code>cat /var/log/auth.log</code>).
+          </p>
+        </div>
+
+        <!-- 2. Scenario-Based Labs -->
+        <div style="background: var(--bg-app, #f4edd9); border: 1.5px solid var(--card-border, #e0d7c3); border-radius: 12px; padding: 1.4rem;">
+          <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">🛡️</div>
+          <h3 style="font-family: var(--font-sans, 'Outfit', sans-serif); color: var(--accent-blue, #1565c0); font-size: 1.05rem; font-weight: 800; margin-bottom: 0.4rem;">
+            2. Scenario-Based Labs
+          </h3>
+          <p style="font-size: 0.85rem; color: var(--text-dark, #212121); line-height: 1.48;">
+            Create simulated incident response scenarios where the user must type the correct sequence of Linux commands to "defend" the server or find the malicious IP.
+          </p>
+        </div>
+
+        <!-- 3. Real-Time Command Validation -->
+        <div style="background: var(--bg-app, #f4edd9); border: 1.5px solid var(--card-border, #e0d7c3); border-radius: 12px; padding: 1.4rem;">
+          <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">⚡</div>
+          <h3 style="font-family: var(--font-sans, 'Outfit', sans-serif); color: var(--accent-blue, #1565c0); font-size: 1.05rem; font-weight: 800; margin-bottom: 0.4rem;">
+            3. Real-Time Command Validation
+          </h3>
+          <p style="font-size: 0.85rem; color: var(--text-dark, #212121); line-height: 1.48;">
+            Provide instant success/fail feedback when they attempt terminal challenges, with telemetry feedback and step-by-step triage guidance.
+          </p>
+        </div>
+
+      </div>
+
+      <!-- ACTIVE PRACTICAL NAVIGATION -->
+      <div style="background: linear-gradient(135deg, rgba(21, 101, 192, 0.08), rgba(2, 132, 199, 0.08)); border: 1.5px dashed var(--accent-blue); padding: 1.4rem; border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 0.8rem;">
+        <div style="font-weight: 700; font-size: 0.9rem; color: var(--text-ink);">
+          🚀 Practice interactive terminal commands & incident challenges in the current active modules:
+        </div>
+        <div style="display: flex; gap: 0.8rem; flex-wrap: wrap; justify-content: center;">
+          <button onclick="document.getElementById('terminal-modal').classList.remove('hidden'); document.getElementById('terminal-input').focus();" class="btn-action btn-cyber" style="padding: 0.6rem 1.2rem; font-size: 0.88rem;">
+            💻 Open Interactive Terminal Sandbox
+          </button>
+          <button onclick="switchMode('labs')" class="btn-action btn-voice" style="padding: 0.6rem 1.2rem; font-size: 0.88rem;">
+            🚩 Open Incident Response Labs
+          </button>
+        </div>
+      </div>
+
+    </article>
+  `;
 }
 
 
