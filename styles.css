@@ -2885,6 +2885,29 @@ body.contrast-high-light { --bg-app: #fff; --paper-bg: #fff; --text-ink: #000; -
 .badge-earned { background: linear-gradient(135deg,#e8f5e9,#f1f8e9); border-color: #4caf50; }
 .badge-locked { background: #f1f5f9; border-color: #e2e8f0; opacity: 0.6; filter: grayscale(1); }
 .badge-icon { font-size: 2.2rem; margin-bottom: 0.4rem; }
+.badge-icon-sprite {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 0.55rem;
+  border-radius: 10px;
+  background-image: var(--badge-sprite-url);
+  background-repeat: no-repeat;
+  background-size: 300% 400%;
+  background-position: var(--badge-sprite-pos, 0% 0%);
+}
+.badge-icon-locked {
+  position: relative;
+  filter: grayscale(1) brightness(0.62);
+}
+.badge-icon-locked::after {
+  content: '🔒';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
 .badge-name { font-weight: 800; font-size: 0.85rem; color: var(--text-ink); }
 .badge-desc { font-size: 0.72rem; color: #64748b; margin-top: 0.2rem; }
 

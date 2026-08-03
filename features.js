@@ -67,6 +67,26 @@
     }},
     { id: 'hardening',     icon: '🔒', name: 'Hardening Expert', desc: 'Completed the CIS Linux Hardening Audit',         check: () => !!localStorage.getItem('soc_hardening_completed') },
   ];
+  const BADGE_SPRITE_URL = 'https://github.com/user-attachments/assets/553e228e-0801-470d-a985-2124abd3d9dd';
+  const BADGE_SPRITE_POSITIONS = {
+    first_step: '0% 0%',
+    streak3: '50% 0%',
+    streak7: '100% 0%',
+    notebook10: '0% 33.3333%',
+    notebook50: '50% 33.3333%',
+    lab5: '100% 33.3333%',
+    lab15: '0% 66.6667%',
+    lab50: '50% 66.6667%',
+    cheat10: '100% 66.6667%',
+    advanced10: '0% 100%',
+    bookmarks5: '50% 100%',
+    hardening: '100% 100%',
+  };
+
+  function renderBadgeIcon(badgeId, isEarned) {
+    const spritePos = BADGE_SPRITE_POSITIONS[badgeId] || '0% 0%';
+    return `<div class="badge-icon badge-icon-sprite ${isEarned ? '' : 'badge-icon-locked'}" style="--badge-sprite-url:url('${BADGE_SPRITE_URL}'); --badge-sprite-pos:${spritePos};" aria-hidden="true"></div>`;
+  }
 
   function checkAndAwardBadges() {
     const earned = JSON.parse(localStorage.getItem('soc_earned_badges') || '[]');
@@ -120,7 +140,7 @@
           <div class="badges-grid">
             ${BADGE_DEFINITIONS.map(b => `
               <div class="badge-card ${earned.includes(b.id) ? 'badge-earned' : 'badge-locked'}">
-                <div class="badge-icon">${earned.includes(b.id) ? b.icon : '🔒'}</div>
+                ${renderBadgeIcon(b.id, earned.includes(b.id))}
                 <div class="badge-name">${b.name}</div>
                 <div class="badge-desc">${b.desc}</div>
               </div>
