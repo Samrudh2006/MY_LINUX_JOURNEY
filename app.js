@@ -16,6 +16,16 @@ let completedQAs = JSON.parse(localStorage.getItem("soc_completed_qas") || "[]")
 let completedLabIds = JSON.parse(localStorage.getItem("soc_completed_labs") || "[]");
 let currentFilter = "all";
 
+// Sync state to global window object for feature extensions
+function syncWindowState() {
+  window.activeMode = activeMode;
+  window.currentPageId = currentPageId;
+  window.currentAdvancedPageId = currentAdvancedPageId;
+  window.currentCheatPageId = currentCheatPageId;
+  window.currentQAId = currentQAId;
+}
+syncWindowState();
+
 document.addEventListener("DOMContentLoaded", () => {
   initSplashScreen();
   initPWA();
@@ -359,6 +369,7 @@ function updateActiveSidebarItem() {
 
 // --- RENDER MAIN VIEW AREA (WITH 3D PAGE FLIP ANIMATION) ---
 function renderCurrentView(direction = "next") {
+  syncWindowState();
   const container = document.getElementById("notebook-paper-view");
 
   // 3D Book Page Flip Animation

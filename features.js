@@ -354,7 +354,7 @@
     const view = document.getElementById('notebook-paper-view');
     if (!view) return;
 
-    const mode = window.activeMode || 'notebook';
+    const mode = window.activeMode || (typeof activeMode !== 'undefined' ? activeMode : 'notebook');
     if (mode !== 'notebook' && mode !== 'advanced' && mode !== 'cheatsheet') {
       const existing = document.getElementById('study-notes-panel');
       if (existing) existing.remove();
@@ -362,9 +362,25 @@
     }
 
     let pageNum = 1;
-    if (mode === 'notebook') pageNum = window.currentPageId || 1;
-    else if (mode === 'advanced') pageNum = window.currentAdvancedPageId || 1;
-    else if (mode === 'cheatsheet') pageNum = window.currentCheatPageId || 1;
+    if (mode === 'notebook') {
+      pageNum = window.currentPageId || (typeof currentPageId !== 'undefined' ? currentPageId : 1);
+    } else if (mode === 'advanced') {
+      pageNum = window.currentAdvancedPageId || (typeof currentAdvancedPageId !== 'undefined' ? currentAdvancedPageId : 1);
+    } else if (mode === 'cheatsheet') {
+      pageNum = window.currentCheatPageId || (typeof currentCheatPageId !== 'undefined' ? currentCheatPageId : 1);
+    }
+
+    // Secondary fallback: inspect active item in sidebar or page number input
+    const pageInput = document.getElementById('page-number-input');
+    if (pageInput && pageInput.value) {
+      const val = parseInt(pageInput.value);
+      if (val && !isNaN(val)) pageNum = val;
+    }
+    const activeItem = document.querySelector('.page-item.active');
+    if (activeItem) {
+      const itemVal = parseInt(activeItem.getAttribute('data-item-id'));
+      if (itemVal && !isNaN(itemVal)) pageNum = itemVal;
+    }
 
     const key = `soc_notes_${mode}_${pageNum}`;
     const saved = localStorage.getItem(key) || '';
@@ -382,18 +398,13 @@
         <span>✍️ My Personal Study Notes (${mode.toUpperCase()} — Page ${pageNum})</span>
         <span class="notes-hint">💾 Auto-saved</span>
       </div>
-      <textarea id="study-notes-textarea" class="notes-textarea" placeholder="Type your personal notes, command shortcuts, or triage insights for this page... auto-saved!">${saved}</textarea>
+      <textarea id="study-notes-textarea" class="notes-textarea" placeholder="Type your personal notes, command shortcuts, or triage insights for page ${pageNum}... auto-saved!">${saved}</textarea>
     `;
 
     const textarea = document.getElementById('study-notes-textarea');
     if (textarea) {
       textarea.addEventListener('input', () => {
-        const currentMode = window.activeMode || 'notebook';
-        let currentNum = 1;
-        if (currentMode === 'notebook') currentNum = window.currentPageId || 1;
-        else if (currentMode === 'advanced') currentNum = window.currentAdvancedPageId || 1;
-        else if (currentMode === 'cheatsheet') currentNum = window.currentCheatPageId || 1;
-        localStorage.setItem(`soc_notes_${currentMode}_${currentNum}`, textarea.value);
+        localStorage.setItem(key, textarea.value);
       });
     }
   };

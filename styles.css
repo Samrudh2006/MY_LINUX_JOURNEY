@@ -2993,8 +2993,47 @@ code[class*="language-"], pre[class*="language-"] { font-family: var(--font-mono
 pre[class*="language-"] { margin: 0.5rem 0 !important; padding: 1rem !important; }
 :not(pre) > code[class*="language-"] { padding: 0.15em 0.4em; border-radius: 4px; }
 
+/* --- MOBILE BOTTOM NAV (Desktop Hide & Mobile Styling) --- */
+.mobile-bottom-nav {
+  display: none !important;
+}
 
-
-
-
-
+@media (max-width: 768px) {
+  .mobile-bottom-nav {
+    display: flex !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    background: var(--paper-bg, #f4edd9);
+    border-top: 1.5px solid var(--card-border, #e0d7c3);
+    z-index: 9999;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 0.5rem;
+    box-shadow: 0 -4px 16px rgba(0,0,0,0.1);
+  }
+  .mobile-nav-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--text-dark, #212121);
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    gap: 2px;
+    padding: 4px 8px;
+    border-radius: 6px;
+  }
+  .mobile-nav-btn:active {
+    background: rgba(21, 101, 192, 0.1);
+    color: var(--accent-blue, #1565c0);
+  }
+  .mobile-nav-btn .nav-icon {
+    font-size: 1.1rem;
+  }
+}
