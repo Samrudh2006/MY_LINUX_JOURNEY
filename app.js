@@ -780,7 +780,7 @@ function applySearchHighlights() {
 function applyTerminalColorScheme(scheme) {
   const termWin = document.querySelector(".terminal-window");
   if (termWin) {
-    termWin.setAttribute("data-term-theme", scheme || "classic");
+    termWin.setAttribute("data-term-theme", scheme || "light");
   }
 }
 
@@ -1285,9 +1285,12 @@ function setupEventListeners() {
 
   const termThemeSelect = document.getElementById("term-theme-select");
   if (termThemeSelect) {
-    const savedScheme = localStorage.getItem("term_color_scheme") || "classic";
+    const allowedSchemes = ["light", "cyber-dark"];
+    const storedScheme = localStorage.getItem("term_color_scheme");
+    const savedScheme = allowedSchemes.includes(storedScheme) ? storedScheme : "light";
     termThemeSelect.value = savedScheme;
     applyTerminalColorScheme(savedScheme);
+    localStorage.setItem("term_color_scheme", savedScheme);
 
     termThemeSelect.addEventListener("change", (e) => {
       const scheme = e.target.value;
