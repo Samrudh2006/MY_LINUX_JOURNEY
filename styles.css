@@ -31,6 +31,9 @@
   --protip-bg: #e8eaf6;
   --protip-border: #1565c0;
   --protip-text: #1565c0;
+  --sticky-top-offset: 115px;
+  --sidebar-height: calc(100dvh - 115px);
+  --mobile-bottom-nav-space: 72px;
 }
 
 /* Dark Cyber Theme (High-Contrast Fixes) */
@@ -75,6 +78,12 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
+}
+
+body.splash-active,
+body.drawer-open {
+  overflow: hidden;
 }
 
 /* --- APP BRAND HEADER --- */
@@ -907,9 +916,9 @@ body.theme-cyber .chip-forensics {
   border-right: 2px solid var(--card-border);
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 115px);
+  height: var(--sidebar-height);
   position: sticky;
-  top: 115px;
+  top: var(--sticky-top-offset);
 }
 
 
@@ -2240,7 +2249,7 @@ body.theme-cyber mark.highlight {
   .mobile-nav-btn:active { background: var(--bg-app); }
 
   /* Pad main content so it's not hidden behind bottom nav */
-  .main-container { padding-bottom: 60px; }
+  .main-container { padding-bottom: var(--mobile-bottom-nav-space); }
 }
 
 /* --- PRINT & PDF EXPORT STYLES (CLEAN A4 PAGE BREAKS & PERFECT LINE FITTING) --- */
@@ -2317,6 +2326,19 @@ body.theme-cyber mark.highlight {
   transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.splash-screen-overlay::after {
+  content: "Tap anywhere to continue";
+  position: absolute;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(148, 163, 184, 0.9);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .splash-screen-overlay.fade-out {
   opacity: 0;
   visibility: hidden;
@@ -2359,6 +2381,36 @@ body.theme-cyber mark.highlight {
   text-align: center;
   backdrop-filter: blur(20px);
   animation: splashCardPop 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (max-width: 768px) {
+  .splash-content-card {
+    width: min(94vw, 620px);
+    max-height: calc(100dvh - 2rem);
+    overflow-y: auto;
+    padding: 1.5rem 1.1rem;
+    border-radius: 16px;
+  }
+
+  .splash-logo-glow {
+    width: 72px;
+    height: 72px;
+  }
+
+  .splash-main-title {
+    font-size: 1.15rem;
+    line-height: 1.35;
+  }
+
+  .splash-sub-title {
+    font-size: 0.72rem;
+    letter-spacing: 0.5px;
+  }
+
+  .splash-chip {
+    font-size: 0.68rem;
+    padding: 0.3rem 0.65rem;
+  }
 }
 
 @keyframes splashCardPop {

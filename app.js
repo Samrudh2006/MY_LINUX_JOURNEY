@@ -27,6 +27,7 @@ function syncWindowState() {
 syncWindowState();
 
 document.addEventListener("DOMContentLoaded", () => {
+  initLayoutMetrics();
   initSplashScreen();
   initPWA();
   initModeTabs();
@@ -44,6 +45,7 @@ function initSplashScreen() {
   const pctLabel = document.getElementById("splash-pct-label");
 
   if (!splash || !bar) return;
+  document.body.classList.add("splash-active");
 
   const steps = [
     { pct: 20, text: "⚡ Initializing Security Engine..." },
@@ -53,8 +55,33 @@ function initSplashScreen() {
     { pct: 100, text: "✅ Platform Ready!" }
   ];
 
+  let isSplashDone = false;
   let currentStep = 0;
-  const interval = setInterval(() => {
+
+  const finishSplash = () => {
+    if (isSplashDone) return;
+    isSplashDone = true;
+    clearInterval(progressTimer);
+    clearTimeout(forceCloseTimer);
+    splash.classList.add("fade-out");
+    document.body.classList.remove("splash-active");
+    setTimeout(() => {
+      splash.style.display = "none";
+      splash.removeEventListener("click", finishSplash);
+      document.removeEventListener("keydown", onSplashKeyDown);
+    }, 650);
+  };
+
+  const onSplashKeyDown = (event) => {
+    if (event.key === "Escape" || event.key === "Enter" || event.key === " ") {
+      finishSplash();
+    }
+  };
+
+  splash.addEventListener("click", finishSplash);
+  document.addEventListener("keydown", onSplashKeyDown);
+
+  const progressTimer = setInterval(() => {
     if (currentStep < steps.length) {
       const step = steps[currentStep];
       bar.style.width = step.pct + "%";
@@ -62,15 +89,11 @@ function initSplashScreen() {
       if (pctLabel) pctLabel.innerText = step.pct + "%";
       currentStep++;
     } else {
-      clearInterval(interval);
-      setTimeout(() => {
-        splash.classList.add("fade-out");
-        setTimeout(() => {
-          splash.style.display = "none";
-        }, 650);
-      }, 350);
+      setTimeout(finishSplash, 350);
     }
   }, 320);
+
+  const forceCloseTimer = setTimeout(finishSplash, 7000);
 }
 
 // --- MOBILE NAV SETUP ---
@@ -81,8 +104,7 @@ function setupMobileNav() {
   // Sidebar overlay tap-to-close
   if (overlay) {
     overlay.addEventListener("click", () => {
-      sidebar.classList.remove("mobile-open");
-      overlay.classList.remove("active");
+      closeMobileSidebar();
     });
   }
 
@@ -96,6 +118,7 @@ function setupMobileNav() {
   if (mobMenu) mobMenu.addEventListener("click", () => {
     sidebar.classList.toggle("mobile-open");
     overlay.classList.toggle("active");
+    document.body.classList.toggle("drawer-open", sidebar.classList.contains("mobile-open"));
   });
 
   if (mobPrev) mobPrev.addEventListener("click", () => {
@@ -128,6 +151,14 @@ function setupMobileNav() {
     document.getElementById("terminal-modal").classList.remove("hidden");
     document.getElementById("terminal-input").focus();
   });
+}
+
+function closeMobileSidebar() {
+  const sidebar = document.getElementById("main-sidebar");
+  const overlay = document.getElementById("sidebar-overlay");
+  if (sidebar) sidebar.classList.remove("mobile-open");
+  if (overlay) overlay.classList.remove("active");
+  document.body.classList.remove("drawer-open");
 }
 
 
@@ -1409,12 +1440,32 @@ function toggleSidebar() {
     // Mobile: slide drawer in/out
     sidebar.classList.toggle("mobile-open");
     overlay.classList.toggle("active");
+    document.body.classList.toggle("drawer-open", sidebar.classList.contains("mobile-open"));
   } else {
     // Desktop: collapse sidebar into zero-width
     mainContainer.classList.toggle("sidebar-collapsed");
     const isCollapsed = mainContainer.classList.contains("sidebar-collapsed");
     toggleText.innerText = isCollapsed ? "Show Sidebar" : "Hide Sidebar";
   }
+}
+
+function initLayoutMetrics() {
+  const applyMetrics = () => {
+    const header = document.querySelector(".app-header");
+    const modeTabs = document.querySelector(".mode-tabs-bar");
+    const mobileNav = document.getElementById("mobile-bottom-nav");
+    const stickyTop = (header ? header.offsetHeight : 0) + (modeTabs ? modeTabs.offsetHeight : 0);
+    const mobileNavHeight = mobileNav ? mobileNav.offsetHeight : 56;
+
+    document.documentElement.style.setProperty("--sticky-top-offset", `${stickyTop}px`);
+    document.documentElement.style.setProperty("--sidebar-height", `calc(100dvh - ${stickyTop}px)`);
+    document.documentElement.style.setProperty("--mobile-bottom-nav-space", `${mobileNavHeight + 16}px`);
+  };
+
+  const scheduleApply = () => window.requestAnimationFrame(applyMetrics);
+  applyMetrics();
+  window.addEventListener("resize", scheduleApply);
+  window.addEventListener("orientationchange", scheduleApply);
 }
 
 
@@ -2849,4 +2900,3 @@ function openMasterCheatOverview() {
   `;
   document.body.appendChild(modal);
 }
-
