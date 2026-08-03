@@ -672,59 +672,78 @@
   }
 
   // ====================================================================
-  // 10. SPACED REPETITION on Cheat Sheet cards — Got it / Need Review
+  // 10. SPACED REPETITION on Cheat Sheets & Interview Q&A Flashcards
   // ====================================================================
-  // This patches the cheat card HTML after render by observing the view
   function initSpacedRepetition() {
     const view = document.getElementById('notebook-paper-view');
     if (!view) return;
 
     const observer = new MutationObserver(() => {
-      if (window.activeMode !== 'cheatsheet') return;
-      // Find all cheat cards that don't yet have spaced-rep buttons
-      const cards = view.querySelectorAll('.cheat-card:not([data-sr-wired])');
-      cards.forEach(card => {
-        card.setAttribute('data-sr-wired', '1');
-        const pageId = card.getAttribute('data-page-id') || window.currentCheatPageId;
-        const gotItKey = `soc_sr_gotit_${pageId}`;
-        const reviewKey = `soc_sr_review_${pageId}`;
-        const isGotIt = !!localStorage.getItem(gotItKey);
-        const isReview = !!localStorage.getItem(reviewKey);
+      const mode = window.activeMode || 'notebook';
+      if (mode !== 'cheatsheet' && mode !== 'interview') return;
 
-        const srRow = document.createElement('div');
-        srRow.className = 'sr-row';
-        srRow.innerHTML = `
-          <button class="sr-btn sr-gotit ${isGotIt ? 'sr-active-gotit' : ''}" onclick="markSR(${pageId}, 'gotit', this)" title="Mark as understood">✅ Got it</button>
-          <button class="sr-btn sr-review ${isReview ? 'sr-active-review' : ''}" onclick="markSR(${pageId}, 'review', this)" title="Mark for review">🔄 Need Review</button>
-        `;
-        card.appendChild(srRow);
+      // 1. Cheat Sheet cards grid
+      const cheatCards = view.querySelectorAll('.cheat-card:not([data-sr-wired])');
+      cheatCards.forEach(card => {
+        card.setAttribute('data-sr-wired', '1');
+        const pageId = card.getAttribute('data-page-id') || window.currentCheatPageId || 1;
+        injectSRButtons(card, 'cheatsheet', pageId);
+      });
+
+      // 2. Cheat Sheet ruled-paper pages
+      if (mode === 'cheatsheet' && !view.querySelector('.cheat-card')) {
+        const ruledPaper = view.querySelector('.ruled-paper:not([data-sr-wired])');
+        if (ruledPaper) {
+          ruledPaper.setAttribute('data-sr-wired', '1');
+          const pageId = window.currentCheatPageId || 1;
+          injectSRButtons(ruledPaper, 'cheatsheet', pageId);
+        }
+      }
+
+      // 3. Interview Q&A 3D Flip Flashcards
+      const flashcards = view.querySelectorAll('.flashcard-back:not([data-sr-wired])');
+      flashcards.forEach(card => {
+        card.setAttribute('data-sr-wired', '1');
+        const qaId = window.currentQAId || 1;
+        injectSRButtons(card, 'interview', qaId);
       });
     });
     observer.observe(view, { childList: true, subtree: true });
   }
 
-  window.markSR = function(pageId, type, btn) {
-    const gotItKey = `soc_sr_gotit_${pageId}`;
-    const reviewKey = `soc_sr_review_${pageId}`;
-    const card = btn.closest('.cheat-card');
-    const gotItBtn = card ? card.querySelector('.sr-gotit') : null;
-    const reviewBtn = card ? card.querySelector('.sr-review') : null;
+  function injectSRButtons(container, mode, id) {
+    const gotItKey = `soc_sr_gotit_${mode}_${id}`;
+    const reviewKey = `soc_sr_review_${mode}_${id}`;
+    const isGotIt = !!localStorage.getItem(gotItKey);
+    const isReview = !!localStorage.getItem(reviewKey);
+
+    const srRow = document.createElement('div');
+    srRow.className = 'sr-row';
+    srRow.style.cssText = 'margin-top:0.8rem; padding-top:0.6rem; border-top:1px dashed var(--card-border); display:flex; gap:0.6rem; justify-content:center;';
+    srRow.innerHTML = `
+      <button class="sr-btn sr-gotit ${isGotIt ? 'sr-active-gotit' : ''}" onclick="event.stopPropagation(); markSR('${mode}', ${id}, 'gotit', this)" title="Mark as understood">✅ Got it</button>
+      <button class="sr-btn sr-review ${isReview ? 'sr-active-review' : ''}" onclick="event.stopPropagation(); markSR('${mode}', ${id}, 'review', this)" title="Mark for review">🔄 Need Review</button>
+    `;
+    container.appendChild(srRow);
+  }
+
+  window.markSR = function(mode, id, type, btn) {
+    const gotItKey = `soc_sr_gotit_${mode}_${id}`;
+    const reviewKey = `soc_sr_review_${mode}_${id}`;
+    const parent = btn.closest('.sr-row');
+    const gotItBtn = parent ? parent.querySelector('.sr-gotit') : null;
+    const reviewBtn = parent ? parent.querySelector('.sr-review') : null;
 
     if (type === 'gotit') {
       localStorage.setItem(gotItKey, '1');
       localStorage.removeItem(reviewKey);
-      if (gotItBtn) { gotItBtn.classList.add('sr-active-gotit'); }
-      if (reviewBtn) { reviewBtn.classList.remove('sr-active-review'); }
-      // Auto-advance to next page
-      setTimeout(() => {
-        const nextBtn = document.getElementById('btn-next-page');
-        if (nextBtn) nextBtn.click();
-      }, 600);
+      if (gotItBtn) gotItBtn.classList.add('sr-active-gotit');
+      if (reviewBtn) reviewBtn.classList.remove('sr-active-review');
     } else {
       localStorage.setItem(reviewKey, '1');
       localStorage.removeItem(gotItKey);
-      if (reviewBtn) { reviewBtn.classList.add('sr-active-review'); }
-      if (gotItBtn) { gotItBtn.classList.remove('sr-active-gotit'); }
+      if (reviewBtn) reviewBtn.classList.add('sr-active-review');
+      if (gotItBtn) gotItBtn.classList.remove('sr-active-gotit');
     }
     if (typeof checkAndAwardBadges === 'function') checkAndAwardBadges();
   };
