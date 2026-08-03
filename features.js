@@ -317,13 +317,22 @@
     }
 
     // Patch renderCurrentView to update hash silently
-    const originalRender = window.renderCurrentView;
-    if (originalRender) {
-      window.renderCurrentView = function(...args) {
-        originalRender.apply(this, args);
-        updateUrlHash();
-      };
+    // Patch renderCurrentView to update hash & study notes silently
+    function patchRenderCurrentView() {
+      if (window._renderPatched) return;
+      const originalRender = window.renderCurrentView;
+      if (originalRender) {
+        window._renderPatched = true;
+        window.renderCurrentView = function(...args) {
+          originalRender.apply(this, args);
+          updateUrlHash();
+          setTimeout(ensureStudyNotes, 50);
+          setTimeout(applyPrism, 100);
+        };
+      }
     }
+    patchRenderCurrentView();
+    setInterval(patchRenderCurrentView, 1000);
   }
 
   function updateUrlHash() {
@@ -339,40 +348,66 @@
 
   // ====================================================================
   // 6. PER-PAGE PERSONAL STUDY NOTES
-  //    Auto-appended below every notebook / advanced page content
+  //    Auto-appended below every notebook / advanced / cheatsheet page content
   // ====================================================================
+  window.ensureStudyNotes = function() {
+    const view = document.getElementById('notebook-paper-view');
+    if (!view) return;
+
+    const mode = window.activeMode || 'notebook';
+    if (mode !== 'notebook' && mode !== 'advanced' && mode !== 'cheatsheet') {
+      const existing = document.getElementById('study-notes-panel');
+      if (existing) existing.remove();
+      return;
+    }
+
+    let pageNum = 1;
+    if (mode === 'notebook') pageNum = window.currentPageId || 1;
+    else if (mode === 'advanced') pageNum = window.currentAdvancedPageId || 1;
+    else if (mode === 'cheatsheet') pageNum = window.currentCheatPageId || 1;
+
+    const key = `soc_notes_${mode}_${pageNum}`;
+    const saved = localStorage.getItem(key) || '';
+
+    let panel = document.getElementById('study-notes-panel');
+    if (!panel) {
+      panel = document.createElement('div');
+      panel.id = 'study-notes-panel';
+      panel.className = 'study-notes-panel';
+      view.appendChild(panel);
+    }
+
+    panel.innerHTML = `
+      <div class="notes-header">
+        <span>✍️ My Personal Study Notes (${mode.toUpperCase()} — Page ${pageNum})</span>
+        <span class="notes-hint">💾 Auto-saved</span>
+      </div>
+      <textarea id="study-notes-textarea" class="notes-textarea" placeholder="Type your personal notes, command shortcuts, or triage insights for this page... auto-saved!">${saved}</textarea>
+    `;
+
+    const textarea = document.getElementById('study-notes-textarea');
+    if (textarea) {
+      textarea.addEventListener('input', () => {
+        const currentMode = window.activeMode || 'notebook';
+        let currentNum = 1;
+        if (currentMode === 'notebook') currentNum = window.currentPageId || 1;
+        else if (currentMode === 'advanced') currentNum = window.currentAdvancedPageId || 1;
+        else if (currentMode === 'cheatsheet') currentNum = window.currentCheatPageId || 1;
+        localStorage.setItem(`soc_notes_${currentMode}_${currentNum}`, textarea.value);
+      });
+    }
+  };
+
   function injectStudyNotes() {
     const view = document.getElementById('notebook-paper-view');
     if (!view) return;
 
-    // Use MutationObserver to inject notes panel after each page render
+    // Run initial injection
+    setTimeout(window.ensureStudyNotes, 200);
+
+    // MutationObserver fallback to re-inject if view is wiped
     const observer = new MutationObserver(() => {
-      const mode = window.activeMode;
-      if (mode !== 'notebook' && mode !== 'advanced' && mode !== 'cheatsheet') return;
-      if (document.getElementById('study-notes-panel')) return;
-
-      const key = `soc_notes_${mode}_${window.currentPageId || window.currentAdvancedPageId || window.currentCheatPageId}`;
-      const saved = localStorage.getItem(key) || '';
-
-      const panel = document.createElement('div');
-      panel.id = 'study-notes-panel';
-      panel.className = 'study-notes-panel';
-      panel.innerHTML = `
-        <div class="notes-header">
-          <span>✍️ My Study Notes</span>
-          <span class="notes-hint">Auto-saved</span>
-        </div>
-        <textarea id="study-notes-textarea" class="notes-textarea" placeholder="Type your personal notes, shortcuts, or insights here... auto-saved!">${saved}</textarea>
-      `;
-      view.appendChild(panel);
-
-      const textarea = document.getElementById('study-notes-textarea');
-      if (textarea) {
-        textarea.addEventListener('input', () => {
-          const currentKey = `soc_notes_${window.activeMode}_${window.currentPageId || window.currentAdvancedPageId || window.currentCheatPageId}`;
-          localStorage.setItem(currentKey, textarea.value);
-        });
-      }
+      setTimeout(window.ensureStudyNotes, 50);
     });
     observer.observe(view, { childList: true });
   }
