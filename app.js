@@ -214,7 +214,14 @@ function switchMode(mode) {
   } else if (mode === "cheatsheet") {
     const tab = document.getElementById("tab-cheatsheet");
     if (tab) tab.classList.add("active");
-    const cheatCount = window.CHEATSHEET_PAGES ? window.CHEATSHEET_PAGES.length : 350;
+    // Robustly resolve cheatsheet pages (support alternate global var shape)
+    const cheatPages = window.CHEATSHEET_PAGES || (window.MASTER_CHEATSHEET_DATA && window.MASTER_CHEATSHEET_DATA.pages) || [];
+    const cheatCount = cheatPages.length || 350;
+    // Ensure currentCheatPageId is valid
+    if (!Number.isFinite(currentCheatPageId) || currentCheatPageId < 1 || currentCheatPageId > cheatCount) {
+      currentCheatPageId = 1;
+      localStorage.setItem("cheatsheet_current_page", currentCheatPageId);
+    }
     document.getElementById("page-type-label").innerText = "Cheat";
     document.getElementById("total-count-label").innerText = cheatCount;
     document.getElementById("page-number-input").max = cheatCount;
@@ -306,8 +313,8 @@ function initSidebar() {
       navContainer.appendChild(modGroup);
     });
   } else if (activeMode === "cheatsheet") {
-    const csModules = window.CHEATSHEET_MODULES || [];
-    const csPages = window.CHEATSHEET_PAGES || [];
+    const csModules = window.CHEATSHEET_MODULES || (window.MASTER_CHEATSHEET_DATA && window.MASTER_CHEATSHEET_DATA.modules) || [];
+    const csPages = window.CHEATSHEET_PAGES || (window.MASTER_CHEATSHEET_DATA && window.MASTER_CHEATSHEET_DATA.pages) || [];
 
     csModules.forEach(mod => {
       const pagesInMod = csPages.filter(p => p.moduleId === mod.id);
@@ -430,7 +437,7 @@ function renderCurrentView(direction = "next") {
   } else if (activeMode === "hardening") {
     container.innerHTML = generateHardeningHTML();
   } else if (activeMode === "cheatsheet") {
-    const csPages = window.CHEATSHEET_PAGES || [];
+    const csPages = window.CHEATSHEET_PAGES || (window.MASTER_CHEATSHEET_DATA && window.MASTER_CHEATSHEET_DATA.pages) || [];
     const page = csPages.find(p => p.id === currentCheatPageId) || csPages[0];
     if (page) {
       document.getElementById("page-number-input").value = currentCheatPageId;
