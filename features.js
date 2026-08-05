@@ -50,22 +50,22 @@
   // 2. ACHIEVEMENT BADGES SYSTEM
   // ====================================================================
   const BADGE_DEFINITIONS = [
-    { id: 'first_step',    icon: '🚀', name: 'First Step',       desc: 'Opened the platform for the first time',          check: () => true },
-    { id: 'streak3',       icon: '🔥', name: 'On Fire',          desc: 'Maintained a 3-day study streak',                 check: () => parseInt(localStorage.getItem('soc_study_streak')||0) >= 3 },
-    { id: 'streak7',       icon: '💎', name: 'Week Warrior',     desc: 'Maintained a 7-day study streak',                 check: () => parseInt(localStorage.getItem('soc_study_streak')||0) >= 7 },
-    { id: 'notebook10',    icon: '📖', name: 'Page Turner',      desc: 'Read 10+ Handbook pages',                         check: () => JSON.parse(localStorage.getItem('soc_completed_pages')||'[]').length >= 10 },
-    { id: 'notebook50',    icon: '📚', name: '365 Traveller',    desc: 'Read 50+ Handbook pages',                         check: () => JSON.parse(localStorage.getItem('soc_completed_pages')||'[]').length >= 50 },
-    { id: 'lab5',          icon: '💻', name: 'Terminal Hacker',  desc: 'Completed 5 Incident Response Labs',              check: () => JSON.parse(localStorage.getItem('soc_completed_labs')||'[]').length >= 5 },
-    { id: 'lab15',         icon: '🛡️', name: 'Blue Teamer',     desc: 'Completed 15 Incident Response Labs',             check: () => JSON.parse(localStorage.getItem('soc_completed_labs')||'[]').length >= 15 },
-    { id: 'lab50',         icon: '🥷', name: 'SOC Ninja',        desc: 'Completed all 50 Incident Response Labs',         check: () => JSON.parse(localStorage.getItem('soc_completed_labs')||'[]').length >= 50 },
-    { id: 'cheat10',       icon: '⚡', name: 'Cheat Sheet Pro',  desc: 'Reviewed 10+ Fast-Revision cheat cards',          check: () => JSON.parse(localStorage.getItem('cheatsheet_completed_pages')||'[]').length >= 10 },
-    { id: 'advanced10',    icon: '🎯', name: 'MITRE Expert',     desc: 'Read 10+ Advanced SOC Domain pages',              check: () => JSON.parse(localStorage.getItem('advanced_completed_pages')||'[]').length >= 10 },
-    { id: 'bookmarks5',    icon: '⭐', name: 'Curator',          desc: 'Saved 5+ items for later review',                 check: () => {
+    { id: 'first_step',    icon: '🚀', img: 'assets/badges/first_step.png',    name: 'First Step',       desc: 'Opened the platform for the first time',          check: () => true },
+    { id: 'streak3',       icon: '🔥', img: 'assets/badges/streak3.png',       name: 'On Fire',          desc: 'Maintained a 3-day study streak',                 check: () => parseInt(localStorage.getItem('soc_study_streak')||0) >= 3 },
+    { id: 'streak7',       icon: '💎', img: 'assets/badges/streak7.png',       name: 'Week Warrior',     desc: 'Maintained a 7-day study streak',                 check: () => parseInt(localStorage.getItem('soc_study_streak')||0) >= 7 },
+    { id: 'notebook10',    icon: '📖', img: 'assets/badges/notebook10.png',    name: 'Page Turner',      desc: 'Read 10+ Handbook pages',                         check: () => JSON.parse(localStorage.getItem('soc_completed_pages')||'[]').length >= 10 },
+    { id: 'notebook50',    icon: '📚', img: 'assets/badges/notebook50.png',    name: '365 Traveller',    desc: 'Read 50+ Handbook pages',                         check: () => JSON.parse(localStorage.getItem('soc_completed_pages')||'[]').length >= 50 },
+    { id: 'lab5',          icon: '💻', img: 'assets/badges/lab5.png',          name: 'Terminal Hacker',  desc: 'Completed 5 Incident Response Labs',              check: () => JSON.parse(localStorage.getItem('soc_completed_labs')||'[]').length >= 5 },
+    { id: 'lab15',         icon: '🛡️', img: 'assets/badges/lab15.png',         name: 'Blue Teamer',     desc: 'Completed 15 Incident Response Labs',             check: () => JSON.parse(localStorage.getItem('soc_completed_labs')||'[]').length >= 15 },
+    { id: 'lab50',         icon: '🥷', img: 'assets/badges/lab50.png',         name: 'SOC Ninja',        desc: 'Completed all 50 Incident Response Labs',         check: () => JSON.parse(localStorage.getItem('soc_completed_labs')||'[]').length >= 50 },
+    { id: 'cheat10',       icon: '⚡', img: 'assets/badges/cheat10.png',       name: 'Cheat Sheet Pro',  desc: 'Reviewed 10+ Fast-Revision cheat cards',          check: () => JSON.parse(localStorage.getItem('cheatsheet_completed_pages')||'[]').length >= 10 },
+    { id: 'advanced10',    icon: '🎯', img: 'assets/badges/advanced10.png',    name: 'MITRE Expert',     desc: 'Read 10+ Advanced SOC Domain pages',              check: () => JSON.parse(localStorage.getItem('advanced_completed_pages')||'[]').length >= 10 },
+    { id: 'bookmarks5',    icon: '⭐', img: 'assets/badges/bookmarks5.png',    name: 'Curator',          desc: 'Saved 5+ items for later review',                 check: () => {
         const b1 = JSON.parse(localStorage.getItem('soc_bookmarked_pages')||'[]').length;
         const b2 = JSON.parse(localStorage.getItem('soc_bookmarked_qas')||'[]').length;
         return (b1 + b2) >= 5;
     }},
-    { id: 'hardening',     icon: '🔒', name: 'Hardening Expert', desc: 'Completed the CIS Linux Hardening Audit',         check: () => !!localStorage.getItem('soc_hardening_completed') },
+    { id: 'hardening',     icon: '🔒', img: 'assets/badges/hardening.png',     name: 'Hardening Expert', desc: 'Completed the CIS Linux Hardening Audit',         check: () => !!localStorage.getItem('soc_hardening_completed') },
   ];
 
   function checkAndAwardBadges() {
@@ -89,7 +89,10 @@
     const toast = document.createElement('div');
     toast.className = 'badge-toast';
     toast.innerHTML = `
-      <span class="badge-toast-icon">${badge.icon}</span>
+      <div class="badge-toast-img-wrap">
+        <img src="${badge.img}" alt="${badge.name}" class="badge-toast-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';"/>
+        <span class="badge-toast-icon" style="display:none;">${badge.icon}</span>
+      </div>
       <div>
         <div class="badge-toast-title">Badge Unlocked!</div>
         <div class="badge-toast-name">${badge.name}</div>
@@ -118,16 +121,24 @@
         <div class="feat-modal-body">
           <p class="feat-modal-hint">Complete labs, read pages, and maintain streaks to unlock all ${BADGE_DEFINITIONS.length} badges!</p>
           <div class="badges-grid">
-            ${BADGE_DEFINITIONS.map(b => `
-              <div class="badge-card ${earned.includes(b.id) ? 'badge-earned' : 'badge-locked'}">
-                <div class="badge-icon">${earned.includes(b.id) ? b.icon : '🔒'}</div>
-                <div class="badge-name">${b.name}</div>
-                <div class="badge-desc">${b.desc}</div>
-              </div>
-            `).join('')}
+            ${BADGE_DEFINITIONS.map(b => {
+              const isEarned = earned.includes(b.id);
+              return `
+                <div class="badge-card ${isEarned ? 'badge-earned' : 'badge-locked'}">
+                  <div class="badge-img-wrapper">
+                    <img src="${b.img}" alt="${b.name}" class="badge-img ${isEarned ? '' : 'badge-img-locked'}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"/>
+                    <span class="badge-icon-fallback" style="display:none;">${isEarned ? b.icon : '🔒'}</span>
+                    ${!isEarned ? '<span class="badge-lock-overlay">🔒</span>' : ''}
+                  </div>
+                  <div class="badge-name">${b.name}</div>
+                  <div class="badge-desc">${b.desc}</div>
+                  <div class="badge-status-tag">${isEarned ? 'UNLOCKED' : 'LOCKED'}</div>
+                </div>
+              `;
+            }).join('')}
           </div>
-          <div style="text-align:center; margin-top:1rem; color:#64748b; font-size:0.85rem;">
-            ${earned.length} / ${BADGE_DEFINITIONS.length} Badges Earned
+          <div style="text-align:center; margin-top:1.2rem; color:var(--text-dark); font-weight:800; font-size:0.9rem;">
+            🏆 ${earned.length} / ${BADGE_DEFINITIONS.length} Badges Earned
           </div>
         </div>
       </div>
@@ -672,78 +683,59 @@
   }
 
   // ====================================================================
-  // 10. SPACED REPETITION on Cheat Sheets & Interview Q&A Flashcards
+  // 10. SPACED REPETITION on Cheat Sheet cards — Got it / Need Review
   // ====================================================================
+  // This patches the cheat card HTML after render by observing the view
   function initSpacedRepetition() {
     const view = document.getElementById('notebook-paper-view');
     if (!view) return;
 
     const observer = new MutationObserver(() => {
-      const mode = window.activeMode || 'notebook';
-      if (mode !== 'cheatsheet' && mode !== 'interview') return;
-
-      // 1. Cheat Sheet cards grid
-      const cheatCards = view.querySelectorAll('.cheat-card:not([data-sr-wired])');
-      cheatCards.forEach(card => {
+      if (window.activeMode !== 'cheatsheet') return;
+      // Find all cheat cards that don't yet have spaced-rep buttons
+      const cards = view.querySelectorAll('.cheat-card:not([data-sr-wired])');
+      cards.forEach(card => {
         card.setAttribute('data-sr-wired', '1');
-        const pageId = card.getAttribute('data-page-id') || window.currentCheatPageId || 1;
-        injectSRButtons(card, 'cheatsheet', pageId);
-      });
+        const pageId = card.getAttribute('data-page-id') || window.currentCheatPageId;
+        const gotItKey = `soc_sr_gotit_${pageId}`;
+        const reviewKey = `soc_sr_review_${pageId}`;
+        const isGotIt = !!localStorage.getItem(gotItKey);
+        const isReview = !!localStorage.getItem(reviewKey);
 
-      // 2. Cheat Sheet ruled-paper pages
-      if (mode === 'cheatsheet' && !view.querySelector('.cheat-card')) {
-        const ruledPaper = view.querySelector('.ruled-paper:not([data-sr-wired])');
-        if (ruledPaper) {
-          ruledPaper.setAttribute('data-sr-wired', '1');
-          const pageId = window.currentCheatPageId || 1;
-          injectSRButtons(ruledPaper, 'cheatsheet', pageId);
-        }
-      }
-
-      // 3. Interview Q&A 3D Flip Flashcards
-      const flashcards = view.querySelectorAll('.flashcard-back:not([data-sr-wired])');
-      flashcards.forEach(card => {
-        card.setAttribute('data-sr-wired', '1');
-        const qaId = window.currentQAId || 1;
-        injectSRButtons(card, 'interview', qaId);
+        const srRow = document.createElement('div');
+        srRow.className = 'sr-row';
+        srRow.innerHTML = `
+          <button class="sr-btn sr-gotit ${isGotIt ? 'sr-active-gotit' : ''}" onclick="markSR(${pageId}, 'gotit', this)" title="Mark as understood">✅ Got it</button>
+          <button class="sr-btn sr-review ${isReview ? 'sr-active-review' : ''}" onclick="markSR(${pageId}, 'review', this)" title="Mark for review">🔄 Need Review</button>
+        `;
+        card.appendChild(srRow);
       });
     });
     observer.observe(view, { childList: true, subtree: true });
   }
 
-  function injectSRButtons(container, mode, id) {
-    const gotItKey = `soc_sr_gotit_${mode}_${id}`;
-    const reviewKey = `soc_sr_review_${mode}_${id}`;
-    const isGotIt = !!localStorage.getItem(gotItKey);
-    const isReview = !!localStorage.getItem(reviewKey);
-
-    const srRow = document.createElement('div');
-    srRow.className = 'sr-row';
-    srRow.style.cssText = 'margin-top:0.8rem; padding-top:0.6rem; border-top:1px dashed var(--card-border); display:flex; gap:0.6rem; justify-content:center;';
-    srRow.innerHTML = `
-      <button class="sr-btn sr-gotit ${isGotIt ? 'sr-active-gotit' : ''}" onclick="event.stopPropagation(); markSR('${mode}', ${id}, 'gotit', this)" title="Mark as understood">✅ Got it</button>
-      <button class="sr-btn sr-review ${isReview ? 'sr-active-review' : ''}" onclick="event.stopPropagation(); markSR('${mode}', ${id}, 'review', this)" title="Mark for review">🔄 Need Review</button>
-    `;
-    container.appendChild(srRow);
-  }
-
-  window.markSR = function(mode, id, type, btn) {
-    const gotItKey = `soc_sr_gotit_${mode}_${id}`;
-    const reviewKey = `soc_sr_review_${mode}_${id}`;
-    const parent = btn.closest('.sr-row');
-    const gotItBtn = parent ? parent.querySelector('.sr-gotit') : null;
-    const reviewBtn = parent ? parent.querySelector('.sr-review') : null;
+  window.markSR = function(pageId, type, btn) {
+    const gotItKey = `soc_sr_gotit_${pageId}`;
+    const reviewKey = `soc_sr_review_${pageId}`;
+    const card = btn.closest('.cheat-card');
+    const gotItBtn = card ? card.querySelector('.sr-gotit') : null;
+    const reviewBtn = card ? card.querySelector('.sr-review') : null;
 
     if (type === 'gotit') {
       localStorage.setItem(gotItKey, '1');
       localStorage.removeItem(reviewKey);
-      if (gotItBtn) gotItBtn.classList.add('sr-active-gotit');
-      if (reviewBtn) reviewBtn.classList.remove('sr-active-review');
+      if (gotItBtn) { gotItBtn.classList.add('sr-active-gotit'); }
+      if (reviewBtn) { reviewBtn.classList.remove('sr-active-review'); }
+      // Auto-advance to next page
+      setTimeout(() => {
+        const nextBtn = document.getElementById('btn-next-page');
+        if (nextBtn) nextBtn.click();
+      }, 600);
     } else {
       localStorage.setItem(reviewKey, '1');
       localStorage.removeItem(gotItKey);
-      if (reviewBtn) reviewBtn.classList.add('sr-active-review');
-      if (gotItBtn) gotItBtn.classList.remove('sr-active-gotit');
+      if (reviewBtn) { reviewBtn.classList.add('sr-active-review'); }
+      if (gotItBtn) { gotItBtn.classList.remove('sr-active-gotit'); }
     }
     if (typeof checkAndAwardBadges === 'function') checkAndAwardBadges();
   };
