@@ -195,103 +195,32 @@
   }
 
   // ====================================================================
-  // 4. ACCESSIBILITY PANEL — Font Scale + Dyslexia + High Contrast
-  //    Triggered from existing "Switch Theme" button (dropdown appears below it)
+  // 4. THEME TOGGLE — keep only the Switch Theme button behavior
+  //    The previous accessibility panel (font style, text size, contrast)
+  //    has been removed per request. We keep the theme button wrapped for
+  //    layout/styling consistency but do not render additional controls.
   // ====================================================================
   function initAccessibilityPanel() {
     const themeBtn = document.getElementById('btn-theme-toggle');
     if (!themeBtn) return;
 
-    // Apply saved accessibility settings immediately on load
-    applySavedAccessibility();
-
-    // Wrap theme button in a group with dropdown
+    // Ensure the theme button is wrapped for consistent layout
     const wrap = document.createElement('div');
     wrap.className = 'theme-toggle-wrap';
     themeBtn.parentNode.insertBefore(wrap, themeBtn);
     wrap.appendChild(themeBtn);
 
-    const panel = document.createElement('div');
-    panel.id = 'accessibility-panel';
-    panel.className = 'accessibility-panel hidden';
-    panel.innerHTML = `
-      <div class="a11y-section">
-        <div class="a11y-label">🔤 Font Style</div>
-        <div class="a11y-row">
-          <button class="a11y-btn" onclick="setFontStyle('default')" id="font-btn-default">Notebook</button>
-          <button class="a11y-btn" onclick="setFontStyle('sans')" id="font-btn-sans">Clean Sans</button>
-          <button class="a11y-btn" onclick="setFontStyle('dyslexia')" id="font-btn-dyslexia">Dyslexia</button>
-        </div>
-      </div>
-      <div class="a11y-section">
-        <div class="a11y-label">📐 Text Size</div>
-        <div class="a11y-row">
-          <button class="a11y-btn" onclick="setFontSize('100')">100%</button>
-          <button class="a11y-btn" onclick="setFontSize('115')">115%</button>
-          <button class="a11y-btn" onclick="setFontSize('130')">130%</button>
-        </div>
-      </div>
-      <div class="a11y-section">
-        <div class="a11y-label">🎨 Contrast Mode</div>
-        <div class="a11y-row">
-          <button class="a11y-btn" onclick="setContrastMode('normal')">Normal</button>
-          <button class="a11y-btn" onclick="setContrastMode('high-dark')">High Dark</button>
-          <button class="a11y-btn" onclick="setContrastMode('high-light')">High Light</button>
-        </div>
-      </div>
-    `;
-    wrap.appendChild(panel);
+    // Remove any legacy accessibility panel if present
+    const existing = document.getElementById('accessibility-panel');
+    if (existing) existing.remove();
 
-    // Long-press or double-click theme button to open accessibility panel
-    let pressTimer;
-    themeBtn.addEventListener('mousedown', () => {
-      pressTimer = setTimeout(() => {
-        panel.classList.toggle('hidden');
-      }, 600);
-    });
-    themeBtn.addEventListener('mouseup', () => clearTimeout(pressTimer));
-    themeBtn.addEventListener('mouseleave', () => clearTimeout(pressTimer));
-    // Also single click still cycles themes (existing behavior), but show hint
+    // Clicking outside the theme button will not open any extra controls
     document.addEventListener('click', e => {
-      if (!wrap.contains(e.target)) panel.classList.add('hidden');
+      if (!wrap.contains(e.target)) {
+        // no-op: intentionally keep layout simple
+      }
     });
   }
-
-  function applySavedAccessibility() {
-    const fontStyle = localStorage.getItem('soc_font_style') || 'default';
-    const fontSize = localStorage.getItem('soc_font_size') || '100';
-    const contrast = localStorage.getItem('soc_contrast_mode') || 'normal';
-    applyFontStyle(fontStyle);
-    document.documentElement.style.fontSize = (parseInt(fontSize) / 100) * 16 + 'px';
-    applyContrastMode(contrast);
-  }
-
-  function applyFontStyle(style) {
-    document.body.classList.remove('font-sans', 'font-dyslexia');
-    if (style === 'sans') document.body.classList.add('font-sans');
-    if (style === 'dyslexia') document.body.classList.add('font-dyslexia');
-  }
-
-  window.setFontStyle = function(style) {
-    localStorage.setItem('soc_font_style', style);
-    applyFontStyle(style);
-  };
-
-  window.setFontSize = function(pct) {
-    localStorage.setItem('soc_font_size', pct);
-    document.documentElement.style.fontSize = (parseInt(pct) / 100) * 16 + 'px';
-  };
-
-  function applyContrastMode(mode) {
-    document.body.classList.remove('contrast-high-dark', 'contrast-high-light');
-    if (mode === 'high-dark') document.body.classList.add('contrast-high-dark');
-    if (mode === 'high-light') document.body.classList.add('contrast-high-light');
-  }
-
-  window.setContrastMode = function(mode) {
-    localStorage.setItem('soc_contrast_mode', mode);
-    applyContrastMode(mode);
-  };
 
   // ====================================================================
   // 5. DEEP LINKING — URL Hash updates silently on every page change
