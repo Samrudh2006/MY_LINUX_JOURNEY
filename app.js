@@ -94,6 +94,48 @@ function initSplashScreen() {
   };
   document.addEventListener("keydown", onSplashKeyDown);
 
+  const audioBtn = document.getElementById("splash-audio-btn");
+  const audioIcon = document.getElementById("splash-audio-icon");
+  const audioLabel = document.getElementById("splash-audio-label");
+
+  const enableAudio = () => {
+    if (activeVideo) {
+      activeVideo.muted = false;
+      activeVideo.volume = 1.0;
+      if (audioIcon) audioIcon.textContent = "🔊";
+      if (audioLabel) audioLabel.textContent = "Sound ON";
+      if (audioBtn) audioBtn.classList.add("unmuted");
+    }
+  };
+
+  const toggleAudio = (e) => {
+    if (e) e.stopPropagation();
+    if (activeVideo) {
+      if (activeVideo.muted) {
+        enableAudio();
+        activeVideo.play().catch(() => {});
+      } else {
+        activeVideo.muted = true;
+        if (audioIcon) audioIcon.textContent = "🔇";
+        if (audioLabel) audioLabel.textContent = "Tap for Sound";
+        if (audioBtn) audioBtn.classList.remove("unmuted");
+      }
+    }
+  };
+
+  if (audioBtn) {
+    audioBtn.addEventListener("click", toggleAudio);
+  }
+
+  // Instant un-mute on first touch / pointer tap anywhere on screen
+  const onFirstInteraction = () => {
+    enableAudio();
+    document.removeEventListener("pointerdown", onFirstInteraction);
+    document.removeEventListener("touchstart", onFirstInteraction);
+  };
+  document.addEventListener("pointerdown", onFirstInteraction);
+  document.addEventListener("touchstart", onFirstInteraction);
+
   if (activeVideo) {
     activeVideo.muted = false;
     activeVideo.volume = 1.0;
@@ -111,9 +153,15 @@ function initSplashScreen() {
     // Attempt playback with audio first; if browser blocks un-muted autoplay, fallback to muted playback
     const playPromise = activeVideo.play();
     if (playPromise !== undefined) {
-      playPromise.catch((err) => {
-        console.warn("Unmuted autoplay restricted by browser, playing muted:", err);
+      playPromise.then(() => {
+        if (!activeVideo.muted) {
+          enableAudio();
+        }
+      }).catch((err) => {
+        console.warn("Unmuted autoplay restricted by browser policy, playing muted until touch:", err);
         activeVideo.muted = true;
+        if (audioIcon) audioIcon.textContent = "🔇";
+        if (audioLabel) audioLabel.textContent = "Tap for Sound";
         activeVideo.play().catch(() => finishSplash());
       });
     }
