@@ -2305,7 +2305,7 @@ body.theme-cyber mark.highlight {
   pointer-events: none;
 }
 
-#splash-video {
+.splash-video {
   width: 100%;
   height: 100%;
   max-width: 100vw;
@@ -2317,15 +2317,22 @@ body.theme-cyber mark.highlight {
   background: #060911;
 }
 
-/* Device Specific Optimizations: Prevent text/title cropping on mobile portrait & narrow viewports */
-@media (max-width: 768px), (max-aspect-ratio: 16/9) {
+/* Device Specific Optimizations */
+@media (min-width: 769px) {
+  .splash-video-desktop { display: block !important; }
+  .splash-video-mobile { display: none !important; }
+}
+
+@media (max-width: 768px) {
   .splash-screen-overlay {
     height: 100dvh;
     background: #060911 !important;
   }
-  #splash-video {
-    object-fit: contain;
-    object-position: center center;
+  .splash-video-desktop { display: none !important; }
+  .splash-video-mobile { 
+    display: block !important; 
+    object-fit: cover !important; 
+    object-position: center center !important;
   }
 }
 

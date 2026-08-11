@@ -22,8 +22,19 @@
 
   <!-- CINEMATIC LINUX PENGUIN INTRO SPLASH OVERLAY -->
   <div id="splash-screen" class="splash-screen-overlay">
-    <video id="splash-video" 
+    <!-- Desktop Widescreen Cinematic Video -->
+    <video id="splash-video-desktop" 
+           class="splash-video splash-video-desktop" 
            src="assets/splash_intro.mp4" 
+           autoplay 
+           muted 
+           playsinline 
+           preload="auto" 
+           aria-hidden="true"></video>
+    <!-- Mobile Vertical Cinematic Video -->
+    <video id="splash-video-mobile" 
+           class="splash-video splash-video-mobile" 
+           src="assets/splash_intro_mobile.mp4" 
            autoplay 
            muted 
            playsinline 

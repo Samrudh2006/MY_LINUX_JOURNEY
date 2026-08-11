@@ -37,10 +37,11 @@ document.addEventListener("DOMContentLoaded", () => {
   setupMobileNav();
 });
 
-// --- CINEMATIC VIDEO SPLASH SCREEN TRANSITION ---
+// --- DUAL CINEMATIC VIDEO SPLASH SCREEN TRANSITION ---
 function initSplashScreen() {
   const splash = document.getElementById("splash-screen");
-  const video = document.getElementById("splash-video");
+  const desktopVideo = document.getElementById("splash-video-desktop");
+  const mobileVideo = document.getElementById("splash-video-mobile");
 
   if (!splash) return;
 
@@ -54,6 +55,14 @@ function initSplashScreen() {
 
   document.body.classList.add("splash-active");
 
+  const isMobile = window.innerWidth <= 768;
+  const activeVideo = isMobile ? (mobileVideo || desktopVideo) : (desktopVideo || mobileVideo);
+  const inactiveVideo = activeVideo === mobileVideo ? desktopVideo : mobileVideo;
+
+  if (inactiveVideo) {
+    inactiveVideo.pause();
+  }
+
   let isSplashDone = false;
 
   const finishSplash = () => {
@@ -66,11 +75,13 @@ function initSplashScreen() {
 
     setTimeout(() => {
       splash.style.display = "none";
-      if (video) {
-        video.pause();
-        video.removeAttribute("src");
-        video.load();
-      }
+      [desktopVideo, mobileVideo].forEach((v) => {
+        if (v) {
+          v.pause();
+          v.removeAttribute("src");
+          v.load();
+        }
+      });
     }, 750);
   };
 
@@ -83,21 +94,21 @@ function initSplashScreen() {
   };
   document.addEventListener("keydown", onSplashKeyDown);
 
-  if (video) {
-    video.muted = true;
-    video.playsInline = true;
+  if (activeVideo) {
+    activeVideo.muted = true;
+    activeVideo.playsInline = true;
 
-    // Transition smoothly when video finishes playing
-    video.addEventListener("ended", finishSplash, { once: true });
+    // Transition smoothly when active video finishes playing
+    activeVideo.addEventListener("ended", finishSplash, { once: true });
 
     // Handle video load / playback error gracefully
-    video.addEventListener("error", () => {
+    activeVideo.addEventListener("error", () => {
       console.warn("Splash video failed to load, transitioning to dashboard.");
       finishSplash();
     }, { once: true });
 
     // Attempt playback
-    const playPromise = video.play();
+    const playPromise = activeVideo.play();
     if (playPromise !== undefined) {
       playPromise.catch((err) => {
         console.warn("Autoplay blocked or video play error:", err);
@@ -108,7 +119,7 @@ function initSplashScreen() {
     finishSplash();
   }
 
-  // Safety fallback timeout (11 seconds max, for 10-second video)
+  // Safety fallback timeout (11 seconds max)
   const fallbackTimer = setTimeout(finishSplash, 11000);
 }
 
