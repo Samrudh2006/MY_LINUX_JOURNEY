@@ -2317,21 +2317,15 @@ body.theme-cyber mark.highlight {
   background: #060911;
 }
 
-/* Device Specific Optimizations */
-@media (max-width: 768px) {
+/* Device Specific Optimizations: Prevent text/title cropping on mobile portrait & narrow viewports */
+@media (max-width: 768px), (max-aspect-ratio: 16/9) {
   .splash-screen-overlay {
     height: 100dvh;
+    background: #060911 !important;
   }
   #splash-video {
-    object-fit: cover;
+    object-fit: contain;
     object-position: center center;
-  }
-}
-
-@media (orientation: portrait) and (max-width: 600px) {
-  #splash-video {
-    object-fit: cover;
-    object-position: 50% 50%;
   }
 }
 
