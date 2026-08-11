@@ -1,4 +1,4 @@
-const CACHE_NAME = 'samrudh-soc-v11';
+const CACHE_NAME = 'samrudh-soc-v12';
 const ASSETS = [
   './',
   './index.html',
@@ -10,7 +10,8 @@ const ASSETS = [
   './visuals.js',
   './logo.png',
   './favicon.svg',
-  './manifest.json'
+  './manifest.json',
+  './assets/splash_intro.mp4'
 ];
 
 self.addEventListener('install', (event) => { event.waitUntil(self.skipWaiting());

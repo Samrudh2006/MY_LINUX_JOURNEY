@@ -2277,32 +2277,26 @@ body.theme-cyber mark.highlight {
 }
 
 /* ============================================================
-   ULTRA-PREMIUM CYBER SPLASH SCREEN OVERLAY
+/* ============================================================
+   CINEMATIC LINUX PENGUIN INTRO SPLASH OVERLAY
    ============================================================ */
 .splash-screen-overlay {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100dvh;
+  min-height: 100vh;
   z-index: 999999;
   display: flex;
   justify-content: center;
   align-items: center;
   overflow: hidden;
-  background: #060a12 !important;
+  background: #060911 !important;
   opacity: 1;
-  transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.splash-screen-overlay::after {
-  content: "Tap anywhere to continue";
-  position: absolute;
-  bottom: max(16px, env(safe-area-inset-bottom));
-  left: 50%;
-  transform: translateX(-50%);
-  color: rgba(148, 163, 184, 0.9);
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  visibility: visible;
+  transition: opacity 0.75s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.75s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: opacity, visibility;
 }
 
 .splash-screen-overlay.fade-out {
@@ -2311,176 +2305,34 @@ body.theme-cyber mark.highlight {
   pointer-events: none;
 }
 
-.splash-bg-image {
-  position: absolute;
-  inset: 0;
-  background-size: cover !important;
-  background-position: center center !important;
-  background-repeat: no-repeat !important;
-  opacity: 0.85;
-  filter: brightness(0.65) contrast(1.15);
-  transform: scale(1.02);
-  animation: splashZoom 12s ease-out infinite alternate;
-}
-
-@keyframes splashZoom {
-  0% { transform: scale(1); }
-  100% { transform: scale(1.06); }
-}
-
-.splash-backdrop-blur {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at center, rgba(6, 10, 18, 0.4) 0%, rgba(6, 10, 18, 0.85) 85%);
-}
-
-.splash-content-card {
-  position: relative;
-  z-index: 10;
-  background: rgba(11, 19, 36, 0.92) !important;
-  border: 2px solid rgba(56, 189, 248, 0.5) !important;
-  box-shadow: 0 0 80px rgba(56, 189, 248, 0.3), inset 0 0 40px rgba(56, 189, 248, 0.15) !important;
-  border-radius: 24px;
-  padding: 3rem 3.5rem;
-  max-width: 680px;
-  width: 90%;
-  text-align: center;
-  backdrop-filter: blur(20px);
-  animation: splashCardPop 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@media (max-width: 768px) {
-  .splash-content-card {
-    width: min(94vw, 620px);
-    max-height: calc(100dvh - 2rem);
-    overflow-y: auto;
-    padding: 1.5rem 1.1rem;
-    border-radius: 16px;
-  }
-
-  .splash-logo-glow {
-    width: 72px;
-    height: 72px;
-  }
-
-  .splash-main-title {
-    font-size: 1.15rem;
-    line-height: 1.35;
-  }
-
-  .splash-sub-title {
-    font-size: 0.72rem;
-    letter-spacing: 0.5px;
-  }
-
-  .splash-chip {
-    font-size: 0.68rem;
-    padding: 0.3rem 0.65rem;
-  }
-}
-
-@keyframes splashCardPop {
-  0% { opacity: 0; transform: scale(0.88) translateY(20px); }
-  100% { opacity: 1; transform: scale(1) translateY(0); }
-}
-
-.splash-brand-hero {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.splash-logo-glow {
-  width: 100px;
-  height: 100px;
-  object-fit: contain;
-  filter: drop-shadow(0 0 20px rgba(56, 189, 248, 0.7));
-  animation: splashLogoPulse 2.5s ease-in-out infinite alternate;
-}
-
-@keyframes splashLogoPulse {
-  0% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.5)); }
-  100% { transform: scale(1.06); filter: drop-shadow(0 0 30px rgba(56, 189, 248, 0.9)); }
-}
-
-.splash-main-title {
-  font-family: 'Outfit', sans-serif;
-  font-size: 1.85rem;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  background: linear-gradient(135deg, #ffffff 0%, #38bdf8 60%, #60a5fa 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin: 0;
-  line-height: 1.25;
-}
-
-.splash-sub-title {
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: #94a3b8;
-  letter-spacing: 1px;
-  margin-top: 0.4rem;
-}
-
-.splash-feature-chips {
-  display: flex;
-  justify-content: center;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-  margin-bottom: 2rem;
-}
-
-.splash-chip {
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  color: #e2e8f0;
-  font-size: 0.78rem;
-  font-weight: 600;
-  padding: 0.35rem 0.85rem;
-  border-radius: 20px;
-}
-
-.splash-loading-box {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.splash-loading-status {
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: #38bdf8;
-  font-family: 'Fira Code', monospace;
-}
-
-.splash-progress-track {
+#splash-video {
   width: 100%;
-  height: 10px;
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
-}
-
-.splash-progress-fill {
   height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, #1565c0, #38bdf8, #4ade80);
-  border-radius: 20px;
-  box-shadow: 0 0 12px rgba(56, 189, 248, 0.8);
-  transition: width 0.15s linear;
+  max-width: 100vw;
+  max-height: 100dvh;
+  object-fit: cover;
+  object-position: center center;
+  display: block;
+  pointer-events: none;
+  background: #060911;
 }
 
-.splash-pct-badge {
-  font-family: 'Fira Code', monospace;
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: #94a3b8;
+/* Device Specific Optimizations */
+@media (max-width: 768px) {
+  .splash-screen-overlay {
+    height: 100dvh;
+  }
+  #splash-video {
+    object-fit: cover;
+    object-position: center center;
+  }
+}
+
+@media (orientation: portrait) and (max-width: 600px) {
+  #splash-video {
+    object-fit: cover;
+    object-position: 50% 50%;
+  }
 }
 
 /* ============================================================

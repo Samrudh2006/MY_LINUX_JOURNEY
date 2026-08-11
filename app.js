@@ -37,63 +37,79 @@ document.addEventListener("DOMContentLoaded", () => {
   setupMobileNav();
 });
 
-// --- SPLASH SCREEN LOADING TRANSITION ---
+// --- CINEMATIC VIDEO SPLASH SCREEN TRANSITION ---
 function initSplashScreen() {
   const splash = document.getElementById("splash-screen");
-  const bar = document.getElementById("splash-progress-bar");
-  const statusText = document.getElementById("splash-status-text");
-  const pctLabel = document.getElementById("splash-pct-label");
+  const video = document.getElementById("splash-video");
 
-  if (!splash || !bar) return;
+  if (!splash) return;
+
+  // Accessibility: Respect prefers-reduced-motion
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (prefersReducedMotion) {
+    splash.style.display = "none";
+    document.body.classList.remove("splash-active");
+    return;
+  }
+
   document.body.classList.add("splash-active");
 
-  const steps = [
-    { pct: 20, text: "⚡ Initializing Security Engine..." },
-    { pct: 45, text: "🛡️ Loading 365-Page Linux Handbook..." },
-    { pct: 75, text: "💻 Loading 456-Page Advanced SOC Analyst Handbook..." },
-    { pct: 95, text: "🚀 Preparing Blue Team Cyber Environment..." },
-    { pct: 100, text: "✅ Platform Ready!" }
-  ];
-
   let isSplashDone = false;
-  let currentStep = 0;
 
   const finishSplash = () => {
     if (isSplashDone) return;
     isSplashDone = true;
-    clearInterval(progressTimer);
-    clearTimeout(forceCloseTimer);
+    clearTimeout(fallbackTimer);
+
     splash.classList.add("fade-out");
     document.body.classList.remove("splash-active");
+
     setTimeout(() => {
       splash.style.display = "none";
-      splash.removeEventListener("click", finishSplash);
-      document.removeEventListener("keydown", onSplashKeyDown);
-    }, 650);
+      if (video) {
+        video.pause();
+        video.removeAttribute("src");
+        video.load();
+      }
+    }, 750);
   };
 
+  // Keyboard shortcut to skip intro (Escape key)
   const onSplashKeyDown = (event) => {
-    if (event.key === "Escape" || event.key === "Enter" || event.key === " ") {
+    if (event.key === "Escape") {
       finishSplash();
+      document.removeEventListener("keydown", onSplashKeyDown);
     }
   };
-
-  splash.addEventListener("click", finishSplash);
   document.addEventListener("keydown", onSplashKeyDown);
 
-  const progressTimer = setInterval(() => {
-    if (currentStep < steps.length) {
-      const step = steps[currentStep];
-      bar.style.width = step.pct + "%";
-      if (statusText) statusText.innerText = step.text;
-      if (pctLabel) pctLabel.innerText = step.pct + "%";
-      currentStep++;
-    } else {
-      setTimeout(finishSplash, 350);
-    }
-  }, 320);
+  if (video) {
+    video.muted = true;
+    video.playsInline = true;
 
-  const forceCloseTimer = setTimeout(finishSplash, 7000);
+    // Transition smoothly when video finishes playing
+    video.addEventListener("ended", finishSplash, { once: true });
+
+    // Handle video load / playback error gracefully
+    video.addEventListener("error", () => {
+      console.warn("Splash video failed to load, transitioning to dashboard.");
+      finishSplash();
+    }, { once: true });
+
+    // Attempt playback
+    const playPromise = video.play();
+    if (playPromise !== undefined) {
+      playPromise.catch((err) => {
+        console.warn("Autoplay blocked or video play error:", err);
+        finishSplash();
+      });
+    }
+  } else {
+    finishSplash();
+  }
+
+  // Safety fallback timeout (11 seconds max, for 10-second video)
+  const fallbackTimer = setTimeout(finishSplash, 11000);
 }
 
 // --- MOBILE NAV SETUP ---
