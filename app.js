@@ -95,7 +95,8 @@ function initSplashScreen() {
   document.addEventListener("keydown", onSplashKeyDown);
 
   if (activeVideo) {
-    activeVideo.muted = true;
+    activeVideo.muted = false;
+    activeVideo.volume = 1.0;
     activeVideo.playsInline = true;
 
     // Transition smoothly when active video finishes playing
@@ -107,12 +108,13 @@ function initSplashScreen() {
       finishSplash();
     }, { once: true });
 
-    // Attempt playback
+    // Attempt playback with audio first; if browser blocks un-muted autoplay, fallback to muted playback
     const playPromise = activeVideo.play();
     if (playPromise !== undefined) {
       playPromise.catch((err) => {
-        console.warn("Autoplay blocked or video play error:", err);
-        finishSplash();
+        console.warn("Unmuted autoplay restricted by browser, playing muted:", err);
+        activeVideo.muted = true;
+        activeVideo.play().catch(() => finishSplash());
       });
     }
   } else {
