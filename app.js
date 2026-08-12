@@ -3233,21 +3233,39 @@ function handleFeedbackSubmit(e) {
     date: new Date().toLocaleDateString()
   };
 
-  // 1. Post to backend server endpoint automatically in background (no mailto redirect!)
+  // 1. Post to local backend server endpoint automatically in background
   fetch('/api/submit-review', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(userReviewObj)
   }).catch(err => console.warn("Backend review submission:", err));
 
-  // 2. Save review locally so it instantly renders in the community section
+  // 2. Dispatch REAL background email notification directly to samrudhdwivedula12@gmail.com inbox!
+  const emailFormData = new FormData();
+  emailFormData.append("access_key", "YOUR_WEB3FORMS_ACCESS_KEY");
+  emailFormData.append("name", name);
+  emailFormData.append("email", email);
+  emailFormData.append("role", role);
+  emailFormData.append("rating", `${starsStr} (${selectedFeedbackRating}/5)`);
+  emailFormData.append("message", message);
+  emailFormData.append("to_email", "samrudhdwivedula12@gmail.com");
+  emailFormData.append("subject", `⭐ LINUX SOC HANDBOOK - Genuine Review from ${name} (${starsStr})`);
+
+  fetch("https://api.web3forms.com/submit", {
+    method: "POST",
+    body: emailFormData
+  }).then(res => res.json())
+    .then(data => console.log("Web3Forms Email Dispatch Status:", data))
+    .catch(err => console.warn("Web3Forms error:", err));
+
+  // 3. Save review locally so it instantly renders in the community section
   const storedUserReviews = JSON.parse(localStorage.getItem("soc_user_submitted_reviews") || "[]");
   storedUserReviews.unshift(userReviewObj);
   localStorage.setItem("soc_user_submitted_reviews", JSON.stringify(storedUserReviews));
 
   closeFeedbackModal();
 
-  // 3. Show Success Confirmation Modal
+  // 4. Show Success Confirmation Modal
   showFeedbackSuccessModal(name);
 
   if (activeMode === "pricing") {
