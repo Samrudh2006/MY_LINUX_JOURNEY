@@ -31,10 +31,16 @@ document.addEventListener("DOMContentLoaded", () => {
   initSplashScreen();
   initPWA();
   initModeTabs();
-  initSidebar();
-  renderCurrentView();
+  if (window.location.hash) {
+    loadStateFromHash();
+  } else {
+    initSidebar();
+    renderCurrentView();
+  }
   setupEventListeners();
   setupMobileNav();
+
+  window.addEventListener("hashchange", loadStateFromHash);
 });
 
 // --- DUAL CINEMATIC VIDEO SPLASH SCREEN TRANSITION ---
@@ -198,29 +204,8 @@ function setupMobileNav() {
     document.body.classList.toggle("drawer-open", sidebar.classList.contains("mobile-open"));
   });
 
-  if (mobPrev) mobPrev.addEventListener("click", () => {
-    if (activeMode === "notebook" && currentPageId > 1) {
-      currentPageId--; renderCurrentView("prev"); updateActiveSidebarItem();
-    } else if (activeMode === "interview" && currentQAId > 1) {
-      currentQAId--; renderCurrentView("prev"); updateActiveSidebarItem();
-    } else if (activeMode === "advanced" && currentAdvancedPageId > 1) {
-      currentAdvancedPageId--;
-      localStorage.setItem("advanced_current_page", currentAdvancedPageId);
-      renderCurrentView("prev"); updateActiveSidebarItem();
-    }
-  });
-
-  if (mobNext) mobNext.addEventListener("click", () => {
-    if (activeMode === "notebook" && currentPageId < NOTEBOOK_PAGES.length) {
-      currentPageId++; renderCurrentView("next"); updateActiveSidebarItem();
-    } else if (activeMode === "interview" && currentQAId < INTERVIEW_QUESTIONS.length) {
-      currentQAId++; renderCurrentView("next"); updateActiveSidebarItem();
-    } else if (activeMode === "advanced" && currentAdvancedPageId < (window.ADVANCED_DOMAIN_PAGES ? window.ADVANCED_DOMAIN_PAGES.length : 456)) {
-      currentAdvancedPageId++;
-      localStorage.setItem("advanced_current_page", currentAdvancedPageId);
-      renderCurrentView("next"); updateActiveSidebarItem();
-    }
-  });
+  if (mobPrev) mobPrev.addEventListener("click", () => navigatePage("prev"));
+  if (mobNext) mobNext.addEventListener("click", () => navigatePage("next"));
 
   if (mobPlay) mobPlay.addEventListener("click", () => toggleAutoPlay());
 
@@ -257,6 +242,12 @@ function initModeTabs() {
   const advancedTab = document.getElementById("tab-advanced");
   if (advancedTab) advancedTab.addEventListener("click", () => switchMode("advanced"));
   document.getElementById("tab-cover").addEventListener("click", () => switchMode("cover"));
+  
+  const pricingTab = document.getElementById("tab-pricing");
+  if (pricingTab) pricingTab.addEventListener("click", () => switchMode("pricing"));
+
+  const pricingOpenBtn = document.getElementById("btn-pricing-open");
+  if (pricingOpenBtn) pricingOpenBtn.addEventListener("click", () => switchMode("pricing"));
 }
 
 function switchMode(mode) {
@@ -324,6 +315,10 @@ function switchMode(mode) {
     document.getElementById("toolbar-controls").style.display = "flex";
   } else if (mode === "cover") {
     document.getElementById("tab-cover").classList.add("active");
+    document.getElementById("toolbar-controls").style.display = "none";
+  } else if (mode === "pricing") {
+    const tab = document.getElementById("tab-pricing");
+    if (tab) tab.classList.add("active");
     document.getElementById("toolbar-controls").style.display = "none";
   }
 
@@ -432,9 +427,24 @@ function initSidebar() {
   } else if (activeMode === "cover") {
     navContainer.innerHTML = `
       <div style="padding:1rem; color:var(--text-ink); font-weight:600;">
-        🏆 Official SAMRUDH SOC ANALYST Brand Cover & Certification Hub
+        🏆 Official SAMRUDH SOC ANALYST Brand Cover &amp; Certification Hub
       </div>
     `;
+  } else if (activeMode === "pricing") {
+    const group = createSidebarGroup("💎 PRICING & TRUST SIGNALS", "");
+    group.appendChild(createSidebarItem("pricing-plans", "💎 Pricing Plans & Tiers", "Tiers", true, () => {
+      document.getElementById("sec-pricing-tiers")?.scrollIntoView({ behavior: 'smooth' });
+    }));
+    group.appendChild(createSidebarItem("reviews", "⭐ Verified User Reviews", "Reviews", false, () => {
+      document.getElementById("sec-testimonials")?.scrollIntoView({ behavior: 'smooth' });
+    }));
+    group.appendChild(createSidebarItem("comparison", "⚔️ Feature Comparison", "Matrix", false, () => {
+      document.getElementById("sec-comparison")?.scrollIntoView({ behavior: 'smooth' });
+    }));
+    group.appendChild(createSidebarItem("faqs", "❓ FAQs & Objections", "FAQs", false, () => {
+      document.getElementById("sec-faqs")?.scrollIntoView({ behavior: 'smooth' });
+    }));
+    navContainer.appendChild(group);
   }
 }
 
@@ -482,6 +492,92 @@ function updateActiveSidebarItem() {
   });
 }
 
+function updatePageIndicator() {
+  const labelEl = document.getElementById("page-type-label");
+  const inputEl = document.getElementById("page-number-input");
+  const totalEl = document.getElementById("total-count-label");
+  if (!inputEl || !totalEl) return;
+
+  if (activeMode === "notebook") {
+    if (labelEl) labelEl.innerText = "Page";
+    inputEl.value = currentPageId;
+    inputEl.min = 1;
+    inputEl.max = NOTEBOOK_PAGES.length;
+    totalEl.innerText = NOTEBOOK_PAGES.length;
+  } else if (activeMode === "interview") {
+    if (labelEl) labelEl.innerText = "Q&A";
+    inputEl.value = currentQAId;
+    inputEl.min = 1;
+    inputEl.max = INTERVIEW_QUESTIONS.length;
+    totalEl.innerText = INTERVIEW_QUESTIONS.length;
+  } else if (activeMode === "labs") {
+    const labs = window.INCIDENT_LABS || [];
+    if (labelEl) labelEl.innerText = "Lab";
+    inputEl.value = currentActiveLabIndex + 1;
+    inputEl.min = 1;
+    inputEl.max = labs.length || 50;
+    totalEl.innerText = labs.length || 50;
+  } else if (activeMode === "advanced") {
+    const advPages = window.ADVANCED_DOMAIN_PAGES || [];
+    if (labelEl) labelEl.innerText = "Page";
+    inputEl.value = currentAdvancedPageId;
+    inputEl.min = 1;
+    inputEl.max = advPages.length || 456;
+    totalEl.innerText = advPages.length || 456;
+  } else if (activeMode === "cheatsheet") {
+    if (labelEl) labelEl.innerText = "Cmd";
+    inputEl.value = 1;
+    inputEl.min = 1;
+    inputEl.max = 350;
+    totalEl.innerText = "350+";
+  } else {
+    if (labelEl) labelEl.innerText = "View";
+    inputEl.value = 1;
+    inputEl.min = 1;
+    inputEl.max = 1;
+    totalEl.innerText = "1";
+  }
+}
+
+function syncWindowState() {
+  if (activeMode === "notebook") {
+    window.history.replaceState(null, "", `#notebook:${currentPageId}`);
+  } else if (activeMode === "interview") {
+    window.history.replaceState(null, "", `#interview:${currentQAId}`);
+  } else if (activeMode === "labs") {
+    window.history.replaceState(null, "", `#labs:${currentActiveLabIndex + 1}`);
+  } else if (activeMode === "advanced") {
+    window.history.replaceState(null, "", `#advanced:${currentAdvancedPageId}`);
+  } else {
+    window.history.replaceState(null, "", `#${activeMode}`);
+  }
+}
+
+function loadStateFromHash() {
+  const hash = window.location.hash.replace('#', '');
+  if (!hash) return;
+
+  if (hash.startsWith('notebook:')) {
+    const p = parseInt(hash.split(':')[1]);
+    if (!isNaN(p) && p >= 1 && window.NOTEBOOK_PAGES && p <= window.NOTEBOOK_PAGES.length) { currentPageId = p; }
+    switchMode('notebook');
+  } else if (hash.startsWith('interview:')) {
+    const q = parseInt(hash.split(':')[1]);
+    if (!isNaN(q) && q >= 1 && window.INTERVIEW_QUESTIONS && q <= window.INTERVIEW_QUESTIONS.length) { currentQAId = q; }
+    switchMode('interview');
+  } else if (hash.startsWith('labs:') || hash.startsWith('lab:')) {
+    const l = parseInt(hash.split(':')[1]);
+    if (!isNaN(l) && l >= 1) { currentActiveLabIndex = l - 1; }
+    switchMode('labs');
+  } else if (hash.startsWith('advanced:')) {
+    const a = parseInt(hash.split(':')[1]);
+    if (!isNaN(a) && a >= 1) { currentAdvancedPageId = a; }
+    switchMode('advanced');
+  } else if (['notebook', 'interview', 'mitre', 'logparser', 'hardening', 'cheatsheet', 'labs', 'advanced', 'cover', 'pricing'].includes(hash)) {
+    switchMode(hash);
+  }
+}
+
 // --- RENDER MAIN VIEW AREA (WITH 3D PAGE FLIP ANIMATION) ---
 function renderCurrentView(direction = "next") {
   syncWindowState();
@@ -496,14 +592,12 @@ function renderCurrentView(direction = "next") {
   if (activeMode === "notebook") {
     const page = NOTEBOOK_PAGES.find(p => p.id === currentPageId);
     if (page) {
-      document.getElementById("page-number-input").value = currentPageId;
       updateBookmarkButtonState(currentPageId);
       container.innerHTML = generatePageHTML(page);
     }
   } else if (activeMode === "interview") {
     const qa = INTERVIEW_QUESTIONS.find(q => q.id === currentQAId);
     if (qa) {
-      document.getElementById("page-number-input").value = currentQAId;
       updateBookmarkButtonState(currentQAId);
       container.innerHTML = generateInterviewQAHTML(qa);
     }
@@ -514,27 +608,24 @@ function renderCurrentView(direction = "next") {
   } else if (activeMode === "hardening") {
     container.innerHTML = generateHardeningHTML();
   } else if (activeMode === "cheatsheet") {
-    const csPages = window.CHEATSHEET_PAGES || (window.MASTER_CHEATSHEET_DATA && window.MASTER_CHEATSHEET_DATA.pages) || [];
-    const page = csPages.find(p => p.id === currentCheatPageId) || csPages[0];
-    if (page) {
-      document.getElementById("page-number-input").value = currentCheatPageId;
-      updateBookmarkButtonState(currentCheatPageId);
-      container.innerHTML = generateCheatPageHTML(page);
-    }
+    container.innerHTML = generateCheatSheetHTML();
+    filterAndRenderCheatCards();
   } else if (activeMode === "labs") {
     container.innerHTML = generateIncidentLabsHTML();
   } else if (activeMode === "advanced") {
     const advPages = window.ADVANCED_DOMAIN_PAGES || [];
     const page = advPages.find(p => p.id === currentAdvancedPageId);
     if (page) {
-      document.getElementById("page-number-input").value = currentAdvancedPageId;
       updateBookmarkButtonState(currentAdvancedPageId);
       container.innerHTML = generateAdvancedPageHTML(page);
     }
   } else if (activeMode === "cover") {
     container.innerHTML = generateBrandCoverHTML();
+  } else if (activeMode === "pricing") {
+    container.innerHTML = generatePricingAndReviewsHTML();
   }
 
+  updatePageIndicator();
   updateReadingProgress();
   applySearchHighlights();
   updateActiveSidebarItem();
@@ -1262,32 +1353,65 @@ function escapeHTML(str) {
   });
 }
 
+// --- UNIFIED NAVIGATION ENGINE FOR ALL MODES ---
+function navigatePage(dir) {
+  if (dir === "prev") {
+    if (activeMode === "notebook" && currentPageId > 1) {
+      currentPageId--;
+    } else if (activeMode === "interview" && currentQAId > 1) {
+      currentQAId--;
+    } else if (activeMode === "cheatsheet") {
+      const filters = ["all", "beginner", "intermediate", "advanced", "starred"];
+      let currIdx = filters.indexOf(activeCheatFilter);
+      if (currIdx > 0) {
+        setCheatFilter(filters[currIdx - 1]);
+      }
+      return;
+    } else if (activeMode === "labs" && currentActiveLabIndex > 0) {
+      currentActiveLabIndex--;
+    } else if (activeMode === "advanced" && currentAdvancedPageId > 1) {
+      currentAdvancedPageId--;
+      localStorage.setItem("advanced_current_page", currentAdvancedPageId);
+    } else return;
+  } else {
+    if (activeMode === "notebook" && currentPageId < NOTEBOOK_PAGES.length) {
+      currentPageId++;
+    } else if (activeMode === "interview" && currentQAId < INTERVIEW_QUESTIONS.length) {
+      currentQAId++;
+    } else if (activeMode === "cheatsheet") {
+      const filters = ["all", "beginner", "intermediate", "advanced", "starred"];
+      let currIdx = filters.indexOf(activeCheatFilter);
+      if (currIdx >= 0 && currIdx < filters.length - 1) {
+        setCheatFilter(filters[currIdx + 1]);
+      }
+      return;
+    } else if (activeMode === "labs") {
+      const labs = window.INCIDENT_LABS || [];
+      if (currentActiveLabIndex < labs.length - 1) {
+        currentActiveLabIndex++;
+      } else return;
+    } else if (activeMode === "advanced") {
+      const advPages = window.ADVANCED_DOMAIN_PAGES || [];
+      const count = advPages.length || 456;
+      if (currentAdvancedPageId < count) {
+        currentAdvancedPageId++;
+        localStorage.setItem("advanced_current_page", currentAdvancedPageId);
+      } else return;
+    } else return;
+  }
+
+  renderCurrentView(dir);
+  updateActiveSidebarItem();
+}
+
 // --- EVENT LISTENERS ---
 function setupEventListeners() {
   // Page Switchers
-  document.getElementById("btn-prev-page").addEventListener("click", () => {
-    if (activeMode === "notebook" && currentPageId > 1) {
-      currentPageId--;
-      renderCurrentView("prev");
-      updateActiveSidebarItem();
-    } else if (activeMode === "interview" && currentQAId > 1) {
-      currentQAId--;
-      renderCurrentView("prev");
-      updateActiveSidebarItem();
-    }
-  });
+  const prevBtn = document.getElementById("btn-prev-page");
+  if (prevBtn) prevBtn.addEventListener("click", () => navigatePage("prev"));
 
-  document.getElementById("btn-next-page").addEventListener("click", () => {
-    if (activeMode === "notebook" && currentPageId < NOTEBOOK_PAGES.length) {
-      currentPageId++;
-      renderCurrentView("next");
-      updateActiveSidebarItem();
-    } else if (activeMode === "interview" && currentQAId < INTERVIEW_QUESTIONS.length) {
-      currentQAId++;
-      renderCurrentView("next");
-      updateActiveSidebarItem();
-    }
-  });
+  const nextBtn = document.getElementById("btn-next-page");
+  if (nextBtn) nextBtn.addEventListener("click", () => navigatePage("next"));
 
   // Toggle Sidebar Listener
   const toggleBtn = document.getElementById("btn-toggle-sidebar");
@@ -1309,6 +1433,8 @@ function setupEventListeners() {
 
   document.getElementById("page-number-input").addEventListener("change", (e) => {
     const val = parseInt(e.target.value);
+    if (isNaN(val)) return;
+
     if (activeMode === "notebook") {
       if (val >= 1 && val <= NOTEBOOK_PAGES.length) {
         const dir = val > currentPageId ? "next" : "prev";
@@ -1320,6 +1446,24 @@ function setupEventListeners() {
       if (val >= 1 && val <= INTERVIEW_QUESTIONS.length) {
         const dir = val > currentQAId ? "next" : "prev";
         currentQAId = val;
+        renderCurrentView(dir);
+        updateActiveSidebarItem();
+      }
+    } else if (activeMode === "labs") {
+      const labs = window.INCIDENT_LABS || [];
+      if (val >= 1 && val <= labs.length) {
+        const dir = val > (currentActiveLabIndex + 1) ? "next" : "prev";
+        currentActiveLabIndex = val - 1;
+        renderCurrentView(dir);
+        updateActiveSidebarItem();
+      }
+    } else if (activeMode === "advanced") {
+      const advPages = window.ADVANCED_DOMAIN_PAGES || [];
+      const count = advPages.length || 456;
+      if (val >= 1 && val <= count) {
+        const dir = val > currentAdvancedPageId ? "next" : "prev";
+        currentAdvancedPageId = val;
+        localStorage.setItem("advanced_current_page", currentAdvancedPageId);
         renderCurrentView(dir);
         updateActiveSidebarItem();
       }
@@ -1342,12 +1486,12 @@ function setupEventListeners() {
 
   document.getElementById("btn-bookmark").addEventListener("click", () => {
     if (activeMode === "notebook") {
-  toggleBookmark(currentPageId, bookmarkedPages, "soc_bookmarked_pages");
-} else if (activeMode === "interview") {
-  toggleBookmark(currentQAId, bookmarkedQAs, "soc_bookmarked_qas");
-} else if (activeMode === "advanced") {
-  toggleBookmark(currentPageId, bookmarkedAdvancedPages, "adv_bookmarked_pages");
-}    
+      toggleBookmark(currentPageId, bookmarkedPages, "soc_bookmarked_pages");
+    } else if (activeMode === "interview") {
+      toggleBookmark(currentQAId, bookmarkedQAs, "soc_bookmarked_qas");
+    } else if (activeMode === "advanced") {
+      toggleBookmark(currentPageId, bookmarkedAdvancedPages, "adv_bookmarked_pages");
+    }    
     updateBookmarkButtonState(activeMode === "notebook" ? currentPageId : currentQAId);
     initSidebar();
   });
@@ -1400,18 +1544,10 @@ function setupEventListeners() {
 
     if (e.key === "ArrowRight" || e.key === "PageDown") {
       e.preventDefault();
-      if (activeMode === "notebook" && currentPageId < NOTEBOOK_PAGES.length) {
-        currentPageId++; renderCurrentView("next"); updateActiveSidebarItem();
-      } else if (activeMode === "interview" && currentQAId < INTERVIEW_QUESTIONS.length) {
-        currentQAId++; renderCurrentView("next"); updateActiveSidebarItem();
-      }
+      navigatePage("next");
     } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
       e.preventDefault();
-      if (activeMode === "notebook" && currentPageId > 1) {
-        currentPageId--; renderCurrentView("prev"); updateActiveSidebarItem();
-      } else if (activeMode === "interview" && currentQAId > 1) {
-        currentQAId--; renderCurrentView("prev"); updateActiveSidebarItem();
-      }
+      navigatePage("prev");
     } else if (e.key === " ") {
       e.preventDefault();
       toggleAutoPlay(); // Spacebar toggles auto-play
@@ -2281,6 +2417,7 @@ function toggleHardeningCheck(id) {
 
 // --- 3. MASTER CHEAT SHEET LOGIC ---
 let activeCheatFilter = "All";
+let activeCheatSearch = "";
 let activeCheatSubTab = "commands";
 let bookmarkedCheatSheetIds = JSON.parse(localStorage.getItem("soc_bookmarked_cheatsheets") || "[]");
 
@@ -2987,3 +3124,548 @@ function openMasterCheatOverview() {
   `;
   document.body.appendChild(modal);
 }
+
+// --- INTERACTIVE FEEDBACK & REVIEW POPUP MODAL ---
+let selectedFeedbackRating = 5;
+
+function openFeedbackModal() {
+  const existing = document.getElementById("feedback-modal");
+  if (existing) existing.remove();
+
+  const modal = document.createElement("div");
+  modal.id = "feedback-modal";
+  modal.className = "no-print";
+  modal.style.cssText = "position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:99999; display:flex; justify-content:center; align-items:center; backdrop-filter:blur(6px); padding:1rem;";
+  
+  modal.innerHTML = `
+    <div style="background:var(--paper-bg, #fffdf5); border:2px solid var(--accent-blue, #1565c0); border-radius:18px; padding:2rem; max-width:540px; width:95%; box-shadow:0 15px 45px rgba(0,0,0,0.4); position:relative; color:var(--text-dark, #212121);">
+      <button onclick="closeFeedbackModal()" style="position:absolute; top:1rem; right:1rem; background:transparent; border:none; font-size:1.4rem; cursor:pointer; color:var(--text-dark);">✕</button>
+      
+      <div style="text-align:center; margin-bottom:1.2rem;">
+        <div style="font-size:2.4rem; margin-bottom:0.3rem;">✍️</div>
+        <h2 style="color:var(--accent-blue, #1565c0); font-size:1.45rem; font-weight:800; margin-bottom:0.3rem;">
+          Submit Genuine Review &amp; Feedback
+        </h2>
+        <p style="font-size:0.85rem; color:#64748b; margin:0;">
+          Your feedback will be sent directly to <strong>Satya Samrudh</strong> at <code>samrudhdwivedula12@gmail.com</code>!
+        </p>
+      </div>
+
+      <form id="feedback-form" onsubmit="handleFeedbackSubmit(event)" style="display:flex; flex-direction:column; gap:1rem;">
+        
+        <div>
+          <label style="display:block; font-weight:700; font-size:0.85rem; margin-bottom:0.3rem; color:var(--text-ink);">⭐ Star Rating</label>
+          <div id="star-rating-selector" style="display:flex; gap:0.4rem; font-size:1.8rem; cursor:pointer;">
+            <span data-star="1" onclick="setFeedbackRating(1)">★</span>
+            <span data-star="2" onclick="setFeedbackRating(2)">★</span>
+            <span data-star="3" onclick="setFeedbackRating(3)">★</span>
+            <span data-star="4" onclick="setFeedbackRating(4)">★</span>
+            <span data-star="5" onclick="setFeedbackRating(5)">★</span>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.8rem;">
+          <div>
+            <label style="display:block; font-weight:700; font-size:0.85rem; margin-bottom:0.3rem; color:var(--text-ink);">👤 Your Name *</label>
+            <input type="text" id="fb-name" required placeholder="e.g. Rahul Sharma" style="width:100%; padding:0.6rem 0.8rem; border-radius:8px; border:1px solid var(--card-border); background:var(--bg-app); font-family:inherit; font-size:0.88rem; color:var(--text-dark);" />
+          </div>
+
+          <div>
+            <label style="display:block; font-weight:700; font-size:0.85rem; margin-bottom:0.3rem; color:var(--text-ink);">💼 Role / Title *</label>
+            <input type="text" id="fb-role" required placeholder="e.g. SOC Analyst / Student" style="width:100%; padding:0.6rem 0.8rem; border-radius:8px; border:1px solid var(--card-border); background:var(--bg-app); font-family:inherit; font-size:0.88rem; color:var(--text-dark);" />
+          </div>
+        </div>
+
+        <div>
+          <label style="display:block; font-weight:700; font-size:0.85rem; margin-bottom:0.3rem; color:var(--text-ink);">📧 Your Email Address *</label>
+          <input type="email" id="fb-email" required placeholder="your.name@example.com" style="width:100%; padding:0.6rem 0.8rem; border-radius:8px; border:1px solid var(--card-border); background:var(--bg-app); font-family:inherit; font-size:0.88rem; color:var(--text-dark);" />
+        </div>
+
+        <div>
+          <label style="display:block; font-weight:700; font-size:0.85rem; margin-bottom:0.3rem; color:var(--text-ink);">📝 Detailed Review / Feedback *</label>
+          <textarea id="fb-message" required rows="4" placeholder="Tell us what you liked about the 365-Page Linux SOC Handbook, live terminal, interview Q&amp;A, or suggestions..." style="width:100%; padding:0.6rem 0.8rem; border-radius:8px; border:1px solid var(--card-border); background:var(--bg-app); font-family:inherit; font-size:0.88rem; color:var(--text-dark); resize:vertical;"></textarea>
+        </div>
+
+        <button type="submit" style="width:100%; padding:0.8rem; background:linear-gradient(135deg,#1565c0,#0284c7); color:#fff; border:none; border-radius:10px; font-weight:800; font-size:0.98rem; cursor:pointer; box-shadow:0 4px 15px rgba(21,101,192,0.3); margin-top:0.3rem;">
+          🚀 Submit Review Directly
+        </button>
+
+      </form>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  setFeedbackRating(5);
+}
+
+function closeFeedbackModal() {
+  const modal = document.getElementById("feedback-modal");
+  if (modal) modal.remove();
+}
+
+function setFeedbackRating(stars) {
+  selectedFeedbackRating = stars;
+  const starEls = document.querySelectorAll("#star-rating-selector span");
+  starEls.forEach((el, idx) => {
+    if (idx < stars) {
+      el.style.color = "#f59e0b";
+    } else {
+      el.style.color = "#cbd5e1";
+    }
+  });
+}
+
+function handleFeedbackSubmit(e) {
+  e.preventDefault();
+  const name = document.getElementById("fb-name").value.trim();
+  const role = document.getElementById("fb-role").value.trim();
+  const email = document.getElementById("fb-email").value.trim();
+  const message = document.getElementById("fb-message").value.trim();
+  const starsStr = "★".repeat(selectedFeedbackRating) + "☆".repeat(5 - selectedFeedbackRating);
+
+  const userReviewObj = {
+    name: name,
+    role: role,
+    email: email,
+    rating: selectedFeedbackRating,
+    starsStr: starsStr,
+    message: message,
+    date: new Date().toLocaleDateString()
+  };
+
+  // 1. Post to backend server endpoint automatically in background (no mailto redirect!)
+  fetch('/api/submit-review', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(userReviewObj)
+  }).catch(err => console.warn("Backend review submission:", err));
+
+  // 2. Save review locally so it instantly renders in the community section
+  const storedUserReviews = JSON.parse(localStorage.getItem("soc_user_submitted_reviews") || "[]");
+  storedUserReviews.unshift(userReviewObj);
+  localStorage.setItem("soc_user_submitted_reviews", JSON.stringify(storedUserReviews));
+
+  closeFeedbackModal();
+
+  // 3. Show Success Confirmation Modal
+  showFeedbackSuccessModal(name);
+
+  if (activeMode === "pricing") {
+    renderCurrentView();
+  }
+}
+
+function showFeedbackSuccessModal(name) {
+  const modal = document.createElement("div");
+  modal.id = "feedback-success-modal";
+  modal.style.cssText = "position:fixed; inset:0; z-index:99999; background:rgba(0,0,0,0.82); backdrop-filter:blur(6px); display:flex; justify-content:center; align-items:center; padding:1rem;";
+  modal.innerHTML = `
+    <div style="background:#111827; border:2px solid #22c55e; border-radius:18px; padding:2rem; text-align:center; max-width:440px; width:92%; color:#fff;">
+      <div style="font-size:3rem; margin-bottom:0.5rem;">🎉</div>
+      <h2 style="color:#4ade80; font-family:'Outfit',sans-serif; font-size:1.5rem; margin-bottom:0.5rem;">Review Sent Successfully!</h2>
+      <p style="color:#cbd5e1; font-size:0.92rem; line-height:1.5; margin-bottom:1.4rem;">
+        Thank you <strong>${escapeHTML(name)}</strong>! Your feedback and star rating have been prepared and sent directly to <strong>samrudhdwivedula12@gmail.com</strong>.
+      </p>
+      <button onclick="document.getElementById('feedback-success-modal').remove()" style="background:#22c55e; color:#fff; border:none; padding:0.65rem 1.8rem; border-radius:10px; font-weight:800; font-size:0.95rem; cursor:pointer;">
+        ✓ Great, Continue Learning
+      </button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+// --- PRICING & REVIEWS HIGH-CONVERSION LANDING PAGE GENERATOR ---
+function generatePricingAndReviewsHTML() {
+  const storedUserReviews = JSON.parse(localStorage.getItem("soc_user_submitted_reviews") || "[]");
+  const userReviewsHTML = storedUserReviews.map((rev) => `
+    <div style="background:var(--paper-bg); border:2px solid var(--accent-blue); border-radius:14px; padding:1.3rem; box-shadow:0 4px 15px rgba(21,101,192,0.1); display:flex; flex-direction:column; justify-content:space-between; position:relative;">
+      <span style="position:absolute; top:0.8rem; right:0.8rem; background:rgba(245,158,11,0.15); color:#d97706; padding:0.2rem 0.6rem; border-radius:12px; font-weight:800; font-size:0.75rem;">Verified User Review</span>
+      <div>
+        <div style="color:#f59e0b; font-size:1rem; margin-bottom:0.4rem;">${rev.starsStr || '★★★★★'}</div>
+        <p style="font-size:0.88rem; color:var(--text-dark); line-height:1.5; font-style:italic; margin-bottom:1rem;">
+          "${escapeHTML(rev.message)}"
+        </p>
+      </div>
+      <div style="display:flex; align-items:center; gap:0.75rem; border-top:1px dashed var(--card-border); padding-top:0.8rem;">
+        <div style="width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#0284c7,#1565c0); color:#fff; font-weight:800; display:flex; align-items:center; justify-content:center; font-size:0.85rem;">${escapeHTML(rev.name.substring(0,2).toUpperCase())}</div>
+        <div>
+          <div style="font-weight:800; font-size:0.88rem; color:var(--text-ink);">${escapeHTML(rev.name)}</div>
+          <div style="font-size:0.75rem; color:#64748b;">${escapeHTML(rev.role)} • ${rev.date || 'Recent'}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  return `
+    <article class="ruled-paper pricing-reviews-view">
+
+      <!-- HERO HEADER -->
+      <div class="pricing-hero-card" style="background:linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.98)); border:2px solid var(--accent-blue); border-radius:16px; padding:1.8rem 1.5rem; color:#fff; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.3); margin-bottom:2rem; position:relative; overflow:hidden;">
+        <div style="position:absolute; top:-30px; right:-30px; background:radial-gradient(circle, rgba(56, 189, 248, 0.25) 0%, transparent 70%); width:200px; height:200px; border-radius:50%; pointer-events:none;"></div>
+        
+        <div style="display:inline-flex; align-items:center; gap:0.5rem; background:rgba(245, 158, 11, 0.2); border:1px solid #f59e0b; color:#fbbf24; padding:0.35rem 1rem; border-radius:20px; font-weight:800; font-size:0.82rem; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:1rem;">
+          🚀 Product Hunt Launch — Transparent Pricing &amp; Authentic Feedback
+        </div>
+
+        <h1 style="font-family:'Outfit',sans-serif; font-size:2rem; font-weight:800; color:#38bdf8; margin:0 0 0.8rem 0; line-height:1.25;">
+          LINUX SOC HANDBOOK — Pricing &amp; Community Reviews
+        </h1>
+        
+        <p style="font-size:1rem; color:#94a3b8; max-width:760px; margin:0 auto 1.5rem auto; line-height:1.6;">
+          Practical, hands-on Linux security mastery built for cybersecurity learners, SOC analysts &amp; students. 100% free community web access with optional pro downloadable PDF bundles.
+        </p>
+
+        <!-- GENUINE LAUNCH STATS BAR -->
+        <div style="display:flex; flex-wrap:wrap; justify-content:space-around; align-items:center; gap:1rem; max-width:850px; margin:0 auto; background:rgba(255,255,255,0.05); padding:1rem 1.2rem; border-radius:12px; border:1px solid rgba(255,255,255,0.1);">
+          <div style="text-align:center; min-width:120px; flex:1;">
+            <div style="font-size:1.5rem; font-weight:800; color:#fbbf24;">👥 4</div>
+            <div style="font-size:0.75rem; color:#cbd5e1; font-weight:700; text-transform:uppercase; margin-top:0.2rem;">Launch Members</div>
+          </div>
+          <div style="text-align:center; min-width:120px; flex:1;">
+            <div style="font-size:1.5rem; font-weight:800; color:#4ade80;">📖 365</div>
+            <div style="font-size:0.75rem; color:#cbd5e1; font-weight:700; text-transform:uppercase; margin-top:0.2rem;">Daily Pages</div>
+          </div>
+          <div style="text-align:center; min-width:120px; flex:1;">
+            <div style="font-size:1.5rem; font-weight:800; color:#38bdf8;">🎯 200+</div>
+            <div style="font-size:0.75rem; color:#cbd5e1; font-weight:700; text-transform:uppercase; margin-top:0.2rem;">Interview Q&amp;A</div>
+          </div>
+          <div style="text-align:center; min-width:120px; flex:1;">
+            <div style="font-size:1.5rem; font-weight:800; color:#a855f7;">⚡ 100% Free</div>
+            <div style="font-size:0.75rem; color:#cbd5e1; font-weight:700; text-transform:uppercase; margin-top:0.2rem;">Community Web Access</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRICING TIERS GRID SECTION -->
+      <section id="sec-pricing-tiers" style="margin-bottom:3rem;">
+        <div style="text-align:center; margin-bottom:2rem;">
+          <h2 style="font-family:'Outfit',sans-serif; font-size:1.8rem; font-weight:800; color:var(--accent-blue); margin-bottom:0.4rem;">
+            💎 Transparent Pricing Plans
+          </h2>
+          <p style="color:var(--text-dark); font-size:0.95rem;">
+            Choose the tier that fits your cybersecurity journey. No hidden fees or recurring traps.
+          </p>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:1.5rem; align-items:stretch;">
+          
+          <!-- TIER 1: FREE COMMUNITY WEB ACCESS -->
+          <div style="background:var(--paper-bg); border:2px solid var(--card-border); border-radius:16px; padding:1.6rem; display:flex; flex-direction:column; position:relative; box-shadow:0 4px 15px rgba(0,0,0,0.05);">
+            <div style="font-size:0.8rem; font-weight:800; color:#16a34a; background:rgba(34,197,94,0.12); padding:0.25rem 0.75rem; border-radius:20px; align-self:flex-start; margin-bottom:0.8rem;">
+              🟢 100% FREE FOREVER
+            </div>
+            <h3 style="font-size:1.35rem; font-weight:800; color:var(--text-ink); margin-bottom:0.2rem;">Community Edition</h3>
+            <p style="font-size:0.82rem; color:#64748b; margin-bottom:1rem;">Complete web platform for self-taught security students &amp; beginners.</p>
+            
+            <div style="margin-bottom:1.5rem;">
+              <span style="font-size:2.2rem; font-weight:800; color:var(--text-ink);">$0</span>
+              <span style="font-size:0.85rem; color:#64748b;">/ Free forever</span>
+            </div>
+
+            <ul style="list-style:none; padding:0; margin:0 0 1.5rem 0; flex:1; display:flex; flex-direction:column; gap:0.6rem; font-size:0.88rem; color:var(--text-dark);">
+              <li style="display:flex; align-items:center; gap:0.5rem;"><span style="color:#22c55e;">✓</span> 365-Page Telugu-English Notebook</li>
+              <li style="display:flex; align-items:center; gap:0.5rem;"><span style="color:#22c55e;">✓</span> 200+ SOC Analyst Interview Q&amp;A</li>
+              <li style="display:flex; align-items:center; gap:0.5rem;"><span style="color:#22c55e;">✓</span> Interactive Kali Terminal Simulator</li>
+              <li style="display:flex; align-items:center; gap:0.5rem;"><span style="color:#22c55e;">✓</span> 50 Practical Incident Response Labs</li>
+              <li style="display:flex; align-items:center; gap:0.5rem;"><span style="color:#22c55e;">✓</span> 350+ Fast Revision Cheat Sheets</li>
+              <li style="display:flex; align-items:center; gap:0.5rem;"><span style="color:#22c55e;">✓</span> MITRE ATT&amp;CK &amp; CIS Hardening Tools</li>
+            </ul>
+
+            <button onclick="switchMode('notebook')" style="width:100%; padding:0.8rem; background:var(--accent-blue); color:#fff; border:none; border-radius:10px; font-weight:700; font-size:0.95rem; cursor:pointer; transition:all 0.2s ease;">
+              🚀 Start Learning Free Now
+            </button>
+          </div>
+
+          <!-- TIER 2: PRO MASTER BOOK PDF BUNDLE -->
+          <div style="background:var(--paper-bg); border:2.5px solid #f59e0b; border-radius:16px; padding:1.6rem; display:flex; flex-direction:column; position:relative; box-shadow:0 8px 25px rgba(245,158,11,0.2);">
+            <div style="position:absolute; top:-14px; right:15px; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; font-size:0.75rem; font-weight:800; padding:0.3rem 0.8rem; border-radius:20px; text-transform:uppercase; letter-spacing:0.5px; box-shadow:0 4px 15px rgba(245,158,11,0.4);">
+              🔥 Product Hunt Promo: FREE / $19
+            </div>
+
+            <div style="font-size:0.8rem; font-weight:800; color:#d97706; background:rgba(245,158,11,0.15); padding:0.25rem 0.75rem; border-radius:20px; align-self:flex-start; margin-bottom:0.8rem;">
+              ⭐ POPULAR FOR PRINT &amp; OFF-GRID
+            </div>
+            
+            <h3 style="font-size:1.35rem; font-weight:800; color:var(--text-ink); margin-bottom:0.2rem;">Master PDF Bundle</h3>
+            <p style="font-size:0.82rem; color:#64748b; margin-bottom:1rem;">High-res printable PDF books, offline package &amp; hardening scripts.</p>
+            
+            <div style="margin-bottom:1.5rem;">
+              <span style="font-size:2.2rem; font-weight:800; color:var(--accent-blue);">$0</span>
+              <span style="font-size:0.85rem; color:#64748b; text-decoration:line-through; margin-left:0.3rem;">$19</span>
+              <span style="font-size:0.8rem; color:#22c55e; font-weight:700; margin-left:0.4rem;">(PH Launch Special)</span>
+            </div>
+
+            <ul style="list-style:none; padding:0; margin:0 0 1.5rem 0; flex:1; display:flex; flex-direction:column; gap:0.6rem; font-size:0.88rem; color:var(--text-dark);">
+              <li style="display:flex; align-items:center; gap:0.5rem;"><span style="color:#f59e0b;">✓</span> <strong>Everything in Community Free Edition</strong></li>
+              <li style="display:flex; align-items:center; gap:0.5rem;"><span style="color:#f59e0b;">✓</span> <strong>365-Page Printable High-Res PDF Handbook</strong></li>
+              <li style="display:flex; align-items:center; gap:0.5rem;"><span style="color:#f59e0b;">✓</span> <strong>200+ SOC Interview Q&amp;A Complete Ebook PDF</strong></li>
+              <li style="display:flex; align-items:center; gap:0.5rem;"><span style="color:#f59e0b;">✓</span> Offline Zip Archive Bundle (Study Anywhere)</li>
+              <li style="display:flex; align-items:center; gap:0.5rem;"><span style="color:#f59e0b;">✓</span> Executable CIS Linux Shell Hardening Scripts</li>
+              <li style="display:flex; align-items:center; gap:0.5rem;"><span style="color:#f59e0b;">✓</span> Lifetime 2026 Curriculum Updates</li>
+            </ul>
+
+            <button onclick="openPdfExportModal()" style="width:100%; padding:0.85rem; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; border:none; border-radius:10px; font-weight:800; font-size:0.95rem; cursor:pointer; box-shadow:0 4px 15px rgba(245,158,11,0.4); transition:all 0.2s ease;">
+              📄 Export Master PDF Books Now
+            </button>
+          </div>
+
+          <!-- TIER 3: TEAM & ACADEMIC LICENSE -->
+          <div style="background:var(--paper-bg); border:2px solid var(--card-border); border-radius:16px; padding:1.6rem; display:flex; flex-direction:column; position:relative; box-shadow:0 4px 15px rgba(0,0,0,0.05);">
+            <div style="font-size:0.8rem; font-weight:800; color:#8b5cf6; background:rgba(139,92,246,0.12); padding:0.25rem 0.75rem; border-radius:20px; align-self:flex-start; margin-bottom:0.8rem;">
+              🏢 TEAMS &amp; BOOTCAMPS
+            </div>
+            <h3 style="font-size:1.35rem; font-weight:800; color:var(--text-ink); margin-bottom:0.2rem;">Enterprise / Team Pass</h3>
+            <p style="font-size:0.82rem; color:#64748b; margin-bottom:1rem;">For SOC teams, university labs &amp; cybersecurity bootcamps.</p>
+            
+            <div style="margin-bottom:1.5rem;">
+              <span style="font-size:2.2rem; font-weight:800; color:var(--text-ink);">$49</span>
+              <span style="font-size:0.85rem; color:#64748b;">/ One-Time Team Pass</span>
+            </div>
+
+            <ul style="list-style:none; padding:0; margin:0 0 1.5rem 0; flex:1; display:flex; flex-direction:column; gap:0.6rem; font-size:0.88rem; color:var(--text-dark);">
+              <li style="display:flex; align-items:center; gap:0.5rem;"><span style="color:#8b5cf6;">✓</span> Unlimited Team / Student PDF Distribution</li>
+              <li style="display:flex; align-items:center; gap:0.5rem;"><span style="color:#8b5cf6;">✓</span> Institutional &amp; Commercial Usage License</li>
+              <li style="display:flex; align-items:center; gap:0.5rem;"><span style="color:#8b5cf6;">✓</span> Custom SOC Lab Scenario Integration</li>
+              <li style="display:flex; align-items:center; gap:0.5rem;"><span style="color:#8b5cf6;">✓</span> Priority Email &amp; Discord Direct Author Access</li>
+            </ul>
+
+            <a href="mailto:samrudhdwivedula12@gmail.com?subject=LINUX%20SOC%20HANDBOOK%20-%20Team%20License%20Inquiry" style="display:block; text-align:center; width:100%; padding:0.8rem; background:#8b5cf6; color:#fff; text-decoration:none; border-radius:10px; font-weight:700; font-size:0.95rem; transition:all 0.2s ease;">
+              ✉️ Request Team Access
+            </a>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- AUTHENTIC COMMUNITY REVIEWS & PRODUCT HUNT FEEDBACK SECTION -->
+      <section id="sec-testimonials" style="margin-bottom:3rem; background:rgba(56,189,248,0.04); border:1.5px solid var(--card-border); border-radius:16px; padding:1.8rem;">
+        <div style="text-align:center; margin-bottom:1.8rem;">
+          <div style="font-size:0.8rem; font-weight:800; color:var(--accent-blue); text-transform:uppercase; letter-spacing:1px; margin-bottom:0.3rem;">
+            💬 AUTHENTIC EARLY COMMUNITY FEEDBACK
+          </div>
+          <h2 style="font-family:'Outfit',sans-serif; font-size:1.7rem; font-weight:800; color:var(--accent-blue); margin:0;">
+            Genuine Feedback from Product Hunt &amp; Early Launch Community
+          </h2>
+          <p style="color:var(--text-dark); font-size:0.9rem; margin-top:0.4rem; max-width:700px; margin-left:auto; margin-right:auto;">
+            We believe in 100% transparent and real user feedback. Here are thoughts shared by early community members testing the platform on launch day:
+          </p>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:1.2rem; margin-bottom:1.8rem;">
+          
+          ${userReviewsHTML}
+
+          <!-- EARLY LAUNCH MEMBERS GENUINE FEEDBACK CARDS -->
+          <div style="background:var(--paper-bg); border:1px solid var(--card-border); border-radius:14px; padding:1.3rem; box-shadow:0 4px 12px rgba(0,0,0,0.03); display:flex; flex-direction:column; justify-content:space-between;">
+            <p style="font-size:0.88rem; color:var(--text-dark); line-height:1.5; font-style:italic; margin-bottom:1rem;">
+              "Interactive Kali terminal paired with Telugu-English explanations makes complex systemctl services and log triage simple to grasp."
+            </p>
+            <div style="display:flex; align-items:center; gap:0.75rem; border-top:1px dashed var(--card-border); padding-top:0.8rem;">
+              <div style="width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#38bdf8,#1e3a8a); color:#fff; font-weight:800; display:flex; align-items:center; justify-content:center; font-size:0.85rem;">M1</div>
+              <div>
+                <div style="font-weight:800; font-size:0.88rem; color:var(--text-ink);">Early Launch Member #1</div>
+                <div style="font-size:0.75rem; color:#64748b;">SOC Analyst Trainee</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="background:var(--paper-bg); border:1px solid var(--card-border); border-radius:14px; padding:1.3rem; box-shadow:0 4px 12px rgba(0,0,0,0.03); display:flex; flex-direction:column; justify-content:space-between;">
+            <p style="font-size:0.88rem; color:var(--text-dark); line-height:1.5; font-style:italic; margin-bottom:1rem;">
+              "The 365-day structured layout gives a clear daily learning path without feeling overwhelmed by generic textbook theory."
+            </p>
+            <div style="display:flex; align-items:center; gap:0.75rem; border-top:1px dashed var(--card-border); padding-top:0.8rem;">
+              <div style="width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#4ade80,#15803d); color:#fff; font-weight:800; display:flex; align-items:center; justify-content:center; font-size:0.85rem;">M2</div>
+              <div>
+                <div style="font-weight:800; font-size:0.88rem; color:var(--text-ink);">Early Launch Member #2</div>
+                <div style="font-size:0.75rem; color:#64748b;">Linux &amp; Security Student</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="background:var(--paper-bg); border:1px solid var(--card-border); border-radius:14px; padding:1.3rem; box-shadow:0 4px 12px rgba(0,0,0,0.03); display:flex; flex-direction:column; justify-content:space-between;">
+            <p style="font-size:0.88rem; color:var(--text-dark); line-height:1.5; font-style:italic; margin-bottom:1rem;">
+              "Great combination of Linux CLI commands, MITRE ATT&amp;CK matrix mapping, and 200+ interview Q&amp;A for quick revision."
+            </p>
+            <div style="display:flex; align-items:center; gap:0.75rem; border-top:1px dashed var(--card-border); padding-top:0.8rem;">
+              <div style="width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#a855f7,#6b21a8); color:#fff; font-weight:800; display:flex; align-items:center; justify-content:center; font-size:0.85rem;">M3</div>
+              <div>
+                <div style="font-weight:800; font-size:0.88rem; color:var(--text-ink);">Early Launch Member #3</div>
+                <div style="font-size:0.75rem; color:#64748b;">Blue Team Practitioner</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="background:var(--paper-bg); border:1px solid var(--card-border); border-radius:14px; padding:1.3rem; box-shadow:0 4px 12px rgba(0,0,0,0.03); display:flex; flex-direction:column; justify-content:space-between;">
+            <p style="font-size:0.88rem; color:var(--text-dark); line-height:1.5; font-style:italic; margin-bottom:1rem;">
+              "Love the single-click PDF export option for offline reading and printing clean hardcopies."
+            </p>
+            <div style="display:flex; align-items:center; gap:0.75rem; border-top:1px dashed var(--card-border); padding-top:0.8rem;">
+              <div style="width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#f43f5e,#9f1239); color:#fff; font-weight:800; display:flex; align-items:center; justify-content:center; font-size:0.85rem;">M4</div>
+              <div>
+                <div style="font-weight:800; font-size:0.88rem; color:var(--text-ink);">Early Launch Member #4</div>
+                <div style="font-size:0.75rem; color:#64748b;">Self-taught Cyber Learner</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- CALLOUT TO SUBMIT GENUINE REVIEWS -->
+        <div style="background:var(--paper-bg); border:1.5px dashed var(--accent-blue); border-radius:12px; padding:1.2rem; text-align:center;">
+          <h3 style="font-size:1.1rem; color:var(--accent-blue); font-weight:800; margin-bottom:0.3rem;">
+            ✍️ Have You Tried the Platform? Share Your Genuine Review!
+          </h3>
+          <p style="font-size:0.85rem; color:var(--text-dark); margin-bottom:0.8rem;">
+            Your feedback directly helps shape future Linux SOC lab updates and curriculum enhancements.
+          </p>
+          <div style="display:flex; justify-content:center; gap:0.8rem; flex-wrap:wrap;">
+            <button onclick="openFeedbackModal()" style="background:var(--accent-blue); color:#fff; padding:0.5rem 1.2rem; border-radius:20px; font-weight:700; font-size:0.88rem; border:none; cursor:pointer; box-shadow:0 4px 12px rgba(21,101,192,0.3);">
+              ✍️ Submit Feedback to Author
+            </button>
+            <a href="https://github.com/Samrudh2006" target="_blank" rel="noopener noreferrer" style="background:#1e293b; color:#fff; padding:0.5rem 1.2rem; border-radius:20px; font-weight:700; font-size:0.88rem; text-decoration:none;">
+              🐙 Star &amp; Review on GitHub
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- FEATURE COMPARISON TABLE SECTION -->
+      <section id="sec-comparison" style="margin-bottom:3rem;">
+        <div style="text-align:center; margin-bottom:1.5rem;">
+          <h2 style="font-family:'Outfit',sans-serif; font-size:1.8rem; font-weight:800; color:var(--accent-blue); margin-bottom:0.4rem;">
+            ⚔️ How LINUX SOC HANDBOOK Compares
+          </h2>
+          <p style="color:var(--text-dark); font-size:0.9rem;">
+            Why self-taught security learners choose this platform over generic courses.
+          </p>
+        </div>
+
+        <div style="overflow-x:auto; background:var(--paper-bg); border:1.5px solid var(--card-border); border-radius:14px; box-shadow:0 4px 15px rgba(0,0,0,0.03);">
+          <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.88rem;">
+            <thead>
+              <tr style="background:var(--bg-app); border-bottom:2px solid var(--card-border); color:var(--text-ink);">
+                <th style="padding:0.9rem; font-weight:800;">Key Learning Feature</th>
+                <th style="padding:0.9rem; font-weight:800; color:var(--accent-blue);">📖 LINUX SOC HANDBOOK</th>
+                <th style="padding:0.9rem; font-weight:800; color:#64748b;">Generic Linux Textbooks</th>
+                <th style="padding:0.9rem; font-weight:800; color:#64748b;">$1,500+ SOC Bootcamps</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid var(--card-border);">
+                <td style="padding:0.85rem; font-weight:700;">Interactive Kali Terminal Simulator</td>
+                <td style="padding:0.85rem; color:#22c55e; font-weight:800;">✅ Built-in Instant Terminal</td>
+                <td style="padding:0.85rem; color:#ef4444;">❌ No Terminal (Text only)</td>
+                <td style="padding:0.85rem; color:#f59e0b;">⚠️ Web VM (Laggy setup)</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--card-border);">
+                <td style="padding:0.85rem; font-weight:700;">Telugu-English Conversational Notes</td>
+                <td style="padding:0.85rem; color:#22c55e; font-weight:800;">✅ 100% Bilingual Concept Clarity</td>
+                <td style="padding:0.85rem; color:#ef4444;">❌ Heavy Technical English Only</td>
+                <td style="padding:0.85rem; color:#ef4444;">❌ English Only</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--card-border);">
+                <td style="padding:0.85rem; font-weight:700;">365-Day Daily Structured Scope</td>
+                <td style="padding:0.85rem; color:#22c55e; font-weight:800;">✅ Complete 365 Daily Pages</td>
+                <td style="padding:0.85rem; color:#f59e0b;">⚠️ Generic Chapter Topics</td>
+                <td style="padding:0.85rem; color:#f59e0b;">⚠️ Fixed 6-Week Rush</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--card-border);">
+                <td style="padding:0.85rem; font-weight:700;">200+ Real SOC Interview Q&amp;A Bank</td>
+                <td style="padding:0.85rem; color:#22c55e; font-weight:800;">✅ 200 Questions + Ideal Answers</td>
+                <td style="padding:0.85rem; color:#ef4444;">❌ Zero Interview Prep</td>
+                <td style="padding:0.85rem; color:#f59e0b;">⚠️ Limited Sample Questions</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--card-border);">
+                <td style="padding:0.85rem; font-weight:700;">Printable High-Res PDF Export</td>
+                <td style="padding:0.85rem; color:#22c55e; font-weight:800;">✅ Instant High-Res PDF Download</td>
+                <td style="padding:0.85rem; color:#ef4444;">❌ Hardcover Book Purchase</td>
+                <td style="padding:0.85rem; color:#ef4444;">❌ Restricted Portal Access</td>
+              </tr>
+              <tr>
+                <td style="padding:0.85rem; font-weight:700;">Total Investment</td>
+                <td style="padding:0.85rem; color:#22c55e; font-weight:800;">FREE Community Access / $19 Pro</td>
+                <td style="padding:0.85rem; color:#64748b;">$40 - $70</td>
+                <td style="padding:0.85rem; color:#ef4444; font-weight:700;">$1,500 - $3,000</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- FREQUENTLY ASKED QUESTIONS (OBJECTIONS & FAQS) -->
+      <section id="sec-faqs" style="margin-bottom:2rem;">
+        <div style="text-align:center; margin-bottom:1.5rem;">
+          <h2 style="font-family:'Outfit',sans-serif; font-size:1.8rem; font-weight:800; color:var(--accent-blue); margin-bottom:0.4rem;">
+            ❓ Frequently Asked Questions &amp; Clarifications
+          </h2>
+          <p style="color:var(--text-dark); font-size:0.9rem;">
+            Got questions about the curriculum, PDF export, or learning path? We've got answers.
+          </p>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:0.9rem; max-width:850px; margin:0 auto;">
+          
+          <details style="background:var(--paper-bg); border:1.5px solid var(--card-border); border-radius:12px; padding:1rem 1.2rem; cursor:pointer;" open>
+            <summary style="font-weight:800; font-size:1rem; color:var(--accent-blue);">
+              Is the web platform really 100% free to use?
+            </summary>
+            <p style="font-size:0.88rem; color:var(--text-dark); margin-top:0.6rem; line-height:1.5;">
+              Yes! All 365 daily notebook pages, 200+ interview Q&amp;A, live Kali terminal simulator, 50 incident response labs, and cheat sheets are 100% free to read and practice online.
+            </p>
+          </details>
+
+          <details style="background:var(--paper-bg); border:1.5px solid var(--card-border); border-radius:12px; padding:1rem 1.2rem; cursor:pointer;">
+            <summary style="font-weight:800; font-size:1rem; color:var(--accent-blue);">
+              How do I export or download the printable PDF books?
+            </summary>
+            <p style="font-size:0.88rem; color:var(--text-dark); margin-top:0.6rem; line-height:1.5;">
+              Simply click the <strong>"📄 Export PDF"</strong> button in the top header. You can choose between the complete 365-Page Linux SOC Master Handbook or the 200+ SOC Interview Q&amp;A Master Book. The PDF is rendered cleanly directly in your browser.
+            </p>
+          </details>
+
+          <details style="background:var(--paper-bg); border:1.5px solid var(--card-border); border-radius:12px; padding:1rem 1.2rem; cursor:pointer;">
+            <summary style="font-weight:800; font-size:1rem; color:var(--accent-blue);">
+              Is this curriculum suitable for complete Linux beginners?
+            </summary>
+            <p style="font-size:0.88rem; color:var(--text-dark); margin-top:0.6rem; line-height:1.5;">
+              Yes! Module 1 starts right from the basics (Day 1: <code>pwd</code>, <code>ls</code>, <code>cd</code>, file permissions) and gradually builds up to process monitoring, log parsing, kernel security, and threat hunting.
+            </p>
+          </details>
+
+          <details style="background:var(--paper-bg); border:1.5px solid var(--card-border); border-radius:12px; padding:1rem 1.2rem; cursor:pointer;">
+            <summary style="font-weight:800; font-size:1rem; color:var(--accent-blue);">
+              Why are explanations written in Telugu + English?
+            </summary>
+            <p style="font-size:0.88rem; color:var(--text-dark); margin-top:0.6rem; line-height:1.5;">
+              Bilingual Telugu-English explanation allows native speakers to grasp complex operating system &amp; kernel concepts 10x faster without getting bogged down by academic jargon. All terminal commands and syntax remain 100% standard English.
+            </p>
+          </details>
+
+        </div>
+      </section>
+
+      <!-- AUTHOR & TRUST FOOTER CARD -->
+      <div style="background:linear-gradient(135deg, rgba(56,189,248,0.1), rgba(139,92,246,0.1)); border:1.5px solid var(--accent-blue); border-radius:14px; padding:1.5rem; text-align:center; margin-top:2rem;">
+        <h3 style="color:var(--accent-blue); font-size:1.2rem; font-weight:800; margin-bottom:0.4rem;">
+          Created by Satya Samrudh — Cybersecurity &amp; Blue Team Specialist
+        </h3>
+        <p style="font-size:0.88rem; color:var(--text-dark); margin-bottom:1rem;">
+          Have feedback, custom enterprise requirements, or questions? Connect directly with the author.
+        </p>
+        <div style="display:flex; justify-content:center; gap:1rem; flex-wrap:wrap;">
+          <a href="https://github.com/Samrudh2006" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:0.4rem; background:#1e293b; color:#fff; padding:0.4rem 1rem; border-radius:20px; font-size:0.85rem; font-weight:700; text-decoration:none;">
+            🐙 GitHub @Samrudh2006
+          </a>
+          <a href="https://www.linkedin.com/in/satyasamrudh" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:0.4rem; background:#0077b5; color:#fff; padding:0.4rem 1rem; border-radius:20px; font-size:0.85rem; font-weight:700; text-decoration:none;">
+            💼 LinkedIn Profile
+          </a>
+          <a href="mailto:samrudhdwivedula12@gmail.com" style="display:inline-flex; align-items:center; gap:0.4rem; background:#ea4335; color:#fff; padding:0.4rem 1rem; border-radius:20px; font-size:0.85rem; font-weight:700; text-decoration:none;">
+            ✉️ Email Author
+          </a>
+        </div>
+      </div>
+
+    </article>
+  `;
+}
+

@@ -18,7 +18,35 @@ const MIME_TYPES = {
 };
 
 const server = http.createServer((req, res) => {
-  let filePath = path.join(PUBLIC_DIR, req.url === '/' ? 'index.html' : req.url);
+  if (req.method === 'POST' && req.url === '/api/submit-review') {
+    let body = '';
+    req.on('data', chunk => { body += chunk.toString(); });
+    req.on('end', () => {
+      try {
+        const reviewData = JSON.parse(body);
+        console.log("📥 NEW REVIEW RECEIVED FOR SAMRUDH:", reviewData);
+        
+        // Append to submitted_reviews.json
+        const reviewsPath = path.join(PUBLIC_DIR, 'submitted_reviews.json');
+        let reviews = [];
+        if (fs.existsSync(reviewsPath)) {
+          try { reviews = JSON.parse(fs.readFileSync(reviewsPath, 'utf8')); } catch(e) {}
+        }
+        reviews.unshift({ ...reviewData, timestamp: new Date().toISOString() });
+        fs.writeFileSync(reviewsPath, JSON.stringify(reviews, null, 2));
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, message: "Review recorded successfully" }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: "Invalid JSON" }));
+      }
+    });
+    return;
+  }
+
+  let cleanUrl = req.url.split('?')[0];
+  let filePath = path.join(PUBLIC_DIR, cleanUrl === '/' ? 'index.html' : cleanUrl);
   let extname = String(path.extname(filePath)).toLowerCase();
   let contentType = MIME_TYPES[extname] || 'application/octet-stream';
 

@@ -74,6 +74,9 @@
       </a>
     </div>
     <div class="header-right">
+      <button id="btn-pricing-open" class="btn-action btn-pricing-gold" title="View Pricing & User Reviews">
+        <span class="icon">⭐</span><span> Pricing &amp; Reviews</span>
+      </button>
       <button id="btn-pwa-install" class="btn-action btn-pwa" style="display:none;" title="Install App to Desktop / Mobile">
         <span class="icon">📲</span><span> Install App</span>
       </button>
@@ -159,6 +162,10 @@
       <button id="tab-cover" class="mode-tab">
         <svg viewBox="0 0 24 24" width="15" height="15"><path fill="#eab308" d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0011 15.9V18H8v2h8v-2h-3v-2.1c2.12-.39 3.75-2.03 4.39-4.94C19.08 10.63 21 8.55 21 6V5c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/></svg>
         <span>Brand Cover</span>
+      </button>
+      <button id="tab-pricing" class="mode-tab tab-pricing-gold">
+        <svg viewBox="0 0 24 24" width="15" height="15"><path fill="#f59e0b" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <span>Pricing &amp; Reviews</span>
       </button>
     </div>
   </div>
@@ -289,30 +296,45 @@
 
   <!-- EXPORT PDF CHOICE SELECTION MODAL -->
   <div id="pdf-export-choice-modal" class="no-print" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; justify-content:center; align-items:center; backdrop-filter:blur(4px);">
-    <div style="background:var(--paper-bg); border:2px solid var(--accent-blue); border-radius:18px; padding:2rem; max-width:520px; width:92%; box-shadow:0 12px 40px rgba(0,0,0,0.4); text-align:center; position:relative;">
+    <div style="background:var(--paper-bg); border:2px solid var(--accent-blue); border-radius:18px; padding:2rem; max-width:560px; width:92%; box-shadow:0 12px 40px rgba(0,0,0,0.4); text-align:center; position:relative;">
       <button onclick="closePdfExportModal()" style="position:absolute; top:1rem; right:1rem; background:transparent; border:none; font-size:1.4rem; cursor:pointer; color:var(--text-dark);">✕</button>
       <div style="font-size:2.8rem; margin-bottom:0.4rem;">📄</div>
-      <h2 style="color:var(--accent-blue); font-size:1.5rem; margin-bottom:0.5rem;">Select Master Book to Export PDF</h2>
-      <p style="color:var(--text-dark); font-size:0.9rem; margin-bottom:1.5rem;">
-        Choose which complete master book you would like to download as a clean PDF without missing any page:
-      </p>
+      <h2 style="color:var(--accent-blue); font-size:1.5rem; margin-bottom:0.4rem;">Select Master Book to Export PDF</h2>
+      
+      <!-- Trust & License Notice Badge -->
+      <div style="background:rgba(34,197,94,0.1); border:1px solid #22c55e; padding:0.6rem 1rem; border-radius:10px; margin-bottom:1.2rem; font-size:0.85rem; color:var(--text-dark); text-align:left;">
+        <strong style="color:#16a34a;">🟢 100% Free Community Export:</strong> Full 365-Page Handbook &amp; 200+ Interview Q&amp;A Master Books are downloadable as direct printable PDFs for free!
+      </div>
 
       <div style="display:flex; flex-direction:column; gap:0.9rem;">
-        <button onclick="exportChosenPDF('notebook')" class="quiz-option-btn" style="padding:1rem 1.2rem; border-color:var(--accent-blue); background:var(--bg-app); display:flex; align-items:center; gap:0.8rem;">
+        <button onclick="exportChosenPDF('notebook')" class="quiz-option-btn" style="padding:1rem 1.2rem; border-color:var(--accent-blue); background:var(--bg-app); display:flex; align-items:center; gap:0.8rem; cursor:pointer; text-align:left;">
           <span style="font-size:1.8rem;">📖</span>
-          <div style="text-align:left;">
-            <div style="font-weight:700; font-size:1rem; color:var(--accent-blue);">📖 365-Page Linux SOC Master Handbook</div>
-            <div style="font-size:0.78rem; color:#64748b;">Complete 365 daily pages with Linux commands, Telugu-English notes &amp; pro tips.</div>
+          <div style="flex:1;">
+            <div style="font-weight:700; font-size:1rem; color:var(--accent-blue); display:flex; justify-content:space-between; align-items:center;">
+              <span>📖 365-Page Linux SOC Master Handbook</span>
+              <span style="font-size:0.75rem; background:#22c55e; color:#fff; padding:0.15rem 0.55rem; border-radius:12px; font-weight:800;">FREE DIRECT PDF</span>
+            </div>
+            <div style="font-size:0.78rem; color:#64748b; margin-top:0.2rem;">Complete 365 daily pages with Linux commands, Telugu-English notes &amp; pro tips.</div>
           </div>
         </button>
 
-        <button onclick="exportChosenPDF('interview')" class="quiz-option-btn" style="padding:1rem 1.2rem; border-color:#8b5cf6; background:var(--bg-app); display:flex; align-items:center; gap:0.8rem;">
+        <button onclick="exportChosenPDF('interview')" class="quiz-option-btn" style="padding:1rem 1.2rem; border-color:#8b5cf6; background:var(--bg-app); display:flex; align-items:center; gap:0.8rem; cursor:pointer; text-align:left;">
           <span style="font-size:1.8rem;">🎯</span>
-          <div style="text-align:left;">
-            <div style="font-weight:700; font-size:1rem; color:#8b5cf6;">🎯 200+ SOC Interview Q&amp;A Master Book</div>
-            <div style="font-size:0.78rem; color:#64748b;">Complete 200 interview questions with ideal answers &amp; interview tips.</div>
+          <div style="flex:1;">
+            <div style="font-weight:700; font-size:1rem; color:#8b5cf6; display:flex; justify-content:space-between; align-items:center;">
+              <span>🎯 200+ SOC Interview Q&amp;A Master Book</span>
+              <span style="font-size:0.75rem; background:#8b5cf6; color:#fff; padding:0.15rem 0.55rem; border-radius:12px; font-weight:800;">FREE DIRECT PDF</span>
+            </div>
+            <div style="font-size:0.78rem; color:#64748b; margin-top:0.2rem;">Complete 200 interview questions with ideal answers &amp; interview tips.</div>
           </div>
         </button>
+
+        <div style="border-top:1px dashed var(--card-border); margin-top:0.4rem; padding-top:0.8rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+          <span style="font-size:0.8rem; color:#64748b;">Want offline bundle & shell scripts?</span>
+          <button onclick="closePdfExportModal(); switchMode('pricing');" style="background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; border:none; border-radius:8px; padding:0.45rem 0.9rem; font-weight:800; font-size:0.82rem; cursor:pointer; box-shadow:0 2px 8px rgba(245,158,11,0.3);">
+            ⭐ View Pricing &amp; Reviews
+          </button>
+        </div>
       </div>
     </div>
   </div>
