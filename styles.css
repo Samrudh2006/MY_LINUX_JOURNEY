@@ -310,7 +310,189 @@ body.theme-cyber .btn-email:hover {
   to { box-shadow: 0 0 16px #f97316; transform: scale(1.04); }
 }
 
-/* --- MITRE ATT&CK MATRIX STYLES --- */
+/* --- 4 MASTER HUBS & SUB-HUB NAVIGATION SYSTEM --- */
+.mode-tabs-bar {
+  background: var(--paper-bg);
+  border-bottom: 2px solid var(--card-border);
+  padding: 0.5rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.master-hubs-container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.6rem;
+  width: 100%;
+}
+
+.master-hub-tab {
+  background: var(--bg-app);
+  border: 2px solid var(--card-border);
+  border-radius: 10px;
+  padding: 0.55rem 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+}
+
+.master-hub-tab .hub-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.master-hub-tab .hub-title {
+  font-weight: 800;
+  font-size: 0.88rem;
+  color: var(--text-ink);
+  display: block;
+  line-height: 1.2;
+}
+
+.master-hub-tab .hub-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #64748b;
+  display: block;
+  margin-top: 0.1rem;
+}
+
+.master-hub-tab:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-blue);
+  box-shadow: 0 4px 12px rgba(21, 101, 192, 0.15);
+}
+
+.master-hub-tab.active {
+  background: linear-gradient(135deg, rgba(21, 101, 192, 0.12), rgba(2, 132, 199, 0.08));
+  border-color: var(--accent-blue);
+  box-shadow: 0 4px 14px rgba(21, 101, 192, 0.22);
+}
+
+.master-hub-tab.active .hub-title {
+  color: var(--accent-blue);
+}
+
+.master-hub-tab.active .hub-badge {
+  color: var(--accent-blue);
+  font-weight: 700;
+}
+
+/* Cyber Theme for Master Hub Tabs */
+body.theme-cyber .master-hub-tab {
+  background: #0f172a;
+  border-color: #1e293b;
+}
+
+body.theme-cyber .master-hub-tab .hub-title {
+  color: #f8fafc;
+}
+
+body.theme-cyber .master-hub-tab .hub-badge {
+  color: #94a3b8;
+}
+
+body.theme-cyber .master-hub-tab:hover {
+  border-color: #38bdf8;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.25);
+}
+
+body.theme-cyber .master-hub-tab.active {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.18), rgba(14, 165, 233, 0.12));
+  border-color: #38bdf8;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.35);
+}
+
+body.theme-cyber .master-hub-tab.active .hub-title,
+body.theme-cyber .master-hub-tab.active .hub-badge {
+  color: #38bdf8;
+}
+
+/* SUB-HUB NAVIGATION BAR */
+.sub-hub-bar {
+  display: flex;
+  align-items: center;
+  padding-top: 0.2rem;
+}
+
+.sub-hub-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.sub-hub-pill {
+  background: var(--paper-bg);
+  border: 1px solid var(--card-border);
+  color: var(--text-dark);
+  padding: 0.35rem 0.8rem;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: all 0.2s ease;
+}
+
+.sub-hub-pill:hover {
+  background: var(--bg-app);
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+  transform: translateY(-1px);
+}
+
+.sub-hub-pill.active {
+  background: var(--accent-blue) !important;
+  color: #ffffff !important;
+  border-color: var(--accent-blue) !important;
+  box-shadow: 0 3px 10px rgba(21, 101, 192, 0.35) !important;
+  font-weight: 800 !important;
+}
+
+body.theme-cyber .sub-hub-pill {
+  background: #111827;
+  border-color: #1e293b;
+  color: #cbd5e1;
+}
+
+body.theme-cyber .sub-hub-pill:hover {
+  border-color: #38bdf8;
+  color: #38bdf8;
+}
+
+body.theme-cyber .sub-hub-pill.active {
+  background: #38bdf8 !important;
+  color: #090d16 !important;
+  border-color: #38bdf8 !important;
+  font-weight: 800 !important;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.5) !important;
+}
+
+/* Responsive adjustment for Mobile screens */
+@media (max-width: 900px) {
+  .master-hubs-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .master-hubs-container {
+    grid-template-columns: 1fr;
+  }
+  .master-hub-tab {
+    padding: 0.45rem 0.65rem;
+  }
+}
 .mitre-matrix-wrapper {
   padding: 1.5rem;
   background: var(--paper-bg);

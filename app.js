@@ -225,26 +225,63 @@ function closeMobileSidebar() {
 
 
 
-// --- MODE TABS SWITCHER ---
+// --- MODE TABS SWITCHER (4 MASTER HUBS & SUB-GROUPS) ---
+const HUB_MODE_MAP = {
+  notebook: "handbooks",
+  advanced: "handbooks",
+  cover: "handbooks",
+  logparser: "labs",
+  labs: "labs",
+  hardening: "labs",
+  phishing: "labs",
+  adlogs: "labs",
+  soar: "labs",
+  cloudlogs: "labs",
+  cheatsheet: "intel",
+  mitre: "intel",
+  ioclookup: "intel",
+  interview: "career",
+  pricing: "career"
+};
+
+const HUB_DEFAULT_MODES = {
+  handbooks: "notebook",
+  labs: "logparser",
+  intel: "cheatsheet",
+  career: "interview"
+};
+
 function initModeTabs() {
-  document.getElementById("tab-notebook").addEventListener("click", () => switchMode("notebook"));
-  document.getElementById("tab-interview").addEventListener("click", () => switchMode("interview"));
-  const mitreTab = document.getElementById("tab-mitre");
-  if (mitreTab) mitreTab.addEventListener("click", () => switchMode("mitre"));
-  const logTab = document.getElementById("tab-logparser");
-  if (logTab) logTab.addEventListener("click", () => switchMode("logparser"));
-  const hardTab = document.getElementById("tab-hardening");
-  if (hardTab) hardTab.addEventListener("click", () => switchMode("hardening"));
-  const cheatTab = document.getElementById("tab-cheatsheet");
-  if (cheatTab) cheatTab.addEventListener("click", () => switchMode("cheatsheet"));
-  const labsTab = document.getElementById("tab-labs");
-  if (labsTab) labsTab.addEventListener("click", () => switchMode("labs"));
-  const advancedTab = document.getElementById("tab-advanced");
-  if (advancedTab) advancedTab.addEventListener("click", () => switchMode("advanced"));
-  document.getElementById("tab-cover").addEventListener("click", () => switchMode("cover"));
-  
-  const pricingTab = document.getElementById("tab-pricing");
-  if (pricingTab) pricingTab.addEventListener("click", () => switchMode("pricing"));
+  // Master Hub listeners
+  document.querySelectorAll(".master-hub-tab").forEach(hubTab => {
+    hubTab.addEventListener("click", () => {
+      const hubId = hubTab.id.replace("hub-", "");
+      const defaultMode = HUB_DEFAULT_MODES[hubId] || "notebook";
+      switchMode(defaultMode);
+    });
+  });
+
+  // Sub-mode pill listeners
+  const safeAddListener = (id, mode) => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener("click", () => switchMode(mode));
+  };
+
+  safeAddListener("tab-notebook", "notebook");
+  safeAddListener("tab-interview", "interview");
+  safeAddListener("tab-mitre", "mitre");
+  safeAddListener("tab-logparser", "logparser");
+  safeAddListener("tab-hardening", "hardening");
+  safeAddListener("tab-phishing", "phishing");
+  safeAddListener("tab-adlogs", "adlogs");
+  safeAddListener("tab-soar", "soar");
+  safeAddListener("tab-cloudlogs", "cloudlogs");
+  safeAddListener("tab-cheatsheet", "cheatsheet");
+  safeAddListener("tab-ioclookup", "ioclookup");
+  safeAddListener("tab-labs", "labs");
+  safeAddListener("tab-advanced", "advanced");
+  safeAddListener("tab-cover", "cover");
+  safeAddListener("tab-pricing", "pricing");
 
   const pricingOpenBtn = document.getElementById("btn-pricing-open");
   if (pricingOpenBtn) pricingOpenBtn.addEventListener("click", () => switchMode("pricing"));
@@ -253,16 +290,41 @@ function initModeTabs() {
 function switchMode(mode) {
   stopSpeech();
   activeMode = mode;
-  document.querySelectorAll(".mode-tab").forEach(tab => tab.classList.remove("active"));
+
+  // 1. Resolve Master Hub
+  const targetHub = HUB_MODE_MAP[mode] || "handbooks";
+  
+  // 2. Highlight Master Hub Tab
+  document.querySelectorAll(".master-hub-tab").forEach(tab => {
+    if (tab.id === `hub-${targetHub}`) {
+      tab.classList.add("active");
+    } else {
+      tab.classList.remove("active");
+    }
+  });
+
+  // 3. Show active sub-group row & hide others
+  document.querySelectorAll(".sub-hub-group").forEach(group => {
+    if (group.id === `sub-group-${targetHub}`) {
+      group.style.display = "flex";
+    } else {
+      group.style.display = "none";
+    }
+  });
+
+  // 4. Highlight sub-mode pills
+  document.querySelectorAll(".sub-hub-pill, .mode-tab").forEach(tab => tab.classList.remove("active"));
 
   if (mode === "notebook") {
-    document.getElementById("tab-notebook").classList.add("active");
+    const tab = document.getElementById("tab-notebook");
+    if (tab) tab.classList.add("active");
     document.getElementById("page-type-label").innerText = "Page";
     document.getElementById("total-count-label").innerText = NOTEBOOK_PAGES.length;
     document.getElementById("page-number-input").max = NOTEBOOK_PAGES.length;
     document.getElementById("toolbar-controls").style.display = "flex";
   } else if (mode === "interview") {
-    document.getElementById("tab-interview").classList.add("active");
+    const tab = document.getElementById("tab-interview");
+    if (tab) tab.classList.add("active");
     document.getElementById("page-type-label").innerText = "Q&A";
     document.getElementById("total-count-label").innerText = INTERVIEW_QUESTIONS.length;
     document.getElementById("page-number-input").max = INTERVIEW_QUESTIONS.length;
@@ -279,13 +341,31 @@ function switchMode(mode) {
     const tab = document.getElementById("tab-hardening");
     if (tab) tab.classList.add("active");
     document.getElementById("toolbar-controls").style.display = "none";
+  } else if (mode === "phishing") {
+    const tab = document.getElementById("tab-phishing");
+    if (tab) tab.classList.add("active");
+    document.getElementById("toolbar-controls").style.display = "none";
+  } else if (mode === "adlogs") {
+    const tab = document.getElementById("tab-adlogs");
+    if (tab) tab.classList.add("active");
+    document.getElementById("toolbar-controls").style.display = "none";
+  } else if (mode === "soar") {
+    const tab = document.getElementById("tab-soar");
+    if (tab) tab.classList.add("active");
+    document.getElementById("toolbar-controls").style.display = "none";
+  } else if (mode === "cloudlogs") {
+    const tab = document.getElementById("tab-cloudlogs");
+    if (tab) tab.classList.add("active");
+    document.getElementById("toolbar-controls").style.display = "none";
+  } else if (mode === "ioclookup") {
+    const tab = document.getElementById("tab-ioclookup");
+    if (tab) tab.classList.add("active");
+    document.getElementById("toolbar-controls").style.display = "none";
   } else if (mode === "cheatsheet") {
     const tab = document.getElementById("tab-cheatsheet");
     if (tab) tab.classList.add("active");
-    // Robustly resolve cheatsheet pages (support alternate global var shape)
     const cheatPages = window.CHEATSHEET_PAGES || (window.MASTER_CHEATSHEET_DATA && window.MASTER_CHEATSHEET_DATA.pages) || [];
     const cheatCount = cheatPages.length || 350;
-    // Ensure currentCheatPageId is valid
     if (!Number.isFinite(currentCheatPageId) || currentCheatPageId < 1 || currentCheatPageId > cheatCount) {
       currentCheatPageId = 1;
       localStorage.setItem("cheatsheet_current_page", currentCheatPageId);
@@ -314,7 +394,8 @@ function switchMode(mode) {
     document.getElementById("page-number-input").value = currentAdvancedPageId;
     document.getElementById("toolbar-controls").style.display = "flex";
   } else if (mode === "cover") {
-    document.getElementById("tab-cover").classList.add("active");
+    const tab = document.getElementById("tab-cover");
+    if (tab) tab.classList.add("active");
     document.getElementById("toolbar-controls").style.display = "none";
   } else if (mode === "pricing") {
     const tab = document.getElementById("tab-pricing");
@@ -608,8 +689,28 @@ function renderCurrentView(direction = "next") {
   } else if (activeMode === "hardening") {
     container.innerHTML = generateHardeningHTML();
   } else if (activeMode === "cheatsheet") {
-    container.innerHTML = generateCheatSheetHTML();
-    filterAndRenderCheatCards();
+    const csPages = window.CHEATSHEET_PAGES || (window.MASTER_CHEATSHEET_DATA && window.MASTER_CHEATSHEET_DATA.pages) || [];
+    const page = csPages.find(p => p.id === currentCheatPageId) || csPages[0];
+    if (window.showMasterCheatOverview) {
+      container.innerHTML = generateCheatSheetHTML();
+      filterAndRenderCheatCards();
+    } else if (page) {
+      updateBookmarkButtonState(currentCheatPageId);
+      container.innerHTML = generateCheatPageHTML(page);
+    } else {
+      container.innerHTML = generateCheatSheetHTML();
+      filterAndRenderCheatCards();
+    }
+  } else if (activeMode === "phishing") {
+    container.innerHTML = generatePhishingTriageHTML();
+  } else if (activeMode === "adlogs") {
+    container.innerHTML = generateADLogHunterHTML();
+  } else if (activeMode === "soar") {
+    container.innerHTML = generateSOARPlaybooksHTML();
+  } else if (activeMode === "cloudlogs") {
+    container.innerHTML = generateCloudTelemetryHTML();
+  } else if (activeMode === "ioclookup") {
+    container.innerHTML = generateThreatIntelIOCHHTML();
   } else if (activeMode === "labs") {
     container.innerHTML = generateIncidentLabsHTML();
   } else if (activeMode === "advanced") {
@@ -3641,10 +3742,6 @@ function generatePricingAndReviewsHTML() {
             </p>
           </details>
 
-          <details style="background:var(--paper-bg); border:1.5px solid var(--card-border); border-radius:12px; padding:1rem 1.2rem; cursor:pointer;">
-            <summary style="font-weight:800; font-size:1rem; color:var(--accent-blue);">
-              Is this curriculum suitable for complete Linux beginners?
-            </summary>
             <p style="font-size:0.88rem; color:var(--text-dark); margin-top:0.6rem; line-height:1.5;">
               Yes! Module 1 starts right from the basics (Day 1: <code>pwd</code>, <code>ls</code>, <code>cd</code>, file permissions) and gradually builds up to process monitoring, log parsing, kernel security, and threat hunting.
             </p>
@@ -3686,4 +3783,494 @@ function generatePricingAndReviewsHTML() {
     </article>
   `;
 }
+
+// --- CHEAT SHEET VIEW TOGGLES ---
+window.openMasterCheatOverview = function() {
+  window.showMasterCheatOverview = true;
+  renderCurrentView();
+};
+
+window.openCheatPageNotebook = function() {
+  window.showMasterCheatOverview = false;
+  renderCurrentView();
+};
+
+// --- NEW SOC ANALYST MODULE 1: PHISHING EMAIL HEADER & TRIAGE INSPECTOR ---
+function generatePhishingTriageHTML() {
+  return `
+    <article class="hardening-wrapper">
+      <div style="text-align:center; margin-bottom:1.2rem;">
+        <div style="display:inline-block; background:rgba(234,179,8,0.15); color:#d97706; padding:0.3rem 0.8rem; border-radius:20px; font-size:0.8rem; font-weight:800; border:1px solid #f59e0b; margin-bottom:0.4rem;">
+          📧 Tier 1 SOC Core Lab
+        </div>
+        <h2 style="color:var(--accent-blue); font-size:1.8rem; font-weight:800; font-family:'Outfit',sans-serif; margin:0;">
+          Phishing Email Header &amp; Triage Inspector
+        </h2>
+        <p style="color:var(--text-dark); font-size:0.9rem; max-width:800px; margin:0.4rem auto 0;">
+          Analyze raw email headers, inspect SPF/DKIM/DMARC alignment, defang malicious URLs, and calculate attachment hashes.
+        </p>
+      </div>
+
+      <!-- PRESET PHISHING INCIDENTS -->
+      <div style="display:flex; justify-content:center; gap:0.6rem; flex-wrap:wrap; margin-bottom:1.5rem;">
+        <button class="cs-pill" style="background:#eab308; color:#000; font-weight:800;" onclick="loadPhishingPreset('bec')">
+          ⚠️ BEC CEO Fraud (Spoofed From)
+        </button>
+        <button class="cs-pill" style="background:#ef4444; color:#fff; font-weight:800;" onclick="loadPhishingPreset('macro')">
+          📎 Malicious Invoice Macro (.docm)
+        </button>
+        <button class="cs-pill" style="background:#3b82f6; color:#fff; font-weight:800;" onclick="loadPhishingPreset('m365')">
+          🔑 M365 Credential Harvester
+        </button>
+      </div>
+
+      <!-- INTERACTIVE HEADER ANALYSIS GRID -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.2rem; margin-bottom:1.5rem;">
+        <!-- RAW HEADER INPUT -->
+        <div style="background:var(--paper-bg); border:1.5px solid var(--card-border); border-radius:12px; padding:1.2rem;">
+          <h3 style="color:var(--accent-blue); font-size:1rem; font-weight:800; margin-bottom:0.6rem;">
+            📥 Raw Email Headers &amp; Body
+          </h3>
+          <textarea id="phish-header-input" rows="12" style="width:100%; font-family:'Fira Code',monospace; font-size:0.78rem; background:var(--bg-app); color:var(--text-dark); border:1px solid var(--card-border); border-radius:8px; padding:0.8rem;" placeholder="Paste raw email RFC822 headers here..."></textarea>
+          <button onclick="analyzePhishingHeaders()" style="width:100%; margin-top:0.8rem; padding:0.6rem; background:var(--accent-blue); color:#fff; font-weight:800; border:none; border-radius:8px; cursor:pointer;">
+            🔍 Analyze Email Headers &amp; Security Alignment
+          </button>
+        </div>
+
+        <!-- AUTHENTICATION ALIGNMENT RESULT -->
+        <div style="background:var(--paper-bg); border:1.5px solid var(--card-border); border-radius:12px; padding:1.2rem; display:flex; flex-direction:column; justify-content:space-between;">
+          <div>
+            <h3 style="color:var(--accent-blue); font-size:1rem; font-weight:800; margin-bottom:0.6rem;">
+              🛡️ Security Authentication Alignment
+            </h3>
+            <div id="phish-auth-results" style="display:flex; flex-direction:column; gap:0.6rem; font-size:0.88rem;">
+              <div style="background:rgba(239,68,68,0.1); border:1px solid #ef4444; color:#dc2626; padding:0.6rem 0.8rem; border-radius:8px; font-weight:700;">
+                SPF: FAIL (IP 185.220.101.5 is not authorized for domain company.com)
+              </div>
+              <div style="background:rgba(239,68,68,0.1); border:1px solid #ef4444; color:#dc2626; padding:0.6rem 0.8rem; border-radius:8px; font-weight:700;">
+                DKIM: FAIL (Invalid signature for selector s1)
+              </div>
+              <div style="background:rgba(239,68,68,0.15); border:1.5px solid #ef4444; color:#b91c1c; padding:0.6rem 0.8rem; border-radius:8px; font-weight:800;">
+                DMARC: REJECT (Header From != Envelope From)
+              </div>
+              <div style="background:var(--bg-app); border:1px dashed var(--card-border); padding:0.6rem 0.8rem; border-radius:8px;">
+                <strong>X-Originating-IP:</strong> 185.220.101.5 (Tor Exit Node / Cybercrime VPN)
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:1rem; padding-top:0.8rem; border-top:1px dashed var(--card-border);">
+            <div style="font-weight:800; font-size:0.85rem; color:var(--text-ink); margin-bottom:0.3rem;">
+              🔗 URL Defanger Tool:
+            </div>
+            <div style="display:flex; gap:0.4rem;">
+              <input id="url-defang-in" type="text" value="http://login-microsoft365-verify.ru/auth" style="flex:1; font-family:'Fira Code',monospace; font-size:0.78rem; padding:0.4rem; border-radius:6px; border:1px solid var(--card-border); background:var(--bg-app); color:var(--text-dark);" />
+              <button onclick="defangUrl()" style="background:#22c55e; color:#fff; font-weight:800; border:none; padding:0.4rem 0.8rem; border-radius:6px; cursor:pointer;">
+                Defang
+              </button>
+            </div>
+            <div id="url-defang-out" style="font-family:'Fira Code',monospace; font-size:0.8rem; color:#1565c0; font-weight:700; margin-top:0.4rem;">
+              hxxps[:]//login-microsoft365-verify[.]ru/auth
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+// --- NEW SOC ANALYST MODULE 2: ACTIVE DIRECTORY LOG HUNTER ---
+function generateADLogHunterHTML() {
+  return `
+    <article class="hardening-wrapper">
+      <div style="text-align:center; margin-bottom:1.2rem;">
+        <div style="display:inline-block; background:rgba(139,92,246,0.15); color:#8b5cf6; padding:0.3rem 0.8rem; border-radius:20px; font-size:0.8rem; font-weight:800; border:1px solid #8b5cf6; margin-bottom:0.4rem;">
+          🔑 Windows Active Directory Threat Lab
+        </div>
+        <h2 style="color:var(--accent-blue); font-size:1.8rem; font-weight:800; font-family:'Outfit',sans-serif; margin:0;">
+          Active Directory Security &amp; Event Log Hunter
+        </h2>
+        <p style="color:var(--text-dark); font-size:0.9rem; max-width:800px; margin:0.4rem auto 0;">
+          Detect Kerberoasting, Pass-the-Hash, AS-REP Roasting, and Password Spraying attacks in Windows Event Security Logs.
+        </p>
+      </div>
+
+      <!-- SCENARIO SELECTOR BUTTONS -->
+      <div style="display:flex; justify-content:center; gap:0.6rem; flex-wrap:wrap; margin-bottom:1.5rem;">
+        <button class="cs-pill" style="background:#8b5cf6; color:#fff; font-weight:800;" onclick="loadADScenario('kerberoast')">
+          🎯 Kerberoasting (Event 4769 RC4)
+        </button>
+        <button class="cs-pill" style="background:#ef4444; color:#fff; font-weight:800;" onclick="loadADScenario('pth')">
+          🔑 Pass-the-Hash (Event 4624 Type 3)
+        </button>
+        <button class="cs-pill" style="background:#0284c7; color:#fff; font-weight:800;" onclick="loadADScenario('asrep')">
+          🔓 AS-REP Roasting (Event 4768 No Pre-Auth)
+        </button>
+        <button class="cs-pill" style="background:#f59e0b; color:#fff; font-weight:800;" onclick="loadADScenario('spray')">
+          💥 Password Spraying (Event 4625 Burst)
+        </button>
+      </div>
+
+      <!-- LOG DISPLAY & INTERACTIVE ANALYSIS -->
+      <div style="background:var(--paper-bg); border:1.5px solid var(--card-border); border-radius:12px; padding:1.2rem;">
+        <h3 id="ad-scenario-title" style="color:var(--accent-blue); font-size:1.1rem; font-weight:800; margin-bottom:0.6rem;">
+          🎯 Kerberoasting Attack Triage — Event ID 4769 Analysis
+        </h3>
+
+        <div id="ad-log-display" style="background:#090d16; color:#4af626; font-family:'Fira Code',monospace; font-size:0.82rem; padding:1rem; border-radius:8px; border:1px solid #1e293b; margin-bottom:1rem; max-height:260px; overflow-y:auto; line-height:1.5;">
+          [EventID: 4769] A Kerberos service ticket was requested.<br/>
+          TargetName: mssql_svc@CORP.LOCAL<br/>
+          ServiceName: mssql_svc<br/>
+          TicketOptions: 0x40810010<br/>
+          TicketEncryptionType: 0x17 (RC4-HMAC)  <-- ANOMALY: Downgraded Encryption<br/>
+          IpAddress: ::ffff:192.168.1.105<br/>
+          Status: 0x0
+        </div>
+
+        <div id="ad-analysis-box" style="background:rgba(139,92,246,0.08); border-left:4px solid #8b5cf6; padding:1rem; border-radius:0 8px 8px 0; font-size:0.88rem; color:var(--text-ink);">
+          <strong>SOC Threat Analysis:</strong> Adversary requested a Kerberos TGS ticket for service account <code>mssql_svc</code> using weak <code>0x17 (RC4-HMAC)</code> encryption to easily crack the password offline hash using Hashcat/John.
+          <br/><br/>
+          <strong>Containment Step:</strong> Rotate <code>mssql_svc</code> password to a 30+ character random string and enforce AES-256 Kerberos encryption in Active Directory.
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+// --- NEW SOC ANALYST MODULE 3: SOAR AUTOMATED INCIDENT PLAYBOOKS ---
+function generateSOARPlaybooksHTML() {
+  return `
+    <article class="hardening-wrapper">
+      <div style="text-align:center; margin-bottom:1.2rem;">
+        <div style="display:inline-block; background:rgba(34,197,94,0.15); color:#16a34a; padding:0.3rem 0.8rem; border-radius:20px; font-size:0.8rem; font-weight:800; border:1px solid #22c55e; margin-bottom:0.4rem;">
+          ⚡ Tier 2/3 SOAR Automation Lab
+        </div>
+        <h2 style="color:var(--accent-blue); font-size:1.8rem; font-weight:800; font-family:'Outfit',sans-serif; margin:0;">
+          SOAR Automated Incident Containment Engine
+        </h2>
+        <p style="color:var(--text-dark); font-size:0.9rem; max-width:800px; margin:0.4rem auto 0;">
+          Execute automated Security Orchestration, Automation, and Response (SOAR) playbooks to isolate hosts, purge malicious emails, and block firewall IPs.
+        </p>
+      </div>
+
+      <!-- PLAYBOOK SELECTION -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.2rem; margin-bottom:1.5rem;">
+        <div style="background:var(--paper-bg); border:1.5px solid var(--card-border); border-radius:12px; padding:1.2rem; display:flex; flex-direction:column; justify-content:space-between;">
+          <div>
+            <h3 style="color:#ef4444; font-size:1.1rem; font-weight:800; margin-bottom:0.4rem;">
+              🛡️ Playbook 1: Compromised Endpoint Host Isolation
+            </h3>
+            <p style="font-size:0.85rem; color:var(--text-dark); margin-bottom:0.8rem;">
+              Triggered when EDR detects C2 Beaconing. Automatically isolates endpoint from network, revokes Azure AD OAuth tokens, and alerts SOC team.
+            </p>
+          </div>
+          <button onclick="runSOARPlaybook('host_isolate')" style="background:#ef4444; color:#fff; font-weight:800; border:none; padding:0.65rem; border-radius:8px; cursor:pointer;">
+            ⚡ Execute Host Isolation Playbook
+          </button>
+        </div>
+
+        <div style="background:var(--paper-bg); border:1.5px solid var(--card-border); border-radius:12px; padding:1.2rem; display:flex; flex-direction:column; justify-content:space-between;">
+          <div>
+            <h3 style="color:#22c55e; font-size:1.1rem; font-weight:800; margin-bottom:0.4rem;">
+              📧 Playbook 2: Phishing Auto-Purge &amp; Firewall Block
+            </h3>
+            <p style="font-size:0.85rem; color:var(--text-dark); margin-bottom:0.8rem;">
+              Triggered on user phishing report. Checks VirusTotal API reputation, purges email from all inbox mailboxes via Graph API, and blocks IP on firewall.
+            </p>
+          </div>
+          <button onclick="runSOARPlaybook('phish_purge')" style="background:#22c55e; color:#fff; font-weight:800; border:none; padding:0.65rem; border-radius:8px; cursor:pointer;">
+            ⚡ Execute Phishing Purge Playbook
+          </button>
+        </div>
+      </div>
+
+      <!-- LIVE SOAR LOG EXECUTION CONSOLE -->
+      <div style="background:#05080e; border:1px solid #1e293b; border-radius:12px; padding:1rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem;">
+          <span style="color:#4af626; font-family:'Fira Code',monospace; font-weight:800; font-size:0.85rem;">
+            🖥️ SOAR Live Execution Console Log
+          </span>
+          <span id="soar-status-badge" style="background:rgba(74,246,38,0.2); color:#4af626; padding:0.2rem 0.6rem; border-radius:12px; font-weight:800; font-size:0.75rem;">
+            System Ready
+          </span>
+        </div>
+        <div id="soar-log-console" style="background:#090d16; color:#4af626; font-family:'Fira Code',monospace; font-size:0.8rem; padding:0.8rem; border-radius:6px; min-height:160px; max-height:220px; overflow-y:auto; line-height:1.6;">
+          [READY] Waiting for SOAR playbook trigger execution...
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+// --- INTERACTIVE PRESET & EVENT HANDLERS ---
+window.loadPhishingPreset = function(type) {
+  const input = document.getElementById('phish-header-input');
+  if (!input) return;
+
+  if (type === 'bec') {
+    input.value = `From: "CEO John Smith" <ceo@company.com>\nReturn-Path: <attacker@tor-exit-node.ru>\nReceived: from mail.attacker-server.ru (185.220.101.5)\nAuthentication-Results: spf=fail dkim=fail dmarc=fail\nSubject: URGENT: Wire Transfer Approval Needed Immediately`;
+  } else if (type === 'macro') {
+    input.value = `From: "Finance Billing" <billing@vendor-update.com>\nReturn-Path: <billing@vendor-update.com>\nAttachment: Invoice_AUG2026.docm (Contains VBA AutoOpen Macro)\nSHA256: 4f8a92b...e109\nSubject: Invoice #89201 Past Due - Please Review`;
+  } else if (type === 'm365') {
+    input.value = `From: "Microsoft Security" <no-reply@account-update.com>\nBody: Your password will expire today. Click below to verify:\nLink: http://login-microsoft365-verify.ru/auth\nSubject: Security Alert: Action Required`;
+  }
+  analyzePhishingHeaders();
+};
+
+window.analyzePhishingHeaders = function() {
+  const input = document.getElementById('phish-header-input');
+  const results = document.getElementById('phish-auth-results');
+  if (!input || !results) return;
+
+  const val = input.value;
+  let spf = "PASS", dkim = "PASS", dmarc = "PASS", ip = "192.168.1.1";
+
+  if (val.includes('fail') || val.includes('attacker') || val.includes('185.220')) {
+    spf = "FAIL (IP 185.220.101.5 unauthorized)";
+    dkim = "FAIL (Invalid signature)";
+    dmarc = "REJECT (Header From != Envelope From)";
+    ip = "185.220.101.5 (Known Cybercrime Proxy)";
+  }
+
+  results.innerHTML = `
+    <div style="background:rgba(239,68,68,0.1); border:1px solid #ef4444; color:#dc2626; padding:0.6rem 0.8rem; border-radius:8px; font-weight:700;">
+      SPF: ${spf}
+    </div>
+    <div style="background:rgba(239,68,68,0.1); border:1px solid #ef4444; color:#dc2626; padding:0.6rem 0.8rem; border-radius:8px; font-weight:700;">
+      DKIM: ${dkim}
+    </div>
+    <div style="background:rgba(239,68,68,0.15); border:1.5px solid #ef4444; color:#b91c1c; padding:0.6rem 0.8rem; border-radius:8px; font-weight:800;">
+      DMARC: ${dmarc}
+    </div>
+    <div style="background:var(--bg-app); border:1px dashed var(--card-border); padding:0.6rem 0.8rem; border-radius:8px;">
+      <strong>X-Originating-IP:</strong> ${ip}
+    </div>
+  `;
+};
+
+window.defangUrl = function() {
+  const inEl = document.getElementById('url-defang-in');
+  const outEl = document.getElementById('url-defang-out');
+  if (!inEl || !outEl) return;
+  const defanged = inEl.value.replace(/http/g, 'hxxp').replace(/\./g, '[.]');
+  outEl.innerText = defanged;
+};
+
+window.loadADScenario = function(scen) {
+  const title = document.getElementById('ad-scenario-title');
+  const display = document.getElementById('ad-log-display');
+  const analysis = document.getElementById('ad-analysis-box');
+  if (!title || !display || !analysis) return;
+
+  if (scen === 'kerberoast') {
+    title.innerText = "🎯 Kerberoasting Attack Triage — Event ID 4769 Analysis";
+    display.innerHTML = `[EventID: 4769] A Kerberos service ticket was requested.<br/>TargetName: mssql_svc@CORP.LOCAL<br/>TicketEncryptionType: 0x17 (RC4-HMAC) <-- Downgraded<br/>IpAddress: 192.168.1.105`;
+    analysis.innerHTML = `<strong>SOC Threat Analysis:</strong> Adversary requested TGS ticket for <code>mssql_svc</code> using RC4 encryption to crack password hash offline.<br/><strong>Mitigation:</strong> Enforce AES-256 Kerberos encryption in Active Directory.`;
+  } else if (scen === 'pth') {
+    title.innerText = "🔑 Pass-the-Hash (PtH) Logon — Event ID 4624 Analysis";
+    display.innerHTML = `[EventID: 4624] An account was successfully logged on.<br/>LogonType: 3 (Network)<br/>AuthenticationPackage: NTLM<br/>KeyLength: 0<br/>WorkstationName: WORKSTATION-99<br/>IpAddress: 10.0.4.12`;
+    analysis.innerHTML = `<strong>SOC Threat Analysis:</strong> Lateral movement using stolen NTLM hash without knowing plaintext password.<br/><strong>Mitigation:</strong> Disable NTLM authentication and restrict Local Admin Remote Logon.`;
+  } else if (scen === 'asrep') {
+    title.innerText = "🔓 AS-REP Roasting Attack — Event ID 4768 Analysis";
+    display.innerHTML = `[EventID: 4768] A Kerberos authentication ticket (TGT) was requested.<br/>TargetUserName: legacy_user<br/>PreAuthType: - (No Pre-Authentication Required)<br/>TicketEncryptionType: 0x17`;
+    analysis.innerHTML = `<strong>SOC Threat Analysis:</strong> Account has "Do not require Kerberos preauthentication" set, allowing anyone to request encrypted TGT.<br/><strong>Mitigation:</strong> Enable Kerberos Pre-Authentication on user object immediately.`;
+  } else if (scen === 'spray') {
+    title.innerText = "💥 Password Spraying Burst — Event ID 4625 Analysis";
+    display.innerHTML = `[EventID: 4625] 50 Failed Logons across 50 different user accounts within 60 seconds.<br/>FailureReason: Unknown user name or bad password.<br/>IpAddress: 45.33.32.156`;
+    analysis.innerHTML = `<strong>SOC Threat Analysis:</strong> Password Spraying attempting common password (e.g. Summer2026!) against multiple domain accounts.<br/><strong>Mitigation:</strong> Enable MFA and block source IP 45.33.32.156 at perimeter firewall.`;
+  }
+};
+
+window.runSOARPlaybook = function(type) {
+  const consoleEl = document.getElementById('soar-log-console');
+  const badgeEl = document.getElementById('soar-status-badge');
+  if (!consoleEl || !badgeEl) return;
+
+  badgeEl.innerText = "Executing Playbook...";
+  badgeEl.style.background = "rgba(245,158,11,0.2)";
+  badgeEl.style.color = "#f59e0b";
+
+  if (type === 'host_isolate') {
+    consoleEl.innerHTML = `
+      [00:00:01] 🚨 Trigger: EDR C2 Beaconing Alert Received for Host WKS-902...<br/>
+      [00:00:02] 🌐 Calling CrowdStrike EDR API: POST /devices/entities/containments/v1...<br/>
+      [00:00:03] ✅ Response 200 OK: Host WKS-902 Isolated from Network.<br/>
+      [00:00:04] 🔑 Calling Azure AD Graph API: POST /users/revokeSignInSessions...<br/>
+      [00:00:05] 📬 Posting Alert to SOC Incident Channel via Slack Webhook...<br/>
+      [00:00:06] 🎉 PLAYBOOK COMPLETE: Endpoint Containment Successful!
+    `;
+  } else if (type === 'phish_purge') {
+    consoleEl.innerHTML = `
+      [00:00:01] 🚨 Trigger: User Reported Phishing Email (MsgID: <phish-882@attacker.com>)...<br/>
+      [00:00:02] 🔍 Querying VirusTotal API: GET /api/v3/urls/defanged_hash... Score: 18/90 Malicious.<br/>
+      [00:00:03] 📧 Calling O365 Graph API: DELETE /users/messages/searchEmail...<br/>
+      [00:00:04] ✅ Response 200 OK: Purged 14 matching phishing emails from all company mailboxes.<br/>
+      [00:00:05] 🧱 Calling Fortinet Firewall API: POST /api/v2/cmdb/firewall/address... Blocked Sender IP 185.220.101.5.<br/>
+      [00:00:06] 🎉 PLAYBOOK COMPLETE: Phishing Auto-Remediation Successful!
+    `;
+  }
+
+  setTimeout(() => {
+    badgeEl.innerText = "Playbook Executed (200 OK)";
+    badgeEl.style.background = "rgba(74,246,38,0.2)";
+    badgeEl.style.color = "#4af626";
+  }, 1000);
+};
+
+// --- NEW SOC ANALYST MODULE 4: CLOUD SECURITY & TELEMETRY LAB (AWS/AZURE) ---
+function generateCloudTelemetryHTML() {
+  return `
+    <article class="hardening-wrapper">
+      <div style="text-align:center; margin-bottom:1.2rem;">
+        <div style="display:inline-block; background:rgba(2,132,199,0.15); color:#0284c7; padding:0.3rem 0.8rem; border-radius:20px; font-size:0.8rem; font-weight:800; border:1px solid #0284c7; margin-bottom:0.4rem;">
+          ☁️ Hybrid Cloud Security Operations
+        </div>
+        <h2 style="color:var(--accent-blue); font-size:1.8rem; font-weight:800; font-family:'Outfit',sans-serif; margin:0;">
+          Cloud Telemetry &amp; Detection Engine (AWS / Azure)
+        </h2>
+        <p style="color:var(--text-dark); font-size:0.9rem; max-width:800px; margin:0.4rem auto 0;">
+          Inspect AWS CloudTrail audit events, Azure Entra ID sign-in anomalies, and Sentinel KQL queries.
+        </p>
+      </div>
+
+      <!-- CLOUD SCENARIO SELECTORS -->
+      <div style="display:flex; justify-content:center; gap:0.6rem; flex-wrap:wrap; margin-bottom:1.5rem;">
+        <button class="cs-pill" style="background:#0284c7; color:#fff; font-weight:800;" onclick="loadCloudScenario('aws_privesc')">
+          ☁️ AWS CloudTrail: IAM PrivEsc (CreateAccessKey)
+        </button>
+        <button class="cs-pill" style="background:#eab308; color:#000; font-weight:800;" onclick="loadCloudScenario('aws_s3')">
+          🪣 AWS S3 Bucket Public Exfiltration
+        </button>
+        <button class="cs-pill" style="background:#8b5cf6; color:#fff; font-weight:800;" onclick="loadCloudScenario('azure_travel')">
+          🌐 Azure Entra ID: Impossible Travel Sign-In
+        </button>
+        <button class="cs-pill" style="background:#ec4899; color:#fff; font-weight:800;" onclick="loadCloudScenario('azure_oauth')">
+          🔑 Azure Consent Abuse (Malicious OAuth App)
+        </button>
+      </div>
+
+      <!-- LOG DISPLAY & INTERACTIVE ANALYSIS -->
+      <div style="background:var(--paper-bg); border:1.5px solid var(--card-border); border-radius:12px; padding:1.2rem;">
+        <h3 id="cloud-scenario-title" style="color:var(--accent-blue); font-size:1.1rem; font-weight:800; margin-bottom:0.6rem;">
+          ☁️ AWS CloudTrail Triage — IAM Privilege Escalation
+        </h3>
+
+        <div id="cloud-log-display" style="background:#090d16; color:#4af626; font-family:'Fira Code',monospace; font-size:0.82rem; padding:1rem; border-radius:8px; border:1px solid #1e293b; margin-bottom:1rem; max-height:260px; overflow-y:auto; line-height:1.5;">
+          {<br/>
+          &nbsp;&nbsp;"eventVersion": "1.08",<br/>
+          &nbsp;&nbsp;"eventName": "CreateAccessKey",<br/>
+          &nbsp;&nbsp;"eventSource": "iam.amazonaws.com",<br/>
+          &nbsp;&nbsp;"userIdentitiy": { "type": "IAMUser", "userName": "dev_backdoor_user" },<br/>
+          &nbsp;&nbsp;"sourceIPAddress": "198.51.100.42",<br/>
+          &nbsp;&nbsp;"userAgent": "aws-cli/2.4.15 Python/3.8.8"<br/>
+          }
+        </div>
+
+        <div id="cloud-analysis-box" style="background:rgba(2,132,199,0.08); border-left:4px solid #0284c7; padding:1rem; border-radius:0 8px 8px 0; font-size:0.88rem; color:var(--text-ink);">
+          <strong>Cloud SOC Detection:</strong> Adversary generated long-term AWS API access keys for backdoor access outside standard CI/CD pipeline.<br/>
+          <strong>Remediation:</strong> Delete access key via <code>aws iam delete-access-key</code> and revoke IAM policy immediately.
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+// --- NEW SOC ANALYST MODULE 5: THREAT INTEL IOC REPUTATION LOOKUP ---
+function generateThreatIntelIOCHHTML() {
+  return `
+    <article class="hardening-wrapper">
+      <div style="text-align:center; margin-bottom:1.2rem;">
+        <div style="display:inline-block; background:rgba(236,72,153,0.15); color:#db2777; padding:0.3rem 0.8rem; border-radius:20px; font-size:0.8rem; font-weight:800; border:1px solid #ec4899; margin-bottom:0.4rem;">
+          🌐 Cyber Threat Intelligence (CTI) Hub
+        </div>
+        <h2 style="color:var(--accent-blue); font-size:1.8rem; font-weight:800; font-family:'Outfit',sans-serif; margin:0;">
+          Threat Intel IOC Reputation Lookup Engine
+        </h2>
+        <p style="color:var(--text-dark); font-size:0.9rem; max-width:800px; margin:0.4rem auto 0;">
+          Query IPs, Domains, and SHA-256 Hashes against MISP, VirusTotal, AbuseIPDB, and AlienVault OTX datasets.
+        </p>
+      </div>
+
+      <!-- SEARCH BAR -->
+      <div style="background:var(--paper-bg); border:1.5px solid var(--card-border); border-radius:12px; padding:1.2rem; margin-bottom:1.5rem;">
+        <div style="display:flex; gap:0.6rem;">
+          <input id="ioc-search-input" type="text" value="185.220.101.5" placeholder="Enter IP (e.g. 185.220.101.5), Domain, or File Hash..." style="flex:1; font-family:'Fira Code',monospace; font-size:0.9rem; padding:0.6rem; border-radius:8px; border:1px solid var(--card-border); background:var(--bg-app); color:var(--text-dark);" />
+          <button onclick="performIOCLookup()" style="background:#db2777; color:#fff; font-weight:800; border:none; padding:0.6rem 1.4rem; border-radius:8px; cursor:pointer;">
+            🔍 Search Threat Intel
+          </button>
+        </div>
+      </div>
+
+      <!-- REPUTATION RESULTS MATRIX -->
+      <div id="ioc-results-area" style="background:var(--paper-bg); border:1.5px solid var(--card-border); border-radius:12px; padding:1.2rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px dashed var(--card-border); padding-bottom:0.6rem;">
+          <div>
+            <span style="font-weight:800; font-size:1.1rem; color:var(--accent-blue);" id="ioc-query-title">IOC Query: 185.220.101.5</span>
+            <span style="background:rgba(239,68,68,0.15); color:#dc2626; border:1px solid #ef4444; padding:0.2rem 0.6rem; border-radius:12px; font-weight:800; font-size:0.78rem; margin-left:0.6rem;">
+              MALICIOUS (High Threat Score 94/100)
+            </span>
+          </div>
+          <span style="font-size:0.8rem; color:#64748b;">STIX 2.1 Object Verified</span>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:1rem;">
+          <div style="background:var(--bg-app); border:1px solid var(--card-border); padding:0.8rem; border-radius:8px;">
+            <div style="font-weight:800; font-size:0.85rem; color:#db2777; margin-bottom:0.3rem;">🦠 VirusTotal Engine</div>
+            <div style="font-size:0.82rem; color:var(--text-dark);">
+              <strong>Detection:</strong> 68 / 90 Security Vendors<br/>
+              <strong>Categories:</strong> Botnet C2, Cobalt Strike Gateway
+            </div>
+          </div>
+          <div style="background:var(--bg-app); border:1px solid var(--card-border); padding:0.8rem; border-radius:8px;">
+            <div style="font-weight:800; font-size:0.85rem; color:#0284c7; margin-bottom:0.3rem;">🛡️ AbuseIPDB Score</div>
+            <div style="font-size:0.82rem; color:var(--text-dark);">
+              <strong>Confidence Score:</strong> 100% Malicious<br/>
+              <strong>Reports:</strong> 1,420 abuse reports in last 30 days
+            </div>
+          </div>
+          <div style="background:var(--bg-app); border:1px solid var(--card-border); padding:0.8rem; border-radius:8px;">
+            <div style="font-weight:800; font-size:0.85rem; color:#8b5cf6; margin-bottom:0.3rem;">👽 AlienVault OTX Pulses</div>
+            <div style="font-size:0.82rem; color:var(--text-dark);">
+              <strong>Pulses:</strong> 14 Active Threat Pulses<br/>
+              <strong>Actor:</strong> APT29 / Cozy Bear Campaign
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+// --- CLOUD & IOC EVENT HANDLERS ---
+window.loadCloudScenario = function(scen) {
+  const title = document.getElementById('cloud-scenario-title');
+  const display = document.getElementById('cloud-log-display');
+  const analysis = document.getElementById('cloud-analysis-box');
+  if (!title || !display || !analysis) return;
+
+  if (scen === 'aws_privesc') {
+    title.innerText = "☁️ AWS CloudTrail Triage — IAM Privilege Escalation";
+    display.innerHTML = `{\n  "eventName": "CreateAccessKey",\n  "eventSource": "iam.amazonaws.com",\n  "userName": "dev_backdoor_user",\n  "sourceIPAddress": "198.51.100.42"\n}`;
+    analysis.innerHTML = `<strong>Cloud SOC Detection:</strong> Adversary created long-term access key for backdoor user.<br/><strong>Remediation:</strong> Delete access key via AWS CLI and revoke user IAM policy.`;
+  } else if (scen === 'aws_s3') {
+    title.innerText = "🪣 AWS S3 Bucket Public Exfiltration Triage";
+    display.innerHTML = `{\n  "eventName": "PutBucketPolicy",\n  "eventSource": "s3.amazonaws.com",\n  "bucketName": "corp-confidential-customer-data",\n  "policy": "Principal: '*', Effect: 'Allow'"\n}`;
+    analysis.innerHTML = `<strong>Cloud SOC Detection:</strong> S3 bucket policy changed to public read ('*'). Data exfiltration in progress.<br/><strong>Remediation:</strong> Enable AWS S3 Block Public Access at account level.`;
+  } else if (scen === 'azure_travel') {
+    title.innerText = "🌐 Azure Entra ID — Impossible Travel Alert";
+    display.innerHTML = `Logon 1: New York, US (10:00 AM UTC)<br/>Logon 2: Moscow, RU (10:14 AM UTC - 14 mins later)<br/>User: sarah.admin@corp.com<br/>App: Azure Management Portal`;
+    analysis.innerHTML = `<strong>Cloud SOC Detection:</strong> User authenticated from 2 distant physical locations within 14 minutes.<br/><strong>Remediation:</strong> Revoke Azure user session tokens and require FIDO2 MFA reset.`;
+  } else if (scen === 'azure_oauth') {
+    title.innerText = "🔑 Azure OAuth App Consent Abuse Triage";
+    display.innerHTML = `[AuditLog] User consent granted.<br/>AppId: 4f901a-malicious-app<br/>AppName: "ReadWriteAllMail_Helper"<br/>PermissionsRequested: Mail.ReadWrite, Files.ReadWrite.All`;
+    analysis.innerHTML = `<strong>Cloud SOC Detection:</strong> Phishing OAuth app granted full mailbox reading & file access.<br/><strong>Remediation:</strong> Revoke OAuth consent grant in Azure Portal Enterprise Applications.`;
+  }
+};
+
+window.performIOCLookup = function() {
+  const input = document.getElementById('ioc-search-input');
+  const title = document.getElementById('ioc-query-title');
+  if (!input || !title) return;
+  title.innerText = `IOC Query: ${input.value}`;
+};
 
