@@ -31,9 +31,19 @@
 
 <br/>
 
+## 👤 Developer Background & Motivation
+
+Hi! I'm **Satya Samrudh**, a passionate Blue Team Cybersecurity & SOC Operations Specialist.
+
+I built this platform to solve a real challenge I noticed while mastering Linux security and SOC threat hunting: **most cybersecurity resources are either purely theoretical or locked behind expensive paywalls, and technical documentation can often be dry.**
+
+This project brings together a **365-Page Linux Handbook**, a **456-Page Advanced SOC Engine**, and **hands-on interactive threat labs** (Phishing Header Inspection, Active Directory Event Log Hunter, SOAR Automation, Cloud Telemetry, and Threat Intel IOC Lookup) presented with bilingual Telugu-English explanations for rapid conceptual understanding.
+
+---
+
 ## 🌟 Executive Overview
 
-**LINUX SOC & ADVANCED ANALYST HANDBOOK** is a state-of-the-art, interactive **Blue Team Security Operations Platform**. Designed specifically for cybersecurity professionals, SOC Analysts (Tier 1 to Tier 3), DFIR responders, and Linux security enthusiasts, this platform seamlessly bridges fundamental OS mechanics with high-level threat hunting in a unique **Telugu-English bilingual format**.
+**LINUX SOC & ADVANCED ANALYST HANDBOOK** is an interactive **Blue Team Security Operations Platform**. Designed for SOC Analysts (Tier 1 to Tier 3), DFIR responders, and Linux security learners, it bridges fundamental OS mechanics with enterprise-grade threat hunting.
 
 ```
    ┌─────────────────────────────────────────────────────────────────────────┐
